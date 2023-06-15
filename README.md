@@ -1,2 +1,2 @@
-# spects-BE
-spectacles distribution
+# spect
+spectacles distributuin.

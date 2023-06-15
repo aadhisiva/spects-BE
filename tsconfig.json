@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata":true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "module": "CommonJS",
+    "outDir": "dist/src",
+    "jsx": "react"
+  },
+  "compileOnSave": true
+}

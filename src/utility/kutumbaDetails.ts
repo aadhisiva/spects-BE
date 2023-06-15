@@ -1,0 +1,125 @@
+import { Service } from "typedi";
+import cryptoJs from "crypto";
+import axios from "axios";
+import Logger from "./winstonLogger";
+
+
+export const convertAadharToSha256Hex = async (data) => {
+    try {
+        let hash = cryptoJs.createHash(process.env.HASHING256);
+        hash.update(data);
+        return hash.digest("hex").toUpperCase();
+    } catch (e) {
+        Logger.error("convertAadharToSha256Hex", e);
+        return e.message;
+    }
+};
+
+const HashHMACHex = (hMACKey, InputValue) => {
+    let hashHMACHex = '';
+
+    const HashHMAC = (message, hmac) => {
+        return hmac.update(message).digest();
+    };
+    const HashEncode = (hash) => {
+        return Buffer.from(hash).toString('base64');
+    };
+    try {
+        const keyByte = Buffer.from(hMACKey, 'ascii');
+        const hmacsha256 = cryptoJs.createHmac('sha256', keyByte);
+        const messageBytes = Buffer.from(InputValue, 'ascii');
+
+        const hash = HashHMAC(messageBytes, hmacsha256);
+        hashHMACHex = HashEncode(hash);
+    } catch (ex) {
+        console.error(ex);
+        Logger.error("Error Message: [" + ex.message.toString() + "]");
+        return ex.message;
+    }
+    return hashHMACHex;
+};
+
+const getReqBody = async (data, creteHMAC) => {
+    const { aadhar_no, rc_no } = data;
+    return {
+        DeptID: "",
+        BenID: "",
+        RC_Number: rc_no ? `${rc_no}` : "",
+        Aadhar_No: aadhar_no ? await convertAadharToSha256Hex(aadhar_no) : "",
+        ClientCode: process.env.KUTUMA_CLIENT_CODE,
+        HashedMac: creteHMAC,
+        APIVersion: "1.0",
+        IsPhotoRequired: "0",
+        Member_ID: "",
+        Mobile_No: "",
+        Request_ID: "0123456789",
+        UIDType: "1"
+    };
+};
+
+export const DecryptStringFromEncrypt = (key, IV, cipherText) => {
+    const buffer = Buffer.from(cipherText, 'base64');
+    const aes = cryptoJs.createDecipheriv('aes-256-cbc', key, IV);
+    let decrypted = aes.update(buffer, null, 'utf8');
+    decrypted += aes.final('utf8');
+    return decrypted;
+};
+
+export const post_axios = async (url, body) =>{
+    return await axios.post(url, body, {headers: {Authorization: "QWxhZGsdfsd45GVuIHNlc2FtZQ=="}});
+}
+
+@Service()
+export class KutumbaDetails {
+    async getFamilyAdDataFromKutumba(data) {
+        try {
+            let inputValue = "";
+            inputValue = (data?.aadhar_no) ?
+                `${process.env.KUTUMA_CLIENT_CODE}___${await convertAadharToSha256Hex(data.aadhar_no)}_` :
+                `${process.env.KUTUMA_CLIENT_CODE}__${data.rc_no}__`;
+
+            let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY, inputValue);
+            let response = await axios.post(process.env.KUTUMBA_API, await getReqBody(data, creteHMAC), {
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+
+            if (response.status == 200 && response.data?.StatusCode == 0) {
+                let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
+                let pasingDecryptData = JSON.parse(decryptString);
+                if (pasingDecryptData?.StatusCode === 0 && pasingDecryptData?.StatusText === "Sucess") {
+                    return pasingDecryptData?.ResultDataList;
+                } else {
+                    return { code: 422, message: "decryption failed." }
+                }
+            } else {
+                return { code: 422, message: "please try again" }
+            }
+        } catch (e) {
+            console.log("getFamilyAdDataFromKutumba", e);
+            Logger.error("getFamilyAdDataFromKutumba", e);
+            return e.message;
+        };
+    };
+
+    async getSchoolDataFromExternal(data, type){
+        let urlType = (type == "school") ? process.env.SCHOOL_API : process.env.CHILD_API;
+        let getData = (await post_axios(urlType, data)).data;
+        console.log(getData)
+        if(type == "school"){
+            if(getData?.return_message == "Success" && getData.status == '1'){
+                return getData.instlist;
+            } else {
+                return 500;
+            }
+        } else {
+            if(getData?.return_message == "Success" && getData.status == '1'){
+                return getData.healthMstChilds;
+            } else {
+                return 500;
+            }  
+        }
+    }
+};
+
