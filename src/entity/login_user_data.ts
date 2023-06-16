@@ -30,11 +30,11 @@ import {
     @Column({default: null})
     password: string;
   
-    @Column()
+    @Column({default: null})
     otp: string;
   
-    @Column({ default: 0 })
-    status: string;
+    // @Column({ default: 0 })
+    // status: string;
   
     @CreateDateColumn()
     created_at: Date;

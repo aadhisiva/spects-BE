@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
+<head>
+</head>
+<body class="container">
+    
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" style="font-size: x-large;font-weight: 700;">Governement Of Karnataka</a>
+            <ul class="navbar-nav mr-auto">
+              <!-- <li class="nav-item">
+                <a class="nav-link" href="/">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/about">About</a>
+              </li> -->
+            </ul>
+          </nav>
+    </header>
+
+    <style>
+        .button {
+            background-color: rgb(38, 38, 144);
+            color: white;
+            border-radius: 10px;
+            width: 100px;
+        }
+    </style>
+
+    <main>
+        <div class="jumbotron">
+            <h4>Spectacles</h4>
+            <% if(data?.data.type == "r") { %>
+                 <h5>Ready To deliver Data</h5>
+                <% } else { %>
+                <h5>Delivered Data</h5>
+                <% } %>
+            <p>This studnets are ready for delivery. Can you pelase check and confirm details of students.</p>
+            <%- console.log(data) %> 
+            <table class="table">
+                <tr>
+                    <th>Studnet Id</th>
+                    <th>Student Name</th>
+                </tr>
+                        <% ((data?.data?.type == "r") ? data?.data?.ready_to_deliver : data?.data?.delivered || []).forEach(function(obj){ %>  
+                        <tr>
+                            <td><%= obj.sats_id %></td>
+                            <td><%= obj.student_name %></td>
+                        </tr>
+                        <% }); %>
+            </table>
+            <div class="text-center">
+                <% if(data?.data.type == "d"){ %>
+                    <button class="button">confirm</button>
+                <% } %>  
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p class="text-center text-muted">&copy; Copyright 2023 Governement of Karnataka</p>
+    </footer>
+
+</body>
+
+</html>

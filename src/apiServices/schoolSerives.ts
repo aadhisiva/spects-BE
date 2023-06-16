@@ -3,6 +3,9 @@ import { SMSServices } from "../utility/sms_otp";
 import { school_data, students_data } from "../entity";
 import { SchoolRepo } from "../apiRepository/schoolRepo";
 import { KutumbaDetails } from "../utility/kutumbaDetails";
+import { RESPONSEMSG } from "../utility/statusCodes";
+import { emailSender } from "../dbConfig/emailConfig";
+import schedule from "node-schedule";
 
 const schoolDataAssignToLocal = (res) => {
     let reqObj: any = {};
@@ -34,7 +37,6 @@ export class SchoolServices {
             if (data?.school_id && data.user_id) {
                 let req = { sats_code: data.school_id }
                 let getSchoolData = await this.KutumbaDetails.getSchoolDataFromExternal(req, "school");
-                console.log("back", getSchoolData)
                 if (getSchoolData == 500) {
                     return { code: 422, message: "Third party api is not working." }
                 } else {
@@ -42,11 +44,12 @@ export class SchoolServices {
                     reqObj.user_id = data.user_id;
                     reqObj.school_id = data?.school_id;
                     let checkSchoolDataById = await this.SchoolRepo.getSchoolData(reqObj);
-                    if (!checkSchoolDataById) {
-                        let response = await this.SchoolRepo.saveSchoolData(reqObj);
-                        return response;
+                    if (checkSchoolDataById.length == 0) {
+                        let res = await this.SchoolRepo.saveSchoolData(reqObj);
+                        return { message: "Data saved." };
                     } else {
-                        return await this.SchoolRepo.updateSchoolById(reqObj)
+                        await this.SchoolRepo.updateSchoolById(reqObj);
+                        return { message: "Data saved." };
                     }
                 }
             } else {
@@ -62,7 +65,6 @@ export class SchoolServices {
             if (data?.school_id && data.user_id && data?.sats_id) {
                 let req = { satsCode: data.sats_id }
                 let getSchoolData = await this.KutumbaDetails.getSchoolDataFromExternal(req, "child");
-                console.log("back", getSchoolData)
                 if (getSchoolData == 500) {
                     return { code: 422, message: "Third party api is not working." }
                 } else {
@@ -71,15 +73,16 @@ export class SchoolServices {
                     reqObj.school_id = data.school_id;
                     reqObj.sats_id = data.sats_id;
                     let checkSatsDataById = await this.SchoolRepo.getStudentDataById(reqObj);
-                    if (!checkSatsDataById) {
-                        let response = await this.SchoolRepo.saveStudentData(reqObj);
-                        return response;
+                    if (checkSatsDataById.length == 0) {
+                        await this.SchoolRepo.saveStudentData(reqObj);
+                        return { message: "Data saved." };
                     } else {
-                        return await this.SchoolRepo.updateSchoolById(reqObj)
+                        await this.SchoolRepo.updateSchoolById(reqObj);
+                        return { message: "Data saved." };
                     }
                 }
             } else {
-                return { code: 422, message: "school id, user id and sats id is mandatory." }
+                return { code: 422, message: "School id, user id and sats id is mandatory." }
             }
         } catch (e) {
             console.log("SchoolServices ==== getStudentDataByOutSource", e);
@@ -91,9 +94,9 @@ export class SchoolServices {
         try {
             if (data?.school_id && data.user_id) {
                 let result = await this.SchoolRepo.getSchoolData(data);
-                return (!result) ? { code: 422, message: "data not exists." } : result;
+                return (result.length == 0) ? { code: 422, message: "Data not exists." } : result;
             } else {
-                return { code: 422, message: "school id and user id is mandatory." }
+                return { code: 422, message: "School id and user id is mandatory." }
             }
         } catch (e) {
             console.log("servicesgetSchoolData", e);
@@ -101,11 +104,40 @@ export class SchoolServices {
         }
     }
 
-    async changePendingToReadyToDeliver(data: students_data) {
+    // async changePendingToReadyToDeliver(data: students_data) {
+    //     try {
+    //         if (data?.student_unique_id) {
+    //             let result = await this.SchoolRepo.changePendingToReadyToDeliver(data);
+    //             return (result == 422) ? { code: 422, message: "Update Failed" } : { message: RESPONSEMSG.UPDATE_SUCCESS };
+
+    //         } else {
+    //             return { code: 422, message: "Id is mandatory." }
+    //         }
+    //     } catch (e) {
+    //         console.log("servicesgetSchoolData", e);
+    //         return e;
+    //     }
+    // }
+
+    async changeReadyToDelivered(data: students_data) {
         try {
             if (data?.student_unique_id) {
-                let result = await this.SchoolRepo.changePendingToReadyToDeliver(data);
-                return (!result) ? { code: 422, message: "data not exists." } : result;
+                let result = await this.SchoolRepo.changeReadyToDelivered(data);
+                return (result == 422) ? { code: 422, message: "Update Failed" } : { message: RESPONSEMSG.UPDATE_SUCCESS };
+            } else {
+                return { code: 422, message: "Id is mandatory." }
+            }
+        } catch (e) {
+            console.log("servicesgetSchoolData", e);
+            return e;
+        }
+    }
+
+    async changePendingToReady(data: students_data) {
+        try {
+            if (data?.student_unique_id) {
+                let result = await this.SchoolRepo.changePendingToReady(data);
+                return (result == 422) ? { code: 422, message: "Update Failed" } : { message: RESPONSEMSG.UPDATE_SUCCESS };
             } else {
                 return { code: 422, message: "Id is mandatory." }
             }
@@ -117,11 +149,11 @@ export class SchoolServices {
 
     async getAllSchoolDataBy(data: school_data) {
         try {
-            if (data.user_id) {
+            if (data?.user_id) {
                 let result = await this.SchoolRepo.getAllSchoolDataBy(data);
-                return (result.length == 0) ? { code: 422, message: "data not exists." } : result;
+                return (result.length == 0) ? { code: 422, message: "Data not exists." } : result;
             } else {
-                return { code: 422, message: "user id is mandatory." }
+                return { code: 422, message: "User id is mandatory." }
             }
         } catch (e) {
             console.log("servicesgetSchoolData", e);
@@ -132,9 +164,10 @@ export class SchoolServices {
     async updaetOrSaveSchoolData(data: school_data) {
         try {
             if (data?.school_id && data.user_id) {
-                return await this.SchoolRepo.updateSchoolById(data)
+                let result = await this.SchoolRepo.updateSchoolById(data);
+                return (result == 422) ? { code: 422, message: "Update Failed" } : { message: RESPONSEMSG.UPDATE_SUCCESS }
             } else {
-                return { code: 422, message: "school id and user id is mandatory." }
+                return { code: 422, message: "School id and user id is mandatory." }
             }
         } catch (e) {
             console.log("updaetOrSaveSchoolData", e);
@@ -146,21 +179,89 @@ export class SchoolServices {
         try {
             if (data?.school_id && data.user_id && data?.sats_id) {
                 let result = await this.SchoolRepo.getStudentDataById(data);
-                return (!result) ? { code: 422, message: "data not exists." } : result;
+                return (result.length == 0) ? { code: 422, message: "Data not exists." } : result;
             } else {
-                return { code: 422, message: "school id, user id and sats id is mandatory." }
-            }
+                return { code: 422, message: "School id, user id and sats id is mandatory." };
+            };
         } catch (e) {
             console.log("getStudentData", e);
             return e;
         }
-    }
+    };
+
+    async sendMailTOSchoolMail(data: school_data) {
+        try {
+            if (data?.school_id && data.user_id) {
+                data['type'] = "r";
+                let result = await this.SchoolRepo.getSchoolData(data);
+                // console.log("res", result);
+                if (result.length == 0) {
+                    return { code: 422, message: "Data not exists." };
+                } else {
+                    const date: any = new Date(Date.now() + 6000);
+                    // const date: any = new Date(Date.now() + 217800000); ------- adding 6 hours
+                    const endTime = new Date(date.getTime() + 1000);
+                    await schedule.scheduleJob({ start: date, end: endTime, rule: '*/1 * * * * *' }, async function () {
+                        console.log('Time for tea!');
+                        let mailSend = await emailSender({ ...result, ...data });
+                        // console.log("cd", mailSend);
+                        if (mailSend == 422) {
+                            return { code: 422, message: RESPONSEMSG.MAIL_FAILED }
+                        } else {
+                            console.log("mail send ", mailSend);
+                            return mailSend;
+                        };
+                    });
+                    return {message: "mail will send after 6 hours."}
+                };
+            } else {
+                return { code: 422, message: "School id, user id and sats id is mandatory." };
+            };
+        } catch (e) {
+            console.log("getStudentData", e);
+            return e;
+        }
+    };
+
+    async sendMailTOSchoolMailDelivered(data: school_data) {
+        try {
+            if (data?.school_id && data.user_id) {
+                data['type'] = "d";
+                let result = await this.SchoolRepo.getSchoolData(data);
+                // console.log("res", result);
+                if (result.length == 0) {
+                    return { code: 422, message: "Data not exists." };
+                } else {
+                    const date: any = new Date(Date.now() + 60000);
+                    // const date: any = new Date(Date.now() + 217800000); ------- adding 6 hours
+                    const endTime = new Date(date.getTime() + 1000);
+                    await schedule.scheduleJob({ start: date, end: endTime, rule: '*/1 * * * * *' }, async function () {
+                        console.log('Time for tea!');
+                        let mailSend = await emailSender([ ...result, ...[data]]);
+                        // console.log("cd", mailSend);
+                        if (mailSend == 422) {
+                            return { code: 422, message: RESPONSEMSG.MAIL_FAILED }
+                        } else {
+                            console.log("mail send ", mailSend);
+                            return mailSend;
+                        };
+                    });
+                    return {message: "mail will send after 6 hours."}
+                };
+            } else {
+                return { code: 422, message: "School id, user id is mandatory." };
+            };
+        } catch (e) {
+            console.log("getStudentData", e);
+            return e;
+        }
+    };
 
     async getAllStudentData(data: students_data) {
         try {
             if (data?.school_id && data.user_id) {
                 let result = await this.SchoolRepo.getAllStudentData(data);
-                return (!result) ? { code: 422, message: "data not exists." } : result;
+                return (!result) ? { code: 422, message: "Data not exists." } : {...result, ...data};
             } else {
                 return { code: 422, message: "school id, user id and is is mandatory." }
             }
@@ -174,7 +275,7 @@ export class SchoolServices {
         try {
             if (data?.school_id && data.user_id) {
                 let result = await this.SchoolRepo.getAllDelivered(data);
-                return (result.length == 0) ? { code: 422, message: "data not exists." } : result;
+                return (result.length == 0) ? { code: 422, message: "Data not exists." } : result;
             } else {
                 return { code: 422, message: "school id, user id and is is mandatory." }
             }
@@ -187,9 +288,10 @@ export class SchoolServices {
     async updateStudentData(data: students_data) {
         try {
             if (data?.school_id && data.user_id && data?.sats_id) {
-                return await this.SchoolRepo.updateStudentData(data)
+                let result = await this.SchoolRepo.updateStudentData(data)
+                return (result == 422) ? { code: 422, message: "Update Failed" } : { message: RESPONSEMSG.UPDATE_SUCCESS }
             } else {
-                return { code: 422, message: "school id, user id and sats is is mandatory." }
+                return { code: 422, message: "School id, user id and sats is is mandatory." }
             }
         } catch (e) {
             console.log("updateStudentData", e);

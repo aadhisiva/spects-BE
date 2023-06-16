@@ -8,8 +8,6 @@ import UserController from "./apiController/userController";
 import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
-import cryptoJs from 'crypto';
-import { decryptData, encryptData } from './utility/resusableFun';
 
 dotenv.config();
 
@@ -17,12 +15,15 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static('public'));
 
 app.use(morgan('common', {
   stream: fs.createWriteStream('./logs/application.log', { flags: 'a' })
 }));
+// Set directory to contain the templates ('views')
+app.set('views', __dirname);
 
+// Set view engine to use
+app.set('view engine', 'ejs');
 app.use(morgan('dev'));
 
 app.use("/login", UserController);
@@ -30,9 +31,7 @@ app.use("/school", SchoolController);
 app.use("/other", OtherBenfController);
 app.use("/edcs", EkycController);
 
-// app.use('/', (req, res) => {
-//   res.sendFile(path.join(__dirname+"/webPage/ekyc.html"))
-// })
+
 app.get('/run', (req: Request, res: Response) => {
   Logger.info("Express + TypeScript Server")
   res.send('Express + TypeScript Server');

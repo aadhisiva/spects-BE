@@ -31,6 +31,9 @@ export class other_benf_data {
     taluk: string;
 
     @Column({ default: null })
+    image: string;
+
+    @Column({ default: null })
     age: number;
 
     @Column({ default: null })
@@ -47,6 +50,9 @@ export class other_benf_data {
 
     @Column({ default: null })
     caste: string;
+
+    @Column({ default: null })
+    order_number: string;
 
     @Column({ default: null })
     gender: string;
@@ -117,8 +123,11 @@ export class other_benf_data {
     @Column({ default: null })
     near_vision_va: string;
 
-    @Column({ default: 0 })
+    @Column({ default: null })
     status: string;
+
+    @Column({ default: "N" })
+    ekyc_check: string;
 
     @CreateDateColumn()
     created_at: Date;

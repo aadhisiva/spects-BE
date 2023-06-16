@@ -9,7 +9,6 @@ import { AppDataSource } from "../dbConfig/mysql";
 export class UserRepo {
     async postUser(data: login_user_data) {
         try {
-            data.user_unique_id = nanoid();
             return await AppDataSource.getRepository(login_user_data).save(data);
         } catch (e) {
             Logger.error("userRepo => postUser", e)
@@ -19,7 +18,16 @@ export class UserRepo {
 
     async getUserByMobile(no) {
         try {
-            return await AppDataSource.getTreeRepository(login_user_data).findOneBy({ user_mobile_number: `${no}` });
+            return await AppDataSource.getRepository(login_user_data).query(`SELECT user_unique_id, user_mobile_number, refractionist_id, type from login_user_data where user_mobile_number='${no}'`);
+        } catch (e) {
+            Logger.error("userRepo => getUserByMobile", e)
+            return e;
+        }
+    };
+
+    async getUserByMobileObj(no) {
+        try {
+            return await AppDataSource.getRepository(login_user_data).findOneBy({user_mobile_number: no});
         } catch (e) {
             Logger.error("userRepo => getUserByMobile", e)
             return e;

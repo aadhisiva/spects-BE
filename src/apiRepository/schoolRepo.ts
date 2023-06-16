@@ -12,17 +12,45 @@ export class SchoolRepo {
     async getSchoolDataById(school_id) {
         try {
             return await AppDataSource.getRepository(school_data).findOneBy({ school_id });
-
         } catch (e) {
             Logger.error("schoolRepo => getSchoolDataById", e)
+            return e;
+        }
+    };
+    // async findAllSchools() {
+    //     try {
+    //         return await AppDataSource.getRepository(school_data).count();
+    //     } catch (e) {
+    //         Logger.error("schoolRepo => getSchoolDataById", e)
+    //         return e;
+    //     }
+    // };
+
+    async findAllStudents() {
+        try {
+            return await AppDataSource.getRepository(students_data).query(`select student_unique_id from students_data ORDER BY id DESC LIMIT 1`);
+            // return await AppDataSource.getRepository(students_data).query(`select top 1 student_unique_id from students_data ORDER BY id DESC`);
+        } catch (e) {
+            Logger.error("schoolRepo => findAllStudents", e)
             return e;
         }
     };
 
     async saveSchoolData(data: school_data) {
         try {
-            data.school_unique_id = nanoid();
+            let findLength = await this.findDescOrderWise();
+            data.school_unique_id = (findLength?.length == 0)? 1 : findLength[0].school_unique_id + 1;
             return await AppDataSource.getTreeRepository(school_data).save(data);
+        } catch (e) {
+            Logger.error("schoolRepo => postSchoolData", e)
+            return e;
+        }
+    };
+
+    async findDescOrderWise() {
+        try {
+            return await AppDataSource.getTreeRepository(school_data).query(`select school_unique_id from school_data ORDER BY id DESC LIMIT 1`); 
+            // return await AppDataSource.getTreeRepository(school_data).query(`select top 1 school_unique_id from school_data ORDER BY id DESC`); 
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;
@@ -31,19 +59,36 @@ export class SchoolRepo {
 
     async getSchoolData(data: school_data) {
         try {
-            return await AppDataSource.getTreeRepository(school_data).findOne({ where: { user_id: Equal(data.user_id), school_id: Equal(data.school_id) } });
+            return await AppDataSource.getTreeRepository(school_data).query(`SELECT school_id, school_mail, school_incharge_contact_no, school_institute_name,village, taluk, district from school_data WHERE user_id= '${data.user_id}' and school_id='${data.school_id}'`);
+        } catch (e) {
+            Logger.error("schoolRepo => postSchoolData", e);
+            return e;
+        }
+    };
+
+    async changeReadyToDelivered(data: students_data) {
+        try {
+            let idData = await AppDataSource.getTreeRepository(students_data);
+            let getData = await idData.findOneBy({student_unique_id: data.student_unique_id});
+            if(!getData){
+                return 422;
+            } else {
+                let newData = {status: "delivered", image: data.image}
+                let updateResult = {...getData, ...newData};
+                return idData.save(updateResult);
+            }
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;
         }
     };
 
-    async changePendingToReadyToDeliver(data: students_data) {
+    async changePendingToReady(data: students_data) {
         try {
             let idData = await AppDataSource.getTreeRepository(students_data);
             let getData = await idData.findOneBy({student_unique_id: data.student_unique_id});
             if(!getData){
-                return { code: 422, message: "data is not exists." }
+                return 422;
             } else {
                 let newData = {status: "ready_to_deliver"}
                 let updateResult = {...getData, ...newData};
@@ -66,7 +111,8 @@ export class SchoolRepo {
 
     async saveStudentData(data: students_data) {
         try {
-            data.student_unique_id = nanoid();
+            let findCount = await this.findAllStudents();
+            data.student_unique_id = (findCount?.length == 0)? 1 : findCount[0].school_unique_id + 1;
             data.order_number = generateOTP();
             return await AppDataSource.getTreeRepository(students_data).save(data);
         } catch (e) {
@@ -77,7 +123,9 @@ export class SchoolRepo {
 
     async getStudentDataById(data: students_data) {
         try {
-            return await AppDataSource.getTreeRepository(students_data).findOne({ where: { user_id: Equal(data.user_id), school_id: Equal(data.school_id), sats_id: Equal(data.sats_id) } });
+            return await AppDataSource.getTreeRepository(students_data).query(`SELECT s.sats_id, s.dob, s.age, 
+                h.school_institute_name, h.school_id, s.gender, s.father_name, s.parent_phone_number FROM students_data 
+                as s INNER JOIN school_data as h ON h.school_id = '${data.school_id}' where s.user_id='${data.user_id}' and s.sats_id='${data.sats_id}'`)
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;
@@ -126,9 +174,9 @@ export class SchoolRepo {
     async updateSchoolById(data: school_data) {
         try {
             let schoolDataBase = AppDataSource.getRepository(school_data);
-            let result = await schoolDataBase.findOneBy({ school_id: data.school_id, user_id: data.user_id });
+            let result = await schoolDataBase.findOneBy({ school_id: Equal(data.school_id), user_id: Equal(data.user_id) });
             if (!result) {
-                return { code: 422, message: "data is not exists." }
+                return 422;
             } else {
                 let finalData = { ...result, ...data }
                 return await schoolDataBase.save(finalData);
@@ -144,8 +192,9 @@ export class SchoolRepo {
             let studentDataBase = AppDataSource.getRepository(students_data);
             let result = await studentDataBase.findOneBy({ school_id: data.school_id, user_id: data.user_id, sats_id: data.sats_id });
             if (!result) {
-                return { code: 422, message: "data is not exists." }
+                return 422;
             } else {
+                data.status = "order_pending";
                 let finalData = { ...result, ...data }
                 return await studentDataBase.save(finalData);
             }

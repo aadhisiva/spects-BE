@@ -2,7 +2,7 @@ import { Service } from "typedi";
 import cryptoJs from "crypto";
 import axios from "axios";
 import Logger from "./winstonLogger";
-
+import https from "https";
 
 export const convertAadharToSha256Hex = async (data) => {
     try {
@@ -67,6 +67,11 @@ export const DecryptStringFromEncrypt = (key, IV, cipherText) => {
 
 export const post_axios = async (url, body) =>{
     return await axios.post(url, body, {headers: {Authorization: "QWxhZGsdfsd45GVuIHNlc2FtZQ=="}});
+};
+
+export const ekyc_post_axis = async (url, body) => {
+    const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+    return await axios.post(url, body, {httpsAgent});
 }
 
 @Service()
@@ -91,10 +96,10 @@ export class KutumbaDetails {
                 if (pasingDecryptData?.StatusCode === 0 && pasingDecryptData?.StatusText === "Sucess") {
                     return pasingDecryptData?.ResultDataList;
                 } else {
-                    return { code: 422, message: "decryption failed." }
+                    return 422;
                 }
             } else {
-                return { code: 422, message: "please try again" }
+                return 422;
             }
         } catch (e) {
             console.log("getFamilyAdDataFromKutumba", e);
@@ -106,7 +111,6 @@ export class KutumbaDetails {
     async getSchoolDataFromExternal(data, type){
         let urlType = (type == "school") ? process.env.SCHOOL_API : process.env.CHILD_API;
         let getData = (await post_axios(urlType, data)).data;
-        console.log(getData)
         if(type == "school"){
             if(getData?.return_message == "Success" && getData.status == '1'){
                 return getData.instlist;
@@ -121,5 +125,33 @@ export class KutumbaDetails {
             }  
         }
     }
+
+    async getDataFromEkycOutSource(data){
+        try {
+            let txnDateTime = new Date().getFullYear()+""+new Date().getTime();
+            let bodyData = {
+                    deptCode : process.env.DEP_CODE,
+                    applnCode : process.env.APPLI_CODE,
+                    schemeCode : process.env.SCHEME_CODE,
+                    beneficiaryID : data.benf_unique_id,
+                    beneficiaryName : data.benf_name,
+                    integrationKey : process.env.INTEGRATION_KEY,
+                    integrationPassword : process.env.INTEGRATION_PASS,
+                    txnNo : txnDateTime,
+                    txnDateTime : txnDateTime,
+                    serviceCode : process.env.SERVICE_CODE,
+                    responseRedirectURL : ""
+            };
+            let res = await ekyc_post_axis(process.env.EKYC_URL, bodyData);
+            if(!res?.data?.Token){
+                return 422;
+            } else {
+               return `${process.env.EKYC_TOKEN_URL}?key=${process.env.INTEGRATION_KEY}&token=${res?.data?.Token}`
+            }
+        } catch (e) {
+            return e;
+        }
+    }
 };
 
+// https://dbt.karnataka.gov.in:8443/HSM_Service_ASPX/EKYCService.aspx?key=b7d39d8f-969c-4bd3-aab7-b6ce587da4cd&token=MDMwNjIwMjMxMTA0NDc5NTAwNjk0ZGMzNTljOS1kMDJkLTQwODktYjMwOC0xNDRjMmY3ZDM4ODQ=

@@ -31,6 +31,8 @@ export const HttpStatusMessages = {
   SERVICE_UNAVAILABLE: "Service Unavailable",
   UNPROCESSABLE_ENTITY: "Unprocessable Content",
   LOOP_DETECTED: "Loop Detected",
+  FAILED: "Failed",
+  SUCCESS: "Success",
 };
 
 export const RESPONSE_EMPTY_DATA = {};
@@ -39,15 +41,20 @@ export enum RESPONSEMSG {
   UPDATE_SUCCESS = "Updated successful.",
   DELETE_SUCCESS = "Delete successful.",
   RETRIVE_SUCCESS = "Operation Successful",
-  UNPROCESS= "Unprocessable Content",
-  OTP= "Otp sent Successfully.",
+  UNPROCESS = "Unprocessable Content",
+  OTP = "Otp sent Successfully.",
+  OTP_FAILED = "Otp sent Failed.",
   EXCEPTION = "Exception while processing",
+  VALIDATE = "validation successfull",
+  VALIDATE_FAILED = "validation Failed",
+  MAIL_SENT = "Mail sent Successfully",
+  MAIL_FAILED = "Mail sent Failed"
 }
 export const ResponseMessages = (code, message = "", data = {}) => {
   const httpStatusCode = {
     SUCCESS: {
       code: HttpStatusCodes.OK,
-      status: HttpStatusMessages.OK,
+      status: HttpStatusMessages.SUCCESS,
       message: message,
       data,
     },
@@ -56,7 +63,7 @@ export const ResponseMessages = (code, message = "", data = {}) => {
     INVALID: { status: "INVALID EMAIL ADDRESS", message, data },
     UNPROCESS: {
       code: HttpStatusCodes.UNPROCESSABLE_ENTITY,
-      status: HttpStatusMessages.UNPROCESSABLE_ENTITY,
+      status: HttpStatusMessages.FAILED,
       message,
       data,
     },

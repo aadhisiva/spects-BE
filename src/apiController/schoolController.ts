@@ -5,6 +5,8 @@ import { SchoolServices } from "../apiServices/schoolSerives";
 import { login_user_data } from '../entity/login_user_data';
 import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { school_data, students_data } from '../entity';
+import { encryptData } from '../utility/resusableFun';
+import path from 'path';
 
 const router = express.Router();
 
@@ -17,10 +19,76 @@ router.post("/add_school", async (req: Request, res: Response) => {
         let result = await schoolServices.getSchoolDataByOutSource(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+// router.get('/get_html_data', async (req: Request, res: Response) => {
+//     try {
+//         let queryData = req.query;
+//         let data = new students_data({
+//             school_id: queryData.s_id,
+//             user_id: queryData.id
+//         });
+//         const result = await schoolServices.getAllStudentData(data);
+//         let response = (result.code || result instanceof Error) ?
+//             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+//             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), result);
+//        res.send(response);
+
+//     } catch (e) {
+//         Logger.error("UserController => ", e);
+//         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+//     }
+// });
+
+router.get('/check', async (req: Request, res: Response) => {
+    try {
+        let queryData = req.query;
+        let data = new students_data({
+            school_id: queryData.s_id,
+            user_id: queryData.id,
+            type: queryData.type
+        });
+        const result = await schoolServices.getAllStudentData(data);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), result);
+       res.render(path.join(__dirname + "../../views/index"), {data: response});
+    } catch (e) {
+        Logger.error("UserController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post('/email', async (req: Request, res: Response) => {
+    try {
+        let data = new school_data(req.body);
+        const result = await schoolServices.sendMailTOSchoolMail(data);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.MAIL_SENT), encryptData(result.data));
+            res.send(response)
+    } catch (e) {
+        Logger.error("UserController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post('/email_delivered', async (req: Request, res: Response) => {
+    try {
+        let data = new school_data(req.body);
+        const result = await schoolServices.sendMailTOSchoolMailDelivered(data);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.MAIL_SENT), encryptData(result.data));
+            res.send(response)
+    } catch (e) {
+        Logger.error("UserController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -31,10 +99,10 @@ router.get("/get_school", async (req: Request, res: Response) => {
         let result = await schoolServices.getSchoolData(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -45,10 +113,10 @@ router.get("/all_schools", async (req: Request, res: Response) => {
         let result = await schoolServices.getAllSchoolDataBy(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -59,10 +127,10 @@ router.post("/update_school_byid", async (req: Request, res: Response) => {
         let result = await schoolServices.updaetOrSaveSchoolData(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.UPDATE_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.UPDATE_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -76,10 +144,10 @@ router.post("/add_student", async (req: Request, res: Response) => {
         let result = await schoolServices.getStudentDataByOutSource(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -87,13 +155,26 @@ router.post("/add_student", async (req: Request, res: Response) => {
 router.post("/change_student_to_deliver", async (req: Request, res: Response) => {
     try {
         let data = new students_data(req.body);
-        let result = await schoolServices.changePendingToReadyToDeliver(data);
+        let result = await schoolServices.changeReadyToDelivered(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/change_pending_to_ready", async (req: Request, res: Response) => {
+    try {
+        let data = new students_data(req.body);
+        let result = await schoolServices.changePendingToReady(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        res.send(response);
+    } catch (e) {
+        Logger.error("SchoolController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -104,10 +185,10 @@ router.get("/get_student", async (req: Request, res: Response) => {
         let result = await schoolServices.getStudentData(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -118,10 +199,10 @@ router.get("/all_student", async (req: Request, res: Response) => {
         let result = await schoolServices.getAllStudentData(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -132,10 +213,10 @@ router.get("/all_delivered", async (req: Request, res: Response) => {
         let result = await schoolServices.getAllDelivered(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -146,10 +227,10 @@ router.post("/update_student", async (req: Request, res: Response) => {
         let result = await schoolServices.updateStudentData(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.UPDATE_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("SchoolController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });

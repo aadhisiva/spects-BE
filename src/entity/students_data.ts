@@ -46,6 +46,9 @@ export class students_data {
   father_name: string;
 
   @Column({ default: null })
+  image: string;
+
+  @Column({ default: null })
   mother_name: string;
 
   @Column({ default: null })
@@ -99,7 +102,7 @@ export class students_data {
   @Column({ default: null })
   hobly: string;
 
-  @Column({ default: 0 })
+  @Column({ default: null })
   status: string;
 
   @CreateDateColumn()

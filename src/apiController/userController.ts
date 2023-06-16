@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import Logger from '../utility/winstonLogger';
 import { UserServices } from '../apiServices/userServices';
 import { login_user_data } from '../entity/login_user_data';
-import {  RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
+import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { hittingTime } from '../utility/trackerLog';
 import { encryptData } from '../utility/resusableFun';
 
@@ -19,25 +19,42 @@ router.post('/login', async (req: Request, res: Response) => {
         const result = await userServices.postUser(tableData, hitting);
         let response = (result.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, encryptData(result));
-        res.send(response);
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        res.json(response);
     } catch (e) {
-        Logger.error("error", e);
+        Logger.error("UserController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
+
+
+router.post('/new_user', async (req: Request, res: Response) => {
+    try {
+        // const hitting = hittingTime();
+        let tableData = new login_user_data(req.body);
+        const result = await userServices.addUser(tableData);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), result.data);
+        res.send(response);
+    } catch (e) {
+        Logger.error("UserController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
 
 router.post("/validate_otp", async (req: Request, res: Response) => {
     try {
         const hitting = hittingTime();
         let data = new login_user_data(req.body);
         let result = await userServices.validateUser(data, hitting);
-        let response = (result?.code || result instanceof Error) ?
-        ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-        ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
-    res.send(response);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result?.data));
+        res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("UserController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -47,51 +64,14 @@ router.post("/resend_otp", async (req: Request, res: Response) => {
         const hitting = hittingTime();
         let data = new login_user_data(req.body);
         let result = await userServices.resendOtp(data, hitting);
-        let response = (result?.code || result instanceof Error) ?
-        ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-        ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result)
-    res.send(response);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        res.send(response);
     } catch (e) {
-        console.log("error", e);
+        Logger.error("UserController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-
-router.post("/get_user", async (req: Request, res: Response) => {
-    try {
-        let id = req.query?.id;
-        let result = await userServices.getUser(id);
-        res.send(result);
-    } catch (e) {
-        console.log("error", e);
-        Logger.error("error", e);
-    }
-});
-
-router.post("/get_sats_data", async (req: Request, res: Response) => {
-    try {
-        let id = req.body;
-        let result = await userServices.getUserBySata(id);
-        res.send(result);
-    } catch (e) {
-        console.log("error", e);
-        Logger.error("error", e);
-    }
-});
-
-// router.get('/:id', async (req, res) => {
-//     try {
-//         const urls: any = {};
-//         const url = urls[req.params.id];
-//         if (url) {
-//             res.redirect(url);
-//         } else {
-//             res.sendStatus(404);
-//         }
-//     } catch (e) {
-//         console.log("error", e);
-//         Logger.error("error", e);
-//     }
-// });
 
 export default router;

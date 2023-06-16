@@ -29,12 +29,14 @@ export function generateOTP() {
 
 export const getAgeFromBirthDate = (dob) => {
     let currentDate: any = new Date();
-    let originDate: any = new Date(dob);
+    let [day, mon, year] = dob.split("/");
+    let originDate: any = new Date(`"${mon+"/"+day+"/"+year}"`);
     var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
-    return Math.floor(((currentDate - originDate) / milliDay) / 365);
+    let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
+    return age;
 };
 
-export function encryptData(data) {
+export function encryptData(data={}) {
     const cipher = cryptoJs.createCipheriv(method, key, encryptionIV)
     return Buffer.from(
         cipher.update(JSON.stringify(data), 'utf8', 'base64') + cipher.final('base64')

@@ -4,6 +4,8 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
+    PrimaryColumn,
+    ManyToOne,
   } from "typeorm";
   
   @Entity()
@@ -51,12 +53,14 @@ import {
     @Column({default: null})
     district: string;
 
-    @Column({ default: 0 })
-    status: string;
+    // @Column({ default: 0 })
+    // status: string;
   
     @CreateDateColumn()
     created_at: Date;
   
     @UpdateDateColumn()
     updated_at: Date;
+
+    // @ManyToOne()
   }
