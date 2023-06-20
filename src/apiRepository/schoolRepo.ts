@@ -112,6 +112,7 @@ export class SchoolRepo {
     async saveStudentData(data: students_data) {
         try {
             let findCount = await this.findAllStudents();
+            console.log("frin",findCount)
             data.student_unique_id = (findCount?.length == 0)? 1 : findCount[0].school_unique_id + 1;
             data.order_number = generateOTP();
             return await AppDataSource.getTreeRepository(students_data).save(data);
@@ -134,10 +135,21 @@ export class SchoolRepo {
 
     async getAllStudentData(data: students_data) {
         try {
+            let pending_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM other_benf_data WHERE status='order_pending'`);
+            let ready_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM other_benf_data WHERE status='ready_to_deliver'`);
+            let delivered_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM other_benf_data WHERE status='delivered'`);
             let order_pending = await this.getAllOrderPending(data);
             let ready_to_deliver = await this.getAllReadyToDeliver(data);
             let delivered = await this.getAllDelivered(data);
-            return {order_pending, ready_to_deliver, delivered};
+            return {
+                total: Number(pending_count[0].count)+Number(ready_count[0].count)+Number(delivered_count[0].count),
+                pending_count: pending_count[0].count,
+                ready_count: ready_count[0].count,
+                delivered_count: delivered_count[0].count,
+                order_pending, 
+                ready_to_deliver, 
+                delivered
+            };
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;

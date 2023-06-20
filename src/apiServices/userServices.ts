@@ -54,7 +54,7 @@ export class UserServices {
 
     async addUser(data){
         return this.UserRepo.postUser(data);
-    };
+    }
 
     async postUser(data: login_user_data, hitTime) {
         try {
@@ -66,12 +66,12 @@ export class UserServices {
                 data.otp = sixDigitsOtp;
                 let mobile_no = data?.user_mobile_number;
                 let checkMobile = await this.UserRepo.getUserByMobile(mobile_no);
-                console.log("checmo", checkMobile[0].user_mobile_number)
+                // console.log("checmo", checkMobile[0].user_mobile_number)
                 await trackerCreateLogs("ADD_USER", hitTime);
-                if (checkMobile.length == 0) {
+                if (checkMobile?.length == 0) {
                     return { code: 422, message: "Invalid mobile number." }
                 } else {
-                    let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(checkMobile[0].user_mobile_number, data.otp);
+                    let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(checkMobile[0]?.user_mobile_number, data.otp);
                     await this.UserRepo.updateOtp(data);
                     if (sendSingleSms == 200) {
                         return { message: RESPONSEMSG.OTP, data: checkMobile }
@@ -95,6 +95,7 @@ export class UserServices {
                 return { code: 422, message: "Enter valid number." }
             }
             let result = await this.UserRepo.getUserByMobileObj(data.user_mobile_number);
+            console.log("1")
             await trackerCreateLogs("VALIDATE_OTP", hitTime);
             let checkOtp = data?.otp == result.otp;
             if (checkOtp) {
@@ -118,7 +119,7 @@ export class UserServices {
             }
             if (data?.user_mobile_number) {
                 let updatedData = await this.UserRepo.getUserByMobileObj(data.user_mobile_number);
-                let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(updatedData.user_mobile_number, updatedData.otp)
+                let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(updatedData.user_mobile_number, data.otp)
                 await this.UserRepo.updateOtp(data);
                 await trackerCreateLogs("RESEND_OTP", hitTime);
                 if (sendSingleSms == 200) {

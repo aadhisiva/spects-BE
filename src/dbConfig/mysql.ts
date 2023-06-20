@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 import { login_user_data, students_data, school_data, tracker_data, ekyc_data } from "../entity";
-import { other_benf_data } from "../entity/other_benf_data";
+import { other_benf_data } from "../entity/other_benf_data_";
 
 dotenv.config();
 

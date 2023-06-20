@@ -46,7 +46,7 @@ router.post("/add_school", async (req: Request, res: Response) => {
 //     }
 // });
 
-router.get('/check', async (req: Request, res: Response) => {
+router.post('/check', async (req: Request, res: Response) => {
     try {
         let queryData = req.query;
         let data = new students_data({
@@ -93,7 +93,7 @@ router.post('/email_delivered', async (req: Request, res: Response) => {
     }
 });
 
-router.get("/get_school", async (req: Request, res: Response) => {
+router.post("/get_school", async (req: Request, res: Response) => {
     try {
         let data = new school_data(req.body);
         let result = await schoolServices.getSchoolData(data);
@@ -107,7 +107,7 @@ router.get("/get_school", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/all_schools", async (req: Request, res: Response) => {
+router.post("/all_schools", async (req: Request, res: Response) => {
     try {
         let data = new school_data(req.body);
         let result = await schoolServices.getAllSchoolDataBy(data);
@@ -179,7 +179,7 @@ router.post("/change_pending_to_ready", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/get_student", async (req: Request, res: Response) => {
+router.post("/get_student", async (req: Request, res: Response) => {
     try {
         let data = new students_data(req.body);
         let result = await schoolServices.getStudentData(data);
@@ -193,7 +193,7 @@ router.get("/get_student", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/all_student", async (req: Request, res: Response) => {
+router.post("/all_student", async (req: Request, res: Response) => {
     try {
         let data = new students_data(req.body);
         let result = await schoolServices.getAllStudentData(data);
@@ -207,7 +207,7 @@ router.get("/all_student", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/all_delivered", async (req: Request, res: Response) => {
+router.post("/all_delivered", async (req: Request, res: Response) => {
     try {
         let data = new students_data(req.body);
         let result = await schoolServices.getAllDelivered(data);

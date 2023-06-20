@@ -20,13 +20,12 @@ router.post('/login', async (req: Request, res: Response) => {
         let response = (result.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
-        res.json(response);
+        res.send(response);
     } catch (e) {
         Logger.error("UserController => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-
 
 router.post('/new_user', async (req: Request, res: Response) => {
     try {
@@ -43,15 +42,14 @@ router.post('/new_user', async (req: Request, res: Response) => {
     }
 });
 
-
 router.post("/validate_otp", async (req: Request, res: Response) => {
     try {
         const hitting = hittingTime();
         let data = new login_user_data(req.body);
         let result = await userServices.validateUser(data, hitting);
-        let response = (result.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result?.data));
+        let response = (result?.code || result instanceof Error) ?
+        ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+        ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result?.data));
         res.send(response);
     } catch (e) {
         Logger.error("UserController => ", e);

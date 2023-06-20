@@ -3,9 +3,11 @@ import express, { Request, Response } from 'express';
 import Logger from '../utility/winstonLogger';
 import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { OtherBenfServices } from '../apiServices/otherBenServices';
-import { other_benf_data } from '../entity/other_benf_data';
+import { other_benf_data } from '../entity/other_benf_data_';
 import { encryptData } from '../utility/resusableFun';
+import http from 'http';
 import axios from 'axios';
+var timeout = require('connect-timeout')
 
 const router = express.Router();
 
@@ -25,7 +27,7 @@ router.post("/add_datails_adr", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/get_aadhar_data", async (req: Request, res: Response) => {
+router.post("/get_aadhar_data", async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
         let result = await otherBenfServices.getDataByAadharHash(data);
@@ -39,7 +41,7 @@ router.get("/get_aadhar_data", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/get_rc_data", async (req: Request, res: Response) => {
+router.post("/get_rc_data", async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
         let result = await otherBenfServices.getDataByRcNo(data);
@@ -137,7 +139,7 @@ router.post("/update_by_aadhar_rc", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/get_bef_status", async (req: Request, res: Response) => {
+router.post("/get_bef_status", async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
         let result = await otherBenfServices.getBenificaryStatus(data);
@@ -151,7 +153,7 @@ router.get("/get_bef_status", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/rc_aadhar_data", async (req: Request, res: Response) => {
+router.post("/rc_aadhar_data", async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
         let result = await otherBenfServices.getRcBasedOnAadharData(data);
@@ -282,7 +284,7 @@ function haltOnTimedout(req, res, next) {
     if (!req.timedout) next();
 }
 
-router.get("/get_bef_history", async (req: Request, res: Response) => {
+router.post("/get_bef_history", async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
         let result = await otherBenfServices.getBenificaryHistory(data);

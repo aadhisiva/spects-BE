@@ -4,7 +4,7 @@ import { school_data } from "../entity";
 import { ResusableFunctions } from "../utility/smsServceResusable";
 import { OtherBenfRepo } from "../apiRepository/otherBenRepo";
 import { KutumbaDetails, convertAadharToSha256Hex } from "../utility/kutumbaDetails";
-import { other_benf_data } from "../entity/other_benf_data";
+import { other_benf_data } from "../entity/other_benf_data_";
 import { getAgeFromBirthDate } from "../utility/resusableFun";
 import { generateOTP } from "../utility/resusableFun";
 import { RESPONSEMSG } from "../utility/statusCodes";
@@ -52,6 +52,7 @@ export class OtherBenfServices {
                 let checkAadharDataByHash = await this.OtherBenfRepo.getDataByAadharHashAndUser(reqBody);
                 if (!checkAadharDataByHash) {
                     let getAllCount = await this.OtherBenfRepo.findAll();
+                    console.log("get",getAllCount)
                     let checkUndefined = (getAllCount[0]?.benf_unique_id == undefined) ? 0 : getAllCount[0]?.benf_unique_id;
                     reqBody.benf_unique_id = `${Number(checkUndefined) + 1}`;
                     reqBody.order_number = generateOTP();
@@ -63,8 +64,9 @@ export class OtherBenfServices {
                         return (res == 422) ? { code: 422, message: "Something went wrong in HSM DB." } : res;
                     }
                 } else {
-                    await this.OtherBenfRepo.updateBefDataByAadhar(reqBody);
-                    return { message: "Data saved." };
+                    let updatedData = await this.OtherBenfRepo.updateBefDataByAadhar(reqBody);
+                    let res = await this.KutumbaFunction.getDataFromEkycOutSource(updatedData);
+                    return (res == 422) ? { code: 422, message: "Something went wrong in HSM DB." } : res;
                 }
             } else {
                 return { code: 422, message: "Aadhar number and user id required." }
@@ -97,7 +99,7 @@ export class OtherBenfServices {
                     }
                     return { message: "Data saved." };
                 } else {
-                    (getData || []).map(async obj => {
+                    (getData || [])?.map(async obj => {
                         let reqBody = await spectclesAPiReusetData(data, obj, "rc");
                         await this.OtherBenfRepo.updateDataByRcAndHash(reqBody);
                     });

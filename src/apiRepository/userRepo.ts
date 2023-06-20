@@ -9,7 +9,8 @@ import { AppDataSource } from "../dbConfig/mysql";
 export class UserRepo {
     async postUser(data: login_user_data) {
         try {
-            return await AppDataSource.getRepository(login_user_data).save(data);
+            let dat = await AppDataSource.getRepository(login_user_data).save(data);
+            return dat;
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -18,7 +19,9 @@ export class UserRepo {
 
     async getUserByMobile(no) {
         try {
-            return await AppDataSource.getRepository(login_user_data).query(`SELECT user_unique_id, user_mobile_number, refractionist_id, type from login_user_data where user_mobile_number='${no}'`);
+            let data = await AppDataSource.getRepository(login_user_data).query(`SELECT user_unique_id, user_mobile_number, refractionist_id, type from login_user_data where user_mobile_number='${no}'`);
+            console.log("dat", data);
+            return data;
         } catch (e) {
             Logger.error("userRepo => getUserByMobile", e)
             return e;
