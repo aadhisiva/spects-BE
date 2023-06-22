@@ -20,7 +20,6 @@ export class UserRepo {
     async getUserByMobile(no) {
         try {
             let data = await AppDataSource.getRepository(login_user_data).query(`SELECT user_unique_id, user_mobile_number, refractionist_id, type from login_user_data where user_mobile_number='${no}'`);
-            console.log("dat", data);
             return data;
         } catch (e) {
             Logger.error("userRepo => getUserByMobile", e)
@@ -55,7 +54,6 @@ export class UserRepo {
         try {
             let login_User_data = AppDataSource.getRepository(login_user_data);
             let result = await login_User_data.findOneBy({user_mobile_number: data.user_mobile_number });
-            console.log("otp", data.otp);
             result.otp = data.otp;
             return await login_User_data.save(result);
         } catch (e) {

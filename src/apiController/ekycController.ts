@@ -6,15 +6,16 @@ import { hittingTime } from '../utility/trackerLog';
 import { EkycServices } from '../apiServices/ekycServices';
 import fs from "fs";
 import path from "path";
+import { requestAndResonseTime } from '../utility/middlewares';
 
 const router = express.Router();
 
 const ekycServices = Container.get(EkycServices);
 
-router.post("/edcs_service", async (req: Request, res: Response) => {
+router.post("/edcs_service", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = req.body;
-        console.log(req)
+        console.log(req.body)
        await fs.writeFileSync("./text.txt", JSON.stringify(req.body));
        let result = await ekycServices.saveEkycData(data);
        let response = (result?.code || result instanceof Error) ?
@@ -27,23 +28,6 @@ router.post("/edcs_service", async (req: Request, res: Response) => {
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-
-// router.post("/edcs_service", async (req: Request, res: Response) => {
-//     try {
-//         let data = req.body;
-//         console.log(req)
-//        await fs.writeFileSync("./text.txt", JSON.stringify(req.body));
-//        let result = await ekycServices.saveEkycData(data);
-//        let response = (result?.code || result instanceof Error) ?
-//        ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-//        ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-//        res.send(response);
-
-//     } catch (e) {
-//         console.log("error", e);
-//         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-//     }
-// });
 
 router.get("/edcs_service_application", async (req: Request, res: Response) => {
     try {

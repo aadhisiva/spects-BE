@@ -1,9 +1,9 @@
 import cryptoJs from "crypto";
+import {data} from "../b";
+import { AppDataSource } from "../dbConfig/mysql";
+import { master_data } from "../entity/master_data";
 
-// let secKey = "secretKeyForedcs/@#123toIntegrateMobileApplication?/@#";
-// let iv = "secretIVForDecryptData/$%^*&456forMobileApplication";
-// let secKey = "MTY2NzM5MDQwNCU3RTE2NjczOTA0MDQlN0UxNjY3MzkwNDA0";
-// let iv = "1306199325031987";
+
 let method = "aes-256-cbc";
 
 const KEY = "MTY2NzM5MDQwNCU3RTE2NjczOTA0MDQlN0UxNjY3MzkwNDA0";
@@ -73,5 +73,14 @@ export function encryptData(plaintext = {}) {
     let decValue = secretKey.update(ivHashCiphertext, "base64", "utf8");
     decValue += secretKey.final("utf8");
     return decValue;
-  }
+  };
+
+
+  export const addData = async () => {
+    for(let i=0; i < data.length; i++){
+      let saveData = new master_data(data[i]);
+        await AppDataSource.getRepository(master_data).save(saveData);
+    }
+    return ;
+  } 
   

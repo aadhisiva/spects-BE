@@ -4,11 +4,13 @@ import { school_data } from "../entity";
 import { ResusableFunctions } from "../utility/smsServceResusable";
 import { OtherBenfRepo } from "../apiRepository/otherBenRepo";
 import { KutumbaDetails, convertAadharToSha256Hex } from "../utility/kutumbaDetails";
-import { other_benf_data } from "../entity/other_benf_data_";
+import { other_benf_data } from "../entity/other_benf_data";
 import { getAgeFromBirthDate } from "../utility/resusableFun";
 import { generateOTP } from "../utility/resusableFun";
 import { RESPONSEMSG } from "../utility/statusCodes";
-import schedule from "node-schedule";
+import { Methods, Tables } from "../utility/constants";
+import { trackExternalLogs } from "../utility/trackerLog";
+import { rc_data } from "../entity/rc_data";
 
 const spectclesAPiReusetData = async (data, getData, type) => {
     let reqBody = new other_benf_data({});
@@ -49,25 +51,25 @@ export class OtherBenfServices {
                 }
                 let reqBody: any = await spectclesAPiReusetData(data, getData[0], "aadhar");
                 reqBody.user_id = data.user_id;
-                let checkAadharDataByHash = await this.OtherBenfRepo.getDataByAadharHashAndUser(reqBody);
-                if (!checkAadharDataByHash) {
+                let checkOnlyAadharHash = await this.OtherBenfRepo.checkOnlyAadharHash(reqBody);
+                if (checkOnlyAadharHash) {
+                    let checkAadharDataByHash = await this.OtherBenfRepo.getDataByAadharHashAndUser(reqBody);
+                    if (!checkAadharDataByHash) {
+                        return { code: 422, message: "Aadhar no is already registered." }
+                    } else {
+                        let updatedData = await this.OtherBenfRepo.updateBefDataByAadhar(reqBody);
+                        let res = await this.KutumbaFunction.getDataFromEkycOutSource(updatedData);
+                        return (res == 422) ? { code: 422, message: "Something went wrong in HSM DB." } : res;
+                    }
+                } else {
                     let getAllCount = await this.OtherBenfRepo.findAll();
-                    console.log("get",getAllCount)
                     let checkUndefined = (getAllCount[0]?.benf_unique_id == undefined) ? 0 : getAllCount[0]?.benf_unique_id;
                     reqBody.benf_unique_id = `${Number(checkUndefined) + 1}`;
                     reqBody.order_number = generateOTP();
                     let addrResult = await this.OtherBenfRepo.addDeatilsFromKutumbaAPI(reqBody);
-                    if (!addrResult) {
-                        return { code: 422, message: "Data saving failed." }
-                    } else {
-                        let res = await this.KutumbaFunction.getDataFromEkycOutSource(addrResult);
-                        return (res == 422) ? { code: 422, message: "Something went wrong in HSM DB." } : res;
-                    }
-                } else {
-                    let updatedData = await this.OtherBenfRepo.updateBefDataByAadhar(reqBody);
-                    let res = await this.KutumbaFunction.getDataFromEkycOutSource(updatedData);
+                    let res = await this.KutumbaFunction.getDataFromEkycOutSource(addrResult);
                     return (res == 422) ? { code: 422, message: "Something went wrong in HSM DB." } : res;
-                }
+                };
             } else {
                 return { code: 422, message: "Aadhar number and user id required." }
             }
@@ -75,8 +77,59 @@ export class OtherBenfServices {
             console.log("OtherBenfServices === addKutumbaAaadharDetails", e);
             return e;
         }
-    }
-    async addKutumbaRcDetails(data: other_benf_data) {
+    };
+
+    async updateBefDataByRcAndAadharHash(data: other_benf_data) {
+        try {
+            if (data?.aadhar_no && data?.user_id) {
+                let checkAadharDataByHash = await this.OtherBenfRepo.getDataByAadharHashAndUser(data);
+                if (!checkAadharDataByHash) {
+                    return { code: 422, message: "Update Failed." }
+                } else {
+                    await this.OtherBenfRepo.updateBefDataByAadhar(data);
+                    return { message: RESPONSEMSG.UPDATE_SUCCESS };
+                }
+            } else {
+                return { code: 422, message: "Aadhar and user id is mandatory." }
+            };
+        } catch (e) {
+            console.log("OtherBenfServices === updateBefDataByRcAndAadharHash", e);
+            return e;
+        }
+    };
+
+    // async updateBefDataByRcAndAadharHash(data: other_benf_data) {
+    //     try {
+    //         if (data.aadhar_no && data.user_id) {
+    //             let checkRcById = await this.OtherBenfRepo.getDataByRcNoAnadAadharHashWithUniId(data);
+    //             let [result, finalData] = await this.OtherBenfRepo.updateDataByRcAndHashUniId(data);
+    //             if (result) {
+    //                 if (!checkRcById) {
+    //                     await this.OtherBenfRepo.addDeatilsFromKutumbaAPI(finalData);
+    //                     return { message: RESPONSEMSG.UPDATE_SUCCESS };
+    //                 } else {
+    //                     let checkAadharDataByHash = await this.OtherBenfRepo.getDataByAadharHashAndUser(finalData);
+    //                     if (!checkAadharDataByHash) {
+    //                         return { code: 422, message: "Aadhar no is already registered.." }
+    //                     } else {
+    //                         await this.OtherBenfRepo.updateBefDataByAadhar(finalData);
+    //                         return { message: RESPONSEMSG.UPDATE_SUCCESS };
+    //                     }
+    //                 }
+    //             } else {
+    //                 return { code: 422, message: "Data not exists in rc table." }
+    //             }
+    //         } else {
+    //             return { code: 422, message: "Aadhar and user id is mandatory." }
+    //         };
+    //     } catch (e) {
+    //         console.log("OtherBenfServices === updateBefDataByRcAndAadharHash", e);
+    //         return e;
+    //     }
+    // };
+
+
+    async addKutumbaRcDetails(data: rc_data) {
         try {
             if (data?.rc_no) {
                 let getData = await this.KutumbaFunction.getFamilyAdDataFromKutumba(data);
@@ -85,23 +138,15 @@ export class OtherBenfServices {
                 }
                 let checkRcById = await this.OtherBenfRepo.getDataByRcNo(data.rc_no);
                 if (checkRcById?.length == 0) {
-                    // (getData || []).map(async obj => {
-                    //     let reqBody = await spectclesAPiReusetData(data, obj, "rc");
-                    //     await this.OtherBenfRepo.addDeatilsFromKutumbaAPI(reqBody);
-                    //     return;
-                    // });
-                    let getAllCount = await this.OtherBenfRepo.findAll();
-                    let checkUndefined = (getAllCount[0]?.benf_unique_id == undefined) ? 0 : getAllCount[0]?.benf_unique_id;
                     for (let i = 1; i <= getData.length; i++) {
                         let reqBody = await spectclesAPiReusetData(data, getData[i - 1], "rc");
-                        reqBody['benf_unique_id'] = `${Number(checkUndefined) + i}`;
-                        await this.OtherBenfRepo.addDeatilsFromKutumbaAPI(reqBody);
+                        await this.OtherBenfRepo.createRcDataOfEach(reqBody);
                     }
                     return { message: "Data saved." };
                 } else {
                     (getData || [])?.map(async obj => {
                         let reqBody = await spectclesAPiReusetData(data, obj, "rc");
-                        await this.OtherBenfRepo.updateDataByRcAndHash(reqBody);
+                        await this.OtherBenfRepo.updateRcDataBYEach(reqBody);
                     });
                     return { message: "Data saved." };
                 };
@@ -134,7 +179,7 @@ export class OtherBenfServices {
         }
     }
 
-    async getDataByRcNo(data: other_benf_data) {
+    async getDataByRcNo(data: rc_data) {
         try {
             if (data?.rc_no) {
                 let result = await this.OtherBenfRepo.getDataByRcNo(data.rc_no);
@@ -165,66 +210,67 @@ export class OtherBenfServices {
 
     async sendOtpByAadharAndHash(data: other_benf_data) {
         try {
-            if (data.benf_unique_id) {
-                let checkRcById = await this.OtherBenfRepo.getDataByRcNoAnadAadharHashWithUniId(data);
-                if (!checkRcById) {
-                    return { code: 422, message: "Data not exist." }
-                }
-                if (!checkRcById.phone_number) {
-                    return { code: 422, message: "Phone number can not be null." }
+            // if (data.aadhar_no) {
+            //     let checkRcById = await this.OtherBenfRepo.getDataByRcNoAnadAadharHashWithUniId(data);
+            //     if (!checkRcById) {
+            //         return { code: 422, message: "Data not exist." }
+            //     }
+            //     if (!checkRcById.phone_number) {
+            //         return { code: 422, message: "Phone number is null." }
+            //     } else {
+            //         let sixDigitsOtp = generateOTP();
+            //         data.otp = sixDigitsOtp;
+            //         let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(checkRcById.phone_number, data.otp);
+            //         if (smsOtp !== 200) {
+            //             return { code: 422, message: RESPONSEMSG.OTP_FAILED }
+            //         } else {
+            //             await this.OtherBenfRepo.updateDataByRcAndHashUniAadharHash(data);
+            //             return { message: RESPONSEMSG.OTP };
+            //         }
+            //     }
+
+
+            // } else {
+            //     return { code: 422, message: "Aadhar no is required." }
+            // };
+
+            if (!data?.aadhar_no) return { code: 422, message: "Aadhar no is required." };
+            let checkRcDataWith__Aadhar = await this.OtherBenfRepo.__checkAadharWithRcTable(data);
+            if (!checkRcDataWith__Aadhar) return { code: 422, message: "Data not Exists." };
+            let checkAadharWith_Other = await this.OtherBenfRepo.getDataByRcNoAnadAadharHashWithUniId(data);
+            let finalData = await this.OtherBenfRepo.updateDataByRcAndHashUniAadharHas__(data);
+            finalData['otp'] = generateOTP();
+            if (!checkAadharWith_Other) {
+                let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(checkAadharWith_Other.phone_number, finalData.otp);
+                if (smsOtp !== 200) {
+                    return { code: 422, message: RESPONSEMSG.OTP_FAILED }
                 } else {
-                    let sixDigitsOtp = generateOTP();
-                    data.otp = sixDigitsOtp;
-                    let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(checkRcById.phone_number, data.otp);
+                    await this.OtherBenfRepo.addDeatilsFromKutumbaAPI(finalData);
+                    return { message: RESPONSEMSG.OTP };
+                }
+            } else {
+                let checkAadharDataByHash = await this.OtherBenfRepo.getDataByAadharHashAndUser(finalData);
+                if (!checkAadharDataByHash) {
+                    return { code: 422, message: "Aadhar no is already registered.." }
+                } else {
+                    let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(checkAadharWith_Other.phone_number, finalData.otp);
                     if (smsOtp !== 200) {
-                        return { code: 422, message: RESPONSEMSG.OTP_FAILED }
+
                     } else {
-                        await this.OtherBenfRepo.updateDataByRcAndHashUniId(data);
+                        await this.OtherBenfRepo.updateOnlyDataInOther({aadhar_no: finalData?.aadhar_no, otp: finalData?.otp});
                         return { message: RESPONSEMSG.OTP };
                     }
                 }
-
-            } else {
-                return { code: 422, message: "Benf id is mandatory." }
-            };
+            }
         } catch (e) {
             console.log("OtherBenfServices === sendOtpByAadharAndHash", e);
             return e;
         }
     }
-    // async sendOtpByAadharAndHash(data: other_benf_data) {
-    //     try {
-    //         if (data.rc_no && data.aadhar_no && data.user_id) {
-    //             let checkRcById = await this.OtherBenfRepo.getDataByRcNoAnadAadharHash(data);
-    //             if (!checkRcById) {
-    //                 return { code: 422, message: "Data not exist." }
-    //             }
-    //             if (!checkRcById.phone_number) {
-    //                 return { code: 422, message: "Phone number can not be null." }
-    //             } else {
-    //                 let sixDigitsOtp = generateOTP();
-    //                 data.otp = sixDigitsOtp;
-    //                 let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(checkRcById.phone_number, data.otp);
-    //                 if (smsOtp !== 200) {
-    //                     return { code: 422, message: RESPONSEMSG.OTP_FAILED }
-    //                 } else {
-    //                     await this.OtherBenfRepo.updateDataByRcAndHash(data);
-    //                     return { message: RESPONSEMSG.OTP };
-    //                 }
-    //             }
-
-    //         } else {
-    //             return { code: 422, message: "Aadhar ,rc no and user id are mandatory." }
-    //         };
-    //     } catch (e) {
-    //         console.log("OtherBenfServices === sendOtpByAadharAndHash", e);
-    //         return e;
-    //     }
-    // }
 
     async checkOtpByAadharAndHash(data: other_benf_data) {
         try {
-            if (data.benf_unique_id) {
+            if (data.aadhar_no) {
                 let checkRcById = await this.OtherBenfRepo.getDataByRcNoAnadAadharHashWithUniId(data);
                 if (!checkRcById) {
                     return { code: 422, message: "Data not exists." }
@@ -237,75 +283,13 @@ export class OtherBenfServices {
                     }
                 }
             } else {
-                return { code: 422, message: "Benf id is mandatory." }
+                return { code: 422, message: "Aadhar no is required." }
             };
         } catch (e) {
             console.log("OtherBenfServices === checkOtpByAadharAndHash", e);
             return e;
         }
     }
-
-    // async checkOtpByAadharAndHash(data: other_benf_data) {
-    //     try {
-    //         if (data.rc_no && data.aadhar_no && data.user_id) {
-    //             let checkRcById = await this.OtherBenfRepo.getDataByRcNoAnadAadharHash(data);
-    //             console.log(checkRcById);
-    //             if (!checkRcById) {
-    //                 return { code: 422, message: "Data not exists." }
-    //             } else {
-    //                 let checkOtp = data?.otp == checkRcById.otp;
-    //                 if (checkOtp) {
-    //                     return { message: RESPONSEMSG.VALIDATE }
-    //                 } else {
-    //                     return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED }
-    //                 }
-    //             }
-    //         } else {
-    //             return { code: 422, message: "Aadhar ,rc no and user id are mandatory." }
-    //         };
-    //     } catch (e) {
-    //         console.log("OtherBenfServices === checkOtpByAadharAndHash", e);
-    //         return e;
-    //     }
-    // }
-
-    // async updateBefDataByRcAndAadharHash(data: other_benf_data) {
-    //     try {
-    //         if (data.rc_no && data.aadhar_no && data.user_id) {
-    //             let checkRcById = await this.OtherBenfRepo.getDataByRcNoAnadAadharHash(data);
-    //             if (!checkRcById) {
-    //                 return { code: 422, message: "Update Failed" };
-    //             } else {
-    //                 await this.OtherBenfRepo.updateDataByRcAndHash(data);
-    //                 return { message: RESPONSEMSG.UPDATE_SUCCESS };
-    //             }
-    //         } else {
-    //             return { code: 422, message: "Aadhar ,rc no and user id is mandatory." }
-    //         };
-    //     } catch (e) {
-    //         console.log("OtherBenfServices === updateBefDataByRcAndAadharHash", e);
-    //         return e;
-    //     }
-    // };
-
-    async updateBefDataByRcAndAadharHash(data: other_benf_data) {
-        try {
-            if (data.benf_unique_id && data.user_id) {
-                let checkRcById = await this.OtherBenfRepo.getDataByRcNoAnadAadharHashWithUniId(data);
-                if (!checkRcById) {
-                    return { code: 422, message: "Update Failed" };
-                } else {
-                    await this.OtherBenfRepo.updateDataByRcAndHashUniId(data);
-                    return { message: RESPONSEMSG.UPDATE_SUCCESS };
-                }
-            } else {
-                return { code: 422, message: "Benf id and user id is mandatory." }
-            };
-        } catch (e) {
-            console.log("OtherBenfServices === updateBefDataByRcAndAadharHash", e);
-            return e;
-        }
-    };
 
     async getBenificaryStatus(data: other_benf_data) {
         try {
@@ -336,21 +320,6 @@ export class OtherBenfServices {
             return e;
         }
     };
-
-    // async getRcBasedOnAadharData(data: other_benf_data) {
-    //     try {
-    //         if (data?.user_id && data.aadhar_no && data.rc_no) {
-    //             let checkUser = await this.OtherBenfRepo.getRcBasedOnAadharData(data);
-    //             if (checkUser.length == 0) return { code: 422, message: "Data not exists" }
-    //             return checkUser;
-    //         } else {
-    //             return { code: 422, message: "Aadhar ,rc no and user id are mandatory." }
-    //         };
-    //     } catch (e) {
-    //         console.log("OtherBenfServices === getBenificaryStatus", e);
-    //         return e;
-    //     }
-    // };
 
     async readyTODeliver(data: other_benf_data) {
         try {
@@ -425,10 +394,6 @@ export class OtherBenfServices {
             return e;
         };
     };
-    // async checkEachFiveSec(hash){
-    //    return await this.OtherBenfRepo.getEkycDataFromEkyc(hash);
-
-    // }
 
     async getEkycDataFromEkyc(data: other_benf_data) {
         try {

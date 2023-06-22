@@ -8,6 +8,7 @@ import UserController from "./apiController/userController";
 import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
+import { addData, decrypt } from './utility/resusableFun';
 
 dotenv.config();
 
@@ -25,17 +26,17 @@ app.set('views', __dirname);
 // Set view engine to use
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
+// console.log(decrypt("6GXg0plJJXptXwHhjccEDXTOYyK0aXfz00C4RT35Wwe8nh9FHMZCEzzZakvsXdCdgrII2dT4k/Bv29OyFVxldzENInBzQUuGaPHYK6LF+9QQA6oOisi9mVQBTt56rk24x0KFGzmJEsWN21W0pz7y7X9sNmsdf5laWRNcSa/VSw1MWG6nNkBr9fEDqHtMkXk4UvpKL94ju5fBCVL4Eq65bYFPVUGy7+H4eIwMhlkeuU2hDcTvfzkf2li7kAGGr2dpaIMTt2pElX65ImEN+GXhOSHNd7FVyXIQC1oAOqJ8+BMDzyPJNUOkW6Tej6IRbAvdAkxtO56+0mjdcjNXxVETgjA9EiB0uXlEEyuoZvk3VsYW7bDdbPHwRNIXZab3GWndwny2xM6Qn77gHoejgllBttnVkuMWThCxST/Yr6hbaZZPdrQxAobxZa6VBvI8AwvRoQLcvTl0Tfirxa8HXmoxdELtZcwWvZt6Y0HkAkPoagqMyln5lP4UE62LzXXHxwlQ"))
+
+app.post("/add", async (req, res) => {
+  addData();
+  res.send("ok")
+});
 
 app.use("/login", UserController);
 app.use("/school", SchoolController);
 app.use("/other", OtherBenfController);
 app.use("/edcs", EkycController);
-
-
-app.get('/run', (req: Request, res: Response) => {
-  Logger.info("Express + TypeScript Server")
-  res.send('Express + TypeScript Server');
-});
 
 app.listen(port, async () => {
   let connection = await AppDataSource.initialize();

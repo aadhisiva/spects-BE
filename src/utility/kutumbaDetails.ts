@@ -3,6 +3,8 @@ import cryptoJs from "crypto";
 import axios from "axios";
 import Logger from "./winstonLogger";
 import https from "https";
+import { Methods, Tables } from "./constants";
+import { trackExternalLogs } from "./trackerLog";
 
 export const convertAadharToSha256Hex = async (data) => {
     try {
@@ -65,13 +67,13 @@ export const DecryptStringFromEncrypt = (key, IV, cipherText) => {
     return decrypted;
 };
 
-export const post_axios = async (url, body) =>{
-    return await axios.post(url, body, {headers: {Authorization: "QWxhZGsdfsd45GVuIHNlc2FtZQ=="}});
+export const post_axios = async (url, body) => {
+    return await axios.post(url, body, { headers: { Authorization: "QWxhZGsdfsd45GVuIHNlc2FtZQ==" } });
 };
 
 export const ekyc_post_axis = async (url, body) => {
     const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-    return await axios.post(url, body, {httpsAgent});
+    return await axios.post(url, body, { httpsAgent });
 }
 
 @Service()
@@ -84,15 +86,16 @@ export class KutumbaDetails {
                 `${process.env.KUTUMA_CLIENT_CODE}__${data.rc_no}__`;
 
             let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY, inputValue);
+            await trackExternalLogs(Tables.OTHER, `kutumba ${data?.aadhar_no ? "aadhar" : "rc"} api`, "before", await getReqBody(data, creteHMAC), "", data?.user_id);
             let response = await axios.post(process.env.KUTUMBA_API, await getReqBody(data, creteHMAC), {
                 headers: {
                     "Accept": "application/json"
                 }
             });
-
             if (response.status == 200 && response.data?.StatusCode == 0) {
                 let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
                 let pasingDecryptData = JSON.parse(decryptString);
+                await trackExternalLogs(Tables.OTHER, `kutumba ${data?.aadhar_no ? "aadhar" : "rc"} api`, "after", "", pasingDecryptData, data?.user_id);
                 if (pasingDecryptData?.StatusCode === 0 && pasingDecryptData?.StatusText === "Sucess") {
                     return pasingDecryptData?.ResultDataList;
                 } else {
@@ -108,50 +111,54 @@ export class KutumbaDetails {
         };
     };
 
-    async getSchoolDataFromExternal(data, type){
+    async getSchoolDataFromExternal(data, type) {
         let urlType = (type == "school") ? process.env.SCHOOL_API : process.env.CHILD_API;
+        await trackExternalLogs(Tables.SCHOOL, type, "before", data, "", data?.user_id);
         let getData = (await post_axios(urlType, data)).data;
-        if(type == "school"){
-            if(getData?.return_message == "Success" && getData.status == '1'){
+        if (type == "school") {
+            await trackExternalLogs(Tables.SCHOOL, type, "after", "", getData, data?.user_id);
+            if (getData?.return_message == "Success" && getData.status == '1') {
                 return getData.instlist;
             } else {
                 return 500;
             }
         } else {
-            if(getData?.return_message == "Success" && getData.status == '1'){
+            await trackExternalLogs(Tables.SCHOOL, type, "after", "", getData, data?.user_id);
+            if (getData?.return_message == "Success" && getData.status == '1') {
                 return getData.healthMstChilds;
             } else {
                 return 500;
-            }  
+            }
         }
     }
 
-    async getDataFromEkycOutSource(data){
+    async getDataFromEkycOutSource(data) {
         try {
-            let txnDateTime = new Date().getFullYear()+""+new Date().getTime();
+            let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
             let bodyData = {
-                    deptCode : process.env.DEP_CODE,
-                    applnCode : process.env.APPLI_CODE,
-                    schemeCode : process.env.SCHEME_CODE,
-                    beneficiaryID : data.benf_unique_id,
-                    beneficiaryName : data.benf_name,
-                    integrationKey : process.env.INTEGRATION_KEY,
-                    integrationPassword : process.env.INTEGRATION_PASS,
-                    txnNo : txnDateTime,
-                    txnDateTime : txnDateTime,
-                    serviceCode : process.env.SERVICE_CODE,
-                    responseRedirectURL : ""
+                deptCode: process.env.DEP_CODE,
+                applnCode: process.env.APPLI_CODE,
+                schemeCode: process.env.SCHEME_CODE,
+                beneficiaryID: data.benf_unique_id,
+                beneficiaryName: data.benf_name,
+                integrationKey: process.env.INTEGRATION_KEY,
+                integrationPassword: process.env.INTEGRATION_PASS,
+                txnNo: txnDateTime,
+                txnDateTime: txnDateTime,
+                serviceCode: process.env.SERVICE_CODE,
+                responseRedirectURL: ""
             };
+
+            await trackExternalLogs(Tables.EKYC, Methods.EKYC, "before", bodyData, "", data?.user_id);
             let res = await ekyc_post_axis(process.env.EKYC_URL, bodyData);
-            if(!res?.data?.Token){
+            await trackExternalLogs(Tables.EKYC, Methods.EKYC, "after", "", res.data, data?.user_id);
+            if (!res?.data?.Token) {
                 return 422;
             } else {
-               return `${process.env.EKYC_TOKEN_URL}?key=${process.env.INTEGRATION_KEY}&token=${res?.data?.Token}`
+                return `${process.env.EKYC_TOKEN_URL}?key=${process.env.INTEGRATION_KEY}&token=${res?.data?.Token}`
             }
         } catch (e) {
             return e;
         }
     }
 };
-
-// https://dbt.karnataka.gov.in:8443/HSM_Service_ASPX/EKYCService.aspx?key=b7d39d8f-969c-4bd3-aab7-b6ce587da4cd&token=MDMwNjIwMjMxMTA0NDc5NTAwNjk0ZGMzNTljOS1kMDJkLTQwODktYjMwOC0xNDRjMmY3ZDM4ODQ=

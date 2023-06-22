@@ -15,14 +15,14 @@ export class rc_data {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
-    rc_unique_id: string;
-
     @Column({ default: null })
     benf_name: string;
 
     @Column({ default: null })
     dob: string;
+
+    @Column({default: null})
+    user_id: string;
 
     @Column({ default: null })
     taluk: string;
@@ -32,6 +32,9 @@ export class rc_data {
 
     @Column({ default: null })
     district: string;
+
+    @Column({ default: null })
+    otp: string;
 
     @Column({ default: null })
     phone_number: string;
@@ -54,17 +57,11 @@ export class rc_data {
     @Column({ default: null })
     address: string;
 
-    @Column({ default: null })
+    @Column({ default: "" })
     aadhar_no: string;
 
     @Column({ default: null })
     rc_no: string;
-
-    @Column({ default: null })
-    scheme_eligability: string;
-
-    @Column({ default: 0 })
-    status: string;
 
     @CreateDateColumn()
     created_at: Date;

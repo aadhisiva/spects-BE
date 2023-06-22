@@ -32,7 +32,6 @@ import nodemailer from "nodemailer";
 
 // async..await is not allowed in global scope, must use a wrapper
 export async function emailSender(data) {
-  // console.log("dat",data)
   // create reusable transporter object using the default SMTP transport
  let transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",

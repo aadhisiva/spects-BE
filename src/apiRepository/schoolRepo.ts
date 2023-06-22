@@ -135,9 +135,9 @@ export class SchoolRepo {
 
     async getAllStudentData(data: students_data) {
         try {
-            let pending_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM other_benf_data WHERE status='order_pending'`);
-            let ready_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM other_benf_data WHERE status='ready_to_deliver'`);
-            let delivered_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM other_benf_data WHERE status='delivered'`);
+            let pending_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM school_data WHERE status='order_pending' and user_id='${data.user_id}'`);
+            let ready_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM school_data WHERE status='ready_to_deliver' and user_id='${data.user_id}'`);
+            let delivered_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM school_data WHERE status='delivered' and user_id='${data.user_id}'`);
             let order_pending = await this.getAllOrderPending(data);
             let ready_to_deliver = await this.getAllReadyToDeliver(data);
             let delivered = await this.getAllDelivered(data);

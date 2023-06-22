@@ -6,6 +6,11 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+export enum SchemeEligibility {
+    YES = "Yes",
+    NO = "No",
+}
+
 @Entity()
 export class other_benf_data {
     constructor(data) {
@@ -30,7 +35,7 @@ export class other_benf_data {
     @Column({ default: null })
     taluk: string;
 
-    @Column({ default: null })
+    @Column('text', {default: null})
     image: string;
 
     @Column({ default: null })
@@ -72,7 +77,7 @@ export class other_benf_data {
     @Column({ default: null })
     rc_no: string;
 
-    @Column({ default: null })
+    @Column({default: null})
     scheme_eligability: string;
 
     @Column({ default: null })

@@ -45,7 +45,7 @@ export class students_data {
   @Column({ default: null })
   father_name: string;
 
-  @Column({ default: null })
+  @Column('text', { default: null })
   image: string;
 
   @Column({ default: null })
