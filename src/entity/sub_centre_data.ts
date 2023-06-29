@@ -16,16 +16,16 @@ import {
     id: number;
   
     @Column()
-    center_unique_id: string;
+    unique_id: string;
 
     @Column({default: null})
     mobile_number: string;
 
     @Column({default: null})
-    name: string;
+    otp: string;
 
     @Column({default: null})
-    health_block: string;
+    name: string;
   
     @CreateDateColumn()
     created_at: Date;

@@ -82,6 +82,8 @@ export class OtherBenfServices {
     async updateBefDataByRcAndAadharHash(data: other_benf_data) {
         try {
             if (data?.aadhar_no && data?.user_id) {
+                data.type= "otherBenificiary";
+                data.details= "rc";
                 let checkAadharDataByHash = await this.OtherBenfRepo.getDataByAadharHashAndUser(data);
                 if (!checkAadharDataByHash) {
                     return { code: 422, message: "Update Failed." }
@@ -162,6 +164,8 @@ export class OtherBenfServices {
     async updateBefDataByAadhar(data: other_benf_data) {
         try {
             if (data?.aadhar_no && data.user_id) {
+                data.type= "otherBenificiary";
+                data.details= "aadhar";
                 data.aadhar_no = await aadharConvert(data.aadhar_no);
                 let result = await this.OtherBenfRepo.getDataByAadharHashAndUser(data);
                 if (!result) {

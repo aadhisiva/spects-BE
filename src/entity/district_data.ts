@@ -4,7 +4,9 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
+    OneToOne,
   } from "typeorm";
+import { master_data } from "./master_data";
   
   @Entity()
   export class district_data {
@@ -16,7 +18,7 @@ import {
     id: number;
   
     @Column()
-    district_unique_id: string;
+    unique_id: string;
 
     @Column({default: null})
     mobile_number: string;
@@ -25,7 +27,7 @@ import {
     name: string;
 
     @Column({default: null})
-    health_block: string;
+    otp: string;
   
     @CreateDateColumn()
     created_at: Date;

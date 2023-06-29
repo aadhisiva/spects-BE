@@ -3,12 +3,14 @@ import dotenv from 'dotenv';
 import morgan from 'morgan';
 import Logger from "./utility/winstonLogger";
 import fs from "fs";
+import cors from "cors";
 import { AppDataSource } from "./dbConfig/mysql";
 import UserController from "./apiController/userController";
 import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
-import { addData, decrypt } from './utility/resusableFun';
+import AdminController from "./apiController/adminController";
+import { addData, decrypt, decryptFront } from './utility/resusableFun';
 
 dotenv.config();
 
@@ -16,7 +18,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-
+app.use(cors());
 app.use(morgan('common', {
   stream: fs.createWriteStream('./logs/application.log', { flags: 'a' })
 }));
@@ -26,17 +28,18 @@ app.set('views', __dirname);
 // Set view engine to use
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
-// console.log(decrypt("6GXg0plJJXptXwHhjccEDXTOYyK0aXfz00C4RT35Wwe8nh9FHMZCEzzZakvsXdCdgrII2dT4k/Bv29OyFVxldzENInBzQUuGaPHYK6LF+9QQA6oOisi9mVQBTt56rk24x0KFGzmJEsWN21W0pz7y7X9sNmsdf5laWRNcSa/VSw1MWG6nNkBr9fEDqHtMkXk4UvpKL94ju5fBCVL4Eq65bYFPVUGy7+H4eIwMhlkeuU2hDcTvfzkf2li7kAGGr2dpaIMTt2pElX65ImEN+GXhOSHNd7FVyXIQC1oAOqJ8+BMDzyPJNUOkW6Tej6IRbAvdAkxtO56+0mjdcjNXxVETgjA9EiB0uXlEEyuoZvk3VsYW7bDdbPHwRNIXZab3GWndwny2xM6Qn77gHoejgllBttnVkuMWThCxST/Yr6hbaZZPdrQxAobxZa6VBvI8AwvRoQLcvTl0Tfirxa8HXmoxdELtZcwWvZt6Y0HkAkPoagqMyln5lP4UE62LzXXHxwlQ"))
+// console.log(decrypt("eosVizk9aPfgFdifuSYn89wdyIRWC69KMy9Vu1zfw6MA7D5zcFw+IRvIiPPAvtrhnNZy6xw7CbWDX9tsnw/hPKEHW2nVdMBqnc+KtjcB8dbV8XwBk2vbwTzZKakDa8Qp7P/Nxfbak7DJiSUoOTMVA0zBmPGjJesBD7KZdb+18XQctQXBnZPGhqSpJYyluQLURWw6d51UTosSg7AxCRRx1XRLGzVtxff2abfN4+6hT1uWZ2yOeIhUmJLxlN5IbAa62WEXL/9Qae9/q1LfTGISmA=="))
 
 app.post("/add", async (req, res) => {
-  addData();
-  res.send("ok")
+  let data = addData();
+  res.send(data)
 });
 
 app.use("/login", UserController);
 app.use("/school", SchoolController);
 app.use("/other", OtherBenfController);
 app.use("/edcs", EkycController);
+app.use("/admin", AdminController);
 
 app.listen(port, async () => {
   let connection = await AppDataSource.initialize();

@@ -77,6 +77,12 @@ export class other_benf_data {
     @Column({ default: null })
     rc_no: string;
 
+    @Column({ default: null })
+    type: string;
+
+    @Column({ default: null })
+    details: string;
+
     @Column({default: null})
     scheme_eligability: string;
 

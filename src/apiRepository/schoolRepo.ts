@@ -207,6 +207,7 @@ export class SchoolRepo {
                 return 422;
             } else {
                 data.status = "order_pending";
+                data.type = "school";
                 let finalData = { ...result, ...data }
                 return await studentDataBase.save(finalData);
             }

@@ -14,13 +14,13 @@ import {
   
     @PrimaryGeneratedColumn()
     id: number;
-  
-    @Column()
-    master_unique_id: string;
-
+   
+    @Column({default: null})
+    user_unique_id: string;
+    
     @Column({default: null})
     district: string;
-
+    
     @Column({default: null})
     taluka: string;
 

@@ -103,6 +103,9 @@ export class students_data {
   hobly: string;
 
   @Column({ default: null })
+  type: string;
+
+  @Column({ default: null })
   status: string;
 
   @CreateDateColumn()

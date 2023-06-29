@@ -16,7 +16,7 @@ import {
     id: number;
   
     @Column()
-    taluka_unique_id: string;
+    unique_id: string;
 
     @Column({default: null})
     mobile_number: string;
@@ -25,7 +25,7 @@ import {
     name: string;
 
     @Column({default: null})
-    health_block: string;
+    otp: string;
   
     @CreateDateColumn()
     created_at: Date;
