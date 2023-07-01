@@ -6,8 +6,8 @@ import { KutumbaDetails } from "../utility/kutumbaDetails";
 import { RESPONSEMSG } from "../utility/statusCodes";
 import { emailSender } from "../dbConfig/emailConfig";
 import schedule from "node-schedule";
-import { Methods, Tables } from "../utility/constants";
 import { trackExternalLogs } from "../utility/trackerLog";
+import { Tables } from "../utility/constants";
 
 const schoolDataAssignToLocal = (res) => {
     let reqObj: any = {};

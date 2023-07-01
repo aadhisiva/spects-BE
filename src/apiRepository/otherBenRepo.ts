@@ -1,13 +1,11 @@
 import { Service } from "typedi";
 import { Equal } from "typeorm";
 import Logger from "../utility/winstonLogger";
-import { nanoid } from "nanoid";
 import { AppDataSource } from "../dbConfig/mysql";
 import { other_benf_data } from "../entity/other_benf_data";
 import { generateOTP } from "../utility/resusableFun";
 import { ekyc_data } from "../entity";
 import { rc_data } from "../entity/rc_data";
-import { convertAadharToSha256Hex } from "../utility/kutumbaDetails";
 
 
 const dataDriven = (data = "Yes") => {

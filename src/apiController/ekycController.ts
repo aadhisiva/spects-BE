@@ -1,8 +1,6 @@
 import Container from 'typedi';
 import express, { Request, Response } from 'express';
-import Logger from '../utility/winstonLogger';
 import {  RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
-import { hittingTime } from '../utility/trackerLog';
 import { EkycServices } from '../apiServices/ekycServices';
 import fs from "fs";
 import path from "path";

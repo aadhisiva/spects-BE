@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { SMSServices } from "../utility/sms_otp";
-import { school_data } from "../entity";
 import { ResusableFunctions } from "../utility/smsServceResusable";
 import { OtherBenfRepo } from "../apiRepository/otherBenRepo";
 import { KutumbaDetails, convertAadharToSha256Hex } from "../utility/kutumbaDetails";
@@ -8,8 +7,6 @@ import { other_benf_data } from "../entity/other_benf_data";
 import { getAgeFromBirthDate } from "../utility/resusableFun";
 import { generateOTP } from "../utility/resusableFun";
 import { RESPONSEMSG } from "../utility/statusCodes";
-import { Methods, Tables } from "../utility/constants";
-import { trackExternalLogs } from "../utility/trackerLog";
 import { rc_data } from "../entity/rc_data";
 
 const spectclesAPiReusetData = async (data, getData, type) => {

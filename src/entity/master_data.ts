@@ -44,6 +44,9 @@ import {
 
     @Column({default: null})
     refractionist_mobile: string;
+
+    @Column({default: null})
+    otp: string;
   
     @CreateDateColumn()
     created_at: Date;

@@ -1,7 +1,5 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
-import { nanoid } from "nanoid";
-import { login_user_data } from "../entity/login_user_data";
 import { AppDataSource } from "../dbConfig/mysql";
 import { ekyc_data } from "../entity";
 

@@ -75,118 +75,6 @@ router.post("/all_masters", async (req: Request, res: Response) => {
     }
 });
 
-router.post("/add_districts", async (req: Request, res: Response) => {
-    try {
-        let data = new district_data(req.body);
-       let result = await adminServices.addDistrictsData(data);
-       let response = (result?.code || result instanceof Error) ?
-       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-       res.send(response);
-    } catch (e) {
-        console.log("error", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-
-router.post("/district_officer", async (req: Request, res: Response) => {
-    try {
-        let data = req.query;
-       let result = await adminServices.getDistrictOfficerWise(data);
-       let response = (result?.code || result instanceof Error) ?
-       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-       res.send(response);
-    } catch (e) {
-        console.log("error", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-
-router.post("/district_officer_select", async (req: Request, res: Response) => {
-    try {
-        let data = req.query;
-       let result = await adminServices.getDistrictOfficerSelectWise(data);
-       let response = (result?.code || result instanceof Error) ?
-       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-       res.send(response);
-    } catch (e) {
-        console.log("error", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-
-router.post("/district_officer", async (req: Request, res: Response) => {
-    try {
-        let data = req.query;
-       let result = await adminServices.getDistrictOfficerWise(data);
-       let response = (result?.code || result instanceof Error) ?
-       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-       res.send(response);
-    } catch (e) {
-        console.log("error", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-
-router.post("/add_sub_Centre", async (req: Request, res: Response) => {
-    try {
-        let data = new district_data(req.body);
-       let result = await adminServices.addSubCentreData(data);
-       let response = (result?.code || result instanceof Error) ?
-       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, encryptData(result));
-       res.send(response);
-    } catch (e) {
-        console.log("error", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-
-router.post("/all_district_wise", async (req: Request, res: Response) => {
-    try {
-        let data = req.query;
-       let result = await adminServices.getAllDistricts(data);
-       let response = (result?.code || result instanceof Error) ?
-       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-       res.send(response);
-    } catch (e) {
-        console.log("error", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-
-router.post("/all_masters", async (req: Request, res: Response) => {
-    try {
-        let data = req.query;
-       let result = await adminServices.getAllTalukas(data);
-       let response = (result?.code || result instanceof Error) ?
-       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, encryptData(result));
-       res.send(response);
-    } catch (e) {
-        console.log("error", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-
-router.post("/search_data", async (req: Request, res: Response) => {
-    try {
-        let data = req.query;
-       let result = await adminServices.getAllSearchData(data);
-       let response = (result?.code || result instanceof Error) ?
-       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-       res.send(response);
-    } catch (e) {
-        console.log("error", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-
 router.post("/get_orders_count", async (req: Request, res: Response) => {
     try {
         let data = req.query;
@@ -306,6 +194,20 @@ router.post("/reports_data", async (req: Request, res: Response) => {
        let response = (result?.code || result instanceof Error) ?
        ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
        ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
+       res.send(response);
+    } catch (e) {
+        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/getUser_data", async (req: Request, res: Response) => {
+    try {
+        let data = new district_data(req.body);
+       let result = await adminServices.getLoginUserData(data);
+       let response = (result?.code || result instanceof Error) ?
+       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
        res.send(response);
     } catch (e) {
         console.log("error", e);

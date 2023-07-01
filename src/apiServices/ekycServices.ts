@@ -2,7 +2,6 @@ import { Service } from "typedi";
 import { SMSServices } from "../utility/sms_otp";
 import { ResusableFunctions } from "../utility/smsServceResusable";
 import { EkycRepo } from "../apiRepository/ekycRepo";
-import { AppDataSource } from "../dbConfig/mysql";
 import { ekyc_data } from "../entity/ekyc_data";
 
 @Service()

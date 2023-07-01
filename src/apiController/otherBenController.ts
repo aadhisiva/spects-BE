@@ -5,11 +5,9 @@ import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from
 import { OtherBenfServices } from '../apiServices/otherBenServices';
 import { other_benf_data } from '../entity/other_benf_data';
 import { encryptData } from '../utility/resusableFun';
-import http from 'http';
 import axios from 'axios';
 import { rc_data } from '../entity/rc_data';
 import { requestAndResonseTime } from '../utility/middlewares';
-var timeout = require('connect-timeout')
 
 const router = express.Router();
 

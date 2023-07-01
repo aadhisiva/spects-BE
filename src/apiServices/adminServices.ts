@@ -49,34 +49,6 @@ export class AdminServices {
         return this.AdminRepo.getAllMasters(data)
     };
 
-    async addDistrictsData(data) {
-        return this.AdminRepo.addDistrictsData(data)
-    };
-
-    async getDistrictOfficerWise(data) {
-        return this.AdminRepo.getDistrictOfficerWise(data)
-    };
-
-    async getDistrictOfficerSelectWise(data) {
-        return this.AdminRepo.getDistrictOfficerSelectWise(data)
-    };
-
-    async addSubCentreData(data) {
-        return this.AdminRepo.addSubCentreData(data)
-    };
-
-    async getAllDistricts(data) {
-        return this.AdminRepo.getAllDistricts(data)
-    };
-
-    async getAllTalukas(data) {
-        return this.AdminRepo.getAllTalukas(data)
-    };
-
-    async getAllSearchData(data) {
-        return this.AdminRepo.getAllSearchData(data)
-    };
-
     async getAllOrders(data) {
         return this.AdminRepo.getAllOrders(data)
     };
@@ -106,6 +78,9 @@ export class AdminServices {
     //reports
     async getReportsData(data) {
         return this.AdminRepo.getReportsData(data)
+    };
+    async getLoginUserData(data) {
+        return this.AdminRepo.getLoginUserData(data)
     };
 
 };

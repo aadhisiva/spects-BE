@@ -2,6 +2,8 @@ import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
 import { district_data, ekyc_data, master_data, other_benf_data, students_data, sub_centre_data, taluka_data } from "../entity";
+import { Equal } from "typeorm";
+import { data } from "../b";
 
 @Service()
 export class AdminRepo {
@@ -73,101 +75,23 @@ export class AdminRepo {
             return e;
         }
     };
-
-    async getDistrictOfficerWise(data: any) {
-        const { id, type } = data;
-        try {
-            if (id && type) {
-                let result = await AppDataSource.getRepository(master_data).query(`SELECT district FROM master_data WHERE master_unique_id=${id}`);
-                return await AppDataSource.getRepository(master_data).query(`SELECT * FROM master_data WHERE district='${result[0].district}' and rural_urban='${type}'`);
-            } else {
-                let result = await AppDataSource.getRepository(master_data).query(`SELECT district FROM master_data WHERE master_unique_id=${id}`);
-                return await AppDataSource.getRepository(master_data).query(`SELECT * FROM master_data WHERE district='${result[0].district}'`);
-            }
-        } catch (e) {
-            Logger.error("adminRepo => addDistrictsData", e)
-            return e;
-        }
-    };
-
-    async getDistrictOfficerSelectWise(data: any) {
-        const { id, type, taluka, sub } = data;
-        try {
-            const { type, district, taluka, sub } = data;
-            if (id && type && taluka && sub) {
-                return AppDataSource.getRepository(master_data).query(`SELECT DISTINCT village as option from master_data where unique_id=${id} and rural_urban='${type}' and district='${district}' and taluka='${taluka}' and suc_centre='${sub}'`);
-            } else if (district && taluka) {
-                return AppDataSource.getRepository(master_data).query(`SELECT DISTINCT sub_centre as option from master_data where unique_id=${id} and rural_urban='${type}' and district='${district}' and taluka='${taluka}'`);
-            } else if (district) {
-                return AppDataSource.getRepository(master_data).query(`SELECT DISTINCT taluka as option from master_data where unique_id=${id} and rural_urban='${type}' and district='${district}'`);
-            }
-        } catch (e) {
-            Logger.error("userRepo => postUser", e)
-            return e;
-        }
-    };
-
-    async addSubCentreData(data: sub_centre_data) {
-        try {
-            data.unique_id = "1";
-            return AppDataSource.getRepository(sub_centre_data).save(data);
-        } catch (e) {
-            Logger.error("adminRepo => addDistrictsData", e)
-            return e;
-        }
-    };
-
     async getAllMasters(data) {
         try {
-            const { type, district, taluka, sub } = data;
-            if (type && district && taluka && sub) {
-                return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}' and taluka='${taluka}' and sub_centre='${sub}'`);
-            } else if (type && district && taluka) {
-                return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}' and taluka='${taluka}'`);
-            } else if (type && district) {
-                return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}'`);
-            } else if (type) {
-                return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}'`);
+            const { districtOne, districtTwo, talukaOne, talukaTwo  } = data;
+            // if (type && district && taluka && sub) {
+            //     return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}' and taluka='${taluka}' and sub_centre='${sub}'`);
+            // } else if (type && district && taluka) {
+            //     return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}' and taluka='${taluka}'`);
+            // } else if (type && district) {
+            //     return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}'`);
+            // } else 
+            if (districtOne || districtTwo) {
+                return AppDataSource.getRepository(master_data).query(`select * from master_data where district='${districtOne}' or district='${districtTwo}'`);
+            } else if(talukaOne || talukaTwo){
+                return AppDataSource.getRepository(master_data).query(`select * from master_data where taluka='${talukaOne}' or taluka='${talukaTwo}'`);
             } else {
                 return AppDataSource.getRepository(master_data).query(`select * from master_data;`);
             }
-        } catch (e) {
-            Logger.error("userRepo => postUser", e)
-            return e;
-        }
-    };
-    async getAllDistricts(data) {
-        try {
-            const { type, district, taluka, sub } = data;
-            if (type && district && taluka && sub) {
-                return AppDataSource.getRepository(master_data).query(`SELECT DISTINCT village as option from master_data where rural_urban='${type}' and district='${district}' and taluka='${taluka}' and sub_centre='${sub}'`);
-            } else if (type && district && taluka) {
-                return AppDataSource.getRepository(master_data).query(`SELECT DISTINCT sub_centre as option from master_data where rural_urban='${type}' and district='${district}' and taluka='${taluka}'`);
-            } else if (type && district) {
-                return AppDataSource.getRepository(master_data).query(`SELECT DISTINCT taluka as option from master_data where rural_urban='${type}' and district='${district}'`);
-            } else if (type) {
-                return AppDataSource.getRepository(master_data).query(`SELECT DISTINCT district as option from master_data where rural_urban='${type}'`);
-            } else {
-                return AppDataSource.getRepository(master_data).query(`SELECT DISTINCT district as option from master_data`);
-            }
-        } catch (e) {
-            Logger.error("userRepo => postUser", e)
-            return e;
-        }
-    };
-    async getAllTalukas(data) {
-        try {
-            const { type, district } = data;
-            return AppDataSource.getRepository(master_data).query(`SELECT DISTINCT taluka from master_data where `);
-        } catch (e) {
-            Logger.error("userRepo => postUser", e)
-            return e;
-        }
-    };
-    async getAllSearchData(data) {
-        try {
-            const { type, district, taluka, sub_centre, village } = data;
-            return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}' and taluka='${taluka}' and sub_centre='${sub_centre}'`);
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -212,7 +136,7 @@ export class AdminRepo {
     async getUpdatedData(data) {
         try {
             let masterData = await AppDataSource.getRepository(master_data);
-            let result = await masterData.findOneBy({ id: data.id });
+            let result = await masterData.findOneBy({ user_unique_id: data.user_unique_id });
             let finalData = { ...result, ...data };
             return await masterData.save(finalData);
         } catch (e) {
@@ -223,12 +147,21 @@ export class AdminRepo {
     async updateDistrictsData(data) {
         try {
             let masterData = await AppDataSource.getRepository(district_data);
-            let result = await masterData.findOneBy({ unique_id: data.unique_id });
-            if (!result) {
-                return await AppDataSource.getRepository(district_data).save(data);
-            }
-            let finalData = { ...result, ...data };
-            return await masterData.save(finalData);
+            let result = await AppDataSource.getRepository(master_data).query(`select user_unique_id from master_data where district='${data.district}'`); 
+           return result?.map(async (obj) => {
+            var temp = Object.assign({}, obj);
+                temp.unique_id = temp.user_unique_id
+                temp.mobile_number= data.mobile_number,
+                temp.name = data.name;
+                delete temp.user_unique_id;
+                let findData = await masterData.findOneBy({unique_id: obj.user_unique_id});
+                if (!findData) {
+                    await AppDataSource.getRepository(district_data).save(temp);
+                }
+                let finalData = { ...findData, ...temp };
+                await masterData.save(finalData);
+                return temp;
+           });
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -237,29 +170,36 @@ export class AdminRepo {
     async updateTalukaData(data) {
         try {
             let masterData = await AppDataSource.getRepository(taluka_data);
-            let result = await masterData.findOneBy({ unique_id: data.unique_id });
-            if (!result) {
-                return await AppDataSource.getRepository(taluka_data).save(data);
-            }
-            let finalData = { ...result, ...data };
-            return await masterData.save(finalData);
+            let result = await AppDataSource.getRepository(master_data).query(`select user_unique_id from master_data where taluka='${data.taluka}'`); 
+            return result?.map(async (obj) => {
+             var temp = Object.assign({}, obj);
+                 temp.unique_id = temp.user_unique_id
+                 temp.mobile_number= data.mobile_number,
+                 temp.name = data.name;
+                 delete temp.user_unique_id;
+                 let findData = await masterData.findOneBy({unique_id: obj.user_unique_id});
+                 if (!findData) {
+                     await AppDataSource.getRepository(taluka_data).save(temp);
+                 }
+                 let finalData = { ...findData, ...temp };
+                 await masterData.save(finalData);
+                 return temp;
+            });
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
+
     async getDistrictsData(data) {
-        const { type, district } = data;
+        const { district } = data;
         try {
-            if (type && district) {
-                return await AppDataSource.getRepository(master_data).query(`SELECT master_data.id, master_data.rural_urban, master_data.district, district_data.name,district_data.mobile_number 
-                FROM master_data LEFT JOIN district_data ON master_data.id=district_data.unique_id where master_data.rural_urban='${type}' and district='${district}'`)
-            } else if (type) {
-                return await AppDataSource.getRepository(master_data).query(`SELECT master_data.id, master_data.rural_urban, master_data.district, district_data.name,district_data.mobile_number 
-                FROM master_data LEFT JOIN district_data ON master_data.id=district_data.unique_id where master_data.rural_urban='${type}' GROUP BY master_data.district`);
+            if (district) {
+                return await AppDataSource.getRepository(master_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district, district_data.name,district_data.mobile_number 
+                FROM master_data LEFT JOIN district_data ON master_data.user_unique_id=district_data.unique_id where master_data.district='${district}'`)
             } else {
-                return await AppDataSource.getRepository(master_data).query(`SELECT master_data.id, master_data.rural_urban, master_data.district, district_data.name,district_data.mobile_number 
-                FROM master_data LEFT JOIN district_data ON master_data.id=district_data.unique_id GROUP BY master_data.district`);
+                return await AppDataSource.getRepository(master_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district, district_data.name,district_data.mobile_number 
+                FROM master_data LEFT JOIN district_data ON master_data.user_unique_id=district_data.unique_id GROUP BY master_data.district`);
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
@@ -285,25 +225,48 @@ export class AdminRepo {
         }
     };
     async getTalukasData(data) {
-        const { type, district, taluka } = data;
+        const { districtOne, districtTwo, talukaOne, talukaTwo} = data;
         try {
-            if (type && district && taluka) {
-                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-                FROM master_data LEFT JOIN taluka_data ON master_data.id=taluka_data.unique_id where master_data.rural_urban='${type}' and master_data.district='${district}' and master_data.taluka='${taluka}' GROUP BY master_data.taluka`)
-            } else if (type && district) {
-                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-                FROM master_data LEFT JOIN taluka_data ON master_data.id=taluka_data.unique_id where master_data.rural_urban='${type}' and master_data.district='${district}' GROUP BY master_data.taluka`);
-            } else if (type) {
-                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-                FROM master_data LEFT JOIN taluka_data ON master_data.id=taluka_data.unique_id where master_data.rural_urban='${type}' GROUP BY master_data.taluka`);
+            // if (type && district && taluka) {
+            //     return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
+            //     FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.rural_urban='${type}' and master_data.district='${district}' and master_data.taluka='${taluka}' GROUP BY master_data.taluka`)
+            // } else if (type && district) {
+            //     return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
+            //     FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.rural_urban='${type}' and master_data.district='${district}' GROUP BY master_data.taluka`);
+            // } else 
+            if (districtOne || districtTwo) {
+                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
+                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.district='${districtOne}' or master_data.district='${districtTwo}' GROUP BY master_data.taluka`);
+            } else if(talukaOne || talukaTwo){
+                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
+                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.taluka='${talukaOne}' or master_data.taluka='${talukaTwo}'`);
             } else {
-                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-                FROM master_data LEFT JOIN taluka_data ON master_data.id=taluka_data.unique_id GROUP BY master_data.taluka`);
+                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
+                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id GROUP BY master_data.taluka`);
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
+    
+    async getLoginUserData(data) {
+        try{
+        if(data.type == "District Officer"){
+            let finOne = await AppDataSource.getRepository(district_data).findOneBy({unique_id: data.unique_id});
+            console.log()
+            let getAll = await AppDataSource.getRepository(district_data).query(`SELECT DISTINCT master_data.district FROM district_data INNER JOIN master_data ON master_data.user_unique_id=district_data.unique_id WHERE mobile_number='${finOne.mobile_number}'`);
+            return getAll;
+        } else if(data.type == "Taluka"){
+            let finOne = await AppDataSource.getRepository(taluka_data).findOneBy({unique_id: data.unique_id});
+            console.log()
+            let getAll = await AppDataSource.getRepository(taluka_data).query(`SELECT DISTINCT master_data.taluka FROM taluka_data INNER JOIN master_data ON master_data.user_unique_id=taluka_data.unique_id WHERE mobile_number='${finOne.mobile_number}'`);
+            return getAll;
+        }
+    } catch(e){
+        Logger.error("userRepo => postUser", e)
+            return e;
+    }
+    }
 };
 // select * from master_data where rural_urban='rural' and district='Bagalkote(2)';

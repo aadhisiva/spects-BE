@@ -2,7 +2,6 @@ import { Container } from 'typedi';
 import express, { Request, Response } from 'express';
 import Logger from '../utility/winstonLogger';
 import { SchoolServices } from "../apiServices/schoolSerives";
-import { login_user_data } from '../entity/login_user_data';
 import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { school_data, students_data } from '../entity';
 import { encryptData } from '../utility/resusableFun';
