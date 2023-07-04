@@ -45,13 +45,17 @@ export class SchoolServices {
                     let reqObj = schoolDataAssignToLocal(getSchoolData[0])
                     reqObj.user_id = data.user_id;
                     reqObj.school_id = data?.school_id;
-                    let checkSchoolDataById = await this.SchoolRepo.getSchoolData(reqObj);
-                    if (checkSchoolDataById.length == 0) {
-                        await this.SchoolRepo.saveSchoolData(reqObj);
-                        return { message: "Data saved." };
+                    let DuplicateUser = await this.SchoolRepo.getOnlySchool(reqObj);
+                    if(DuplicateUser){
+                        let checkSchoolDataById = await this.SchoolRepo.getSchoolData(reqObj);
+                        if (checkSchoolDataById.length == 0) {
+                            return {code: 422, message: "School id is already added."}
+                        } else {
+                            await this.SchoolRepo.updateSchoolById(reqObj);
+                            return { message: "Data saved." };
+                        }
                     } else {
-                        await this.SchoolRepo.updateSchoolById(reqObj);
-                        return { message: "Data saved." };
+                        await this.SchoolRepo.saveSchoolData(reqObj);
                     }
                 }
             } else {
@@ -74,12 +78,17 @@ export class SchoolServices {
                     reqObj.user_id = data.user_id;
                     reqObj.school_id = data.school_id;
                     reqObj.sats_id = data.sats_id;
-                    let checkSatsDataById = await this.SchoolRepo.getStudentDataById(reqObj);
-                    if (checkSatsDataById.length == 0) {
-                        await this.SchoolRepo.saveStudentData(reqObj);
-                        return { message: "Data saved." };
+                    let duplicateUser = await this.SchoolRepo.getOnlyStudent(reqObj);
+                    if(duplicateUser){
+                        let checkSatsDataById = await this.SchoolRepo.getStudentDataById(reqObj);
+                        if (checkSatsDataById.length == 0) {
+                            return {code: 422, message: "Student Id is already added."}
+                        } else {
+                            await this.SchoolRepo.updateSchoolById(reqObj);
+                            return { message: "Data saved." };
+                        }
                     } else {
-                        await this.SchoolRepo.updateSchoolById(reqObj);
+                        await this.SchoolRepo.saveStudentData(reqObj);
                         return { message: "Data saved." };
                     }
                 }

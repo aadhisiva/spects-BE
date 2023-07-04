@@ -39,7 +39,7 @@ export class SchoolRepo {
     async saveSchoolData(data: school_data) {
         try {
             let findLength = await this.findDescOrderWise();
-            data.school_unique_id = (findLength?.length == 0)? 1 : findLength[0].school_unique_id + 1;
+            data.school_unique_id = (findLength?.length == 0) ? 1 : findLength[0].school_unique_id + 1;
             return await AppDataSource.getTreeRepository(school_data).save(data);
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
@@ -49,7 +49,7 @@ export class SchoolRepo {
 
     async findDescOrderWise() {
         try {
-            return await AppDataSource.getTreeRepository(school_data).query(`select school_unique_id from school_data ORDER BY id DESC LIMIT 1`); 
+            return await AppDataSource.getTreeRepository(school_data).query(`select school_unique_id from school_data ORDER BY id DESC LIMIT 1`);
             // return await AppDataSource.getTreeRepository(school_data).query(`select top 1 school_unique_id from school_data ORDER BY id DESC`); 
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
@@ -66,15 +66,24 @@ export class SchoolRepo {
         }
     };
 
+    async getOnlySchool(data: school_data) {
+        try {
+            return await AppDataSource.getTreeRepository(school_data).findOneBy({ school_id: Equal(data.school_id) });
+        } catch (e) {
+            Logger.error("schoolRepo => postSchoolData", e);
+            return e;
+        }
+    };
+
     async changeReadyToDelivered(data: students_data) {
         try {
             let idData = await AppDataSource.getTreeRepository(students_data);
-            let getData = await idData.findOneBy({student_unique_id: data.student_unique_id});
-            if(!getData){
+            let getData = await idData.findOneBy({ student_unique_id: data.student_unique_id });
+            if (!getData) {
                 return 422;
             } else {
-                let newData = {status: "delivered", image: data.image}
-                let updateResult = {...getData, ...newData};
+                let newData = { status: "delivered", image: data.image }
+                let updateResult = { ...getData, ...newData };
                 return idData.save(updateResult);
             }
         } catch (e) {
@@ -86,12 +95,12 @@ export class SchoolRepo {
     async changePendingToReady(data: students_data) {
         try {
             let idData = await AppDataSource.getTreeRepository(students_data);
-            let getData = await idData.findOneBy({student_unique_id: data.student_unique_id});
-            if(!getData){
+            let getData = await idData.findOneBy({ student_unique_id: data.student_unique_id });
+            if (!getData) {
                 return 422;
             } else {
-                let newData = {status: "ready_to_deliver"}
-                let updateResult = {...getData, ...newData};
+                let newData = { status: "ready_to_deliver" }
+                let updateResult = { ...getData, ...newData };
                 return idData.save(updateResult);
             }
         } catch (e) {
@@ -112,8 +121,8 @@ export class SchoolRepo {
     async saveStudentData(data: students_data) {
         try {
             let findCount = await this.findAllStudents();
-            console.log("frin",findCount)
-            data.student_unique_id = (findCount?.length == 0)? 1 : findCount[0].school_unique_id + 1;
+            console.log("frin", findCount)
+            data.student_unique_id = (findCount?.length == 0) ? 1 : findCount[0].school_unique_id + 1;
             data.order_number = generateOTP();
             return await AppDataSource.getTreeRepository(students_data).save(data);
         } catch (e) {
@@ -125,8 +134,17 @@ export class SchoolRepo {
     async getStudentDataById(data: students_data) {
         try {
             return await AppDataSource.getTreeRepository(students_data).query(`SELECT s.sats_id, s.dob, s.age, 
-                h.school_institute_name, h.school_id, s.gender, s.father_name, s.parent_phone_number FROM students_data 
+                h.school_institute_name, s.student_name, h.school_id, s.gender, s.father_name, s.parent_phone_number FROM students_data 
                 as s INNER JOIN school_data as h ON h.school_id = '${data.school_id}' where s.user_id='${data.user_id}' and s.sats_id='${data.sats_id}'`)
+        } catch (e) {
+            Logger.error("schoolRepo => postSchoolData", e)
+            return e;
+        }
+    };
+
+    async getOnlyStudent(data: students_data) {
+        try {
+            return await AppDataSource.getTreeRepository(students_data).findOneBy({sats_id: Equal(data.sats_id)});
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;
@@ -135,19 +153,19 @@ export class SchoolRepo {
 
     async getAllStudentData(data: students_data) {
         try {
-            let pending_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM school_data WHERE status='order_pending' and user_id='${data.user_id}'`);
-            let ready_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM school_data WHERE status='ready_to_deliver' and user_id='${data.user_id}'`);
-            let delivered_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM school_data WHERE status='delivered' and user_id='${data.user_id}'`);
+            let pending_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM students_data WHERE status='order_pending' and user_id='${data.user_id}'`);
+            let ready_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM students_data WHERE status='ready_to_deliver' and user_id='${data.user_id}'`);
+            let delivered_count = await AppDataSource.getRepository(students_data).query(`SELECT COUNT(*) as count FROM students_data WHERE status='delivered' and user_id='${data.user_id}'`);
             let order_pending = await this.getAllOrderPending(data);
             let ready_to_deliver = await this.getAllReadyToDeliver(data);
             let delivered = await this.getAllDelivered(data);
             return {
-                total: Number(pending_count[0].count)+Number(ready_count[0].count)+Number(delivered_count[0].count),
+                total: Number(pending_count[0].count) + Number(ready_count[0].count) + Number(delivered_count[0].count),
                 pending_count: pending_count[0].count,
                 ready_count: ready_count[0].count,
                 delivered_count: delivered_count[0].count,
-                order_pending, 
-                ready_to_deliver, 
+                order_pending,
+                ready_to_deliver,
                 delivered
             };
         } catch (e) {

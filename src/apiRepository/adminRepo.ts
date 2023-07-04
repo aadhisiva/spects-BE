@@ -199,7 +199,7 @@ export class AdminRepo {
                 FROM master_data LEFT JOIN district_data ON master_data.user_unique_id=district_data.unique_id where master_data.district='${district}'`)
             } else {
                 return await AppDataSource.getRepository(master_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district, district_data.name,district_data.mobile_number 
-                FROM master_data LEFT JOIN district_data ON master_data.user_unique_id=district_data.unique_id GROUP BY master_data.district`);
+                FROM master_data LEFT JOIN district_data ON master_data.user_unique_id=district_data.unique_id`);
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
@@ -207,15 +207,14 @@ export class AdminRepo {
         }
     };
     async getReportsData(data) {
-        const { type, district } = data;
         try {
-            let studentsData = await AppDataSource.getRepository(students_data).query(`SELECT st.student_name as name, 
+            let studentsData = await AppDataSource.getRepository(students_data).query(`SELECT st.student_name as name, st.created_at,
           sd.school_institute_name as details ,st.type, st.status, md.refractionist_name, md.district, md.taluka, md.sub_centre, 
           md.village, st.parent_phone_number as phone_number FROM students_data st INNER JOIN school_data sd ON 
           st.school_id=sd.school_id INNER JOIN master_data md ON st.user_id=md.user_unique_id where status='order_pending' 
           or status='ready_to_deliver' or status='delivered'`);
-            let otherBenfData = await AppDataSource.getRepository(students_data).query(`SELECT ob.benf_name as name, ob.type, 
-          ob.details,md.refractionist_name, md.district, md.taluka, md.sub_centre, md.village, ob.status, ob.phone_number 
+            let otherBenfData = await AppDataSource.getRepository(other_benf_data).query(`SELECT ob.benf_name as name, ob.type, 
+          ob.details,md.refractionist_name, md.district, md.taluka, md.sub_centre, md.village, ob.status, ob.phone_number, ob.created_at 
           FROM other_benf_data ob INNER JOIN master_data md ON ob.user_id=md.user_unique_id where status='order_pending' or 
           status='ready_to_deliver' or status='delivered';`);
             return [...studentsData, ...otherBenfData];
@@ -224,6 +223,7 @@ export class AdminRepo {
             return e;
         }
     };
+    
     async getTalukasData(data) {
         const { districtOne, districtTwo, talukaOne, talukaTwo} = data;
         try {
@@ -236,13 +236,13 @@ export class AdminRepo {
             // } else 
             if (districtOne || districtTwo) {
                 return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.district='${districtOne}' or master_data.district='${districtTwo}' GROUP BY master_data.taluka`);
+                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.district='${districtOne}' or master_data.district='${districtTwo}'`);
             } else if(talukaOne || talukaTwo){
                 return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
                 FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.taluka='${talukaOne}' or master_data.taluka='${talukaTwo}'`);
             } else {
                 return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id GROUP BY master_data.taluka`);
+                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id`);
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)

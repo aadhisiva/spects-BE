@@ -165,7 +165,7 @@ import {
     @Column({ default: null })
     local_lang: string;
   
-    @Column({ default: null })
+    @Column({ type: 'text', default: null })
     photo: string;
   
     @Column({ default: null })

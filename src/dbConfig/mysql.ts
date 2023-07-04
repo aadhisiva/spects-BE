@@ -13,7 +13,9 @@ dotenv.config();
 //   username: "sa",
 //   password: "edcs@123",
 //   database: "spectacles",
-//   entities: [login_user_data, school_data, students_data, other_benf_data, tracker_data, ekyc_data, master_data],
+//   entities: [login_user_data, school_data, students_data, other_benf_data, ekyc_data,
+//     external_logs, rc_data, master_data, sub_centre_data, district_data, taluka_data,
+//   ],
 //   logging: false,
 //   synchronize: true,
 //   options: {
