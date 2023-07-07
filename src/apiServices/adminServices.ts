@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import { AdminRepo } from "../apiRepository/adminRepo";
-import { SMSServices } from "../utility/sms_otp";
 import { generateOTP } from "../utility/resusableFun";
 import { ResusableFunctions } from "../utility/smsServceResusable";
 import { RESPONSEMSG } from "../utility/statusCodes";

@@ -13,7 +13,6 @@ const ekycServices = Container.get(EkycServices);
 router.post("/edcs_service", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = req.body;
-        console.log(req.body)
        await fs.writeFileSync("./text.txt", JSON.stringify(req.body));
        let result = await ekycServices.saveEkycData(data);
        let response = (result?.code || result instanceof Error) ?

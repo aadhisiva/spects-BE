@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import Logger from "./utility/winstonLogger";
@@ -10,7 +10,7 @@ import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
 import AdminController from "./apiController/adminController";
-import { addData, decrypt, decryptFront } from './utility/resusableFun';
+import { addData, decrypt } from './utility/resusableFun';
 
 dotenv.config();
 
@@ -28,7 +28,7 @@ app.set('views', __dirname);
 // Set view engine to use
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
-// console.log(decrypt("wInAF5ThdK2V8QzFRigvjsSOHMeV9+Pr362Y38Gc/649SAxc5GY0n+j8KhCcI2pDM9Em1v66r33hekK4ULabcutQ6fim+z8zLjnLTXjDmJ7EITRBh/en0+CucmT4i2rQzyAzyYj8HzWWHkEaVIyzonwTTjJt0+SKwgC5MuRecLqMqPdggiuy2O1IpS1F09j3YNSl3hn3r2d7lnBAr3JAnJwy24TickZX8ujfDqqq1L0uzjtrYbdxuMDpIPWLNr1WGbRJw81yJEP5HlFDDVOH7+vCmSurHAt9EUTWAsh+s7Sdqb9gO7ExKiBWYz47AeBthb1HcDMiAyS6ljADB5yHc5WbnZYu/KBzquaT0D7gepbFseduGY9OtMAVM6HMFxJ2ZHmdGV1mQjLOuYaN5jJpcFNJRISzs7Nx3zKk6TiGFrjCrgL4TsiMcPZmZPoVXmj/iZvI6JPeBWLH8VEwm0J3y30s6G44L2DLiqqeDJ0sHBRCRnGzy8wNu40TzuqpZkPMuLSGI/c7Q1ExADAy5hnx+NGJ2FJCzsNTJHCrL0OnpLJv+QQbpDs+hfl5m3l13RI95HhgvB4ldX2Xv+f9GxIH6m+g9TTcqMsSJdREAvhpJ82nBQBTul5mS5JB5EKYii+fQh64B3p1EwGh5QNgpKpkD9Br74Q4N2rtSYrSw6+th7DhQJfw+TNYbLymleOrSNo0WWcmyhq0UYb4XNE/dew4OPP/9/+0GvcwXSiosyY62WVg7ABCvkME48pey0SdxwvpMRooRkoydOY2UcCrf6muIA86PhOrYjIrFelZl+bGdHLdmmTC4UD9pZKKwx4t/F74A0yL9zf62J+yq/PvjVa7KadANI7MpiFxk5DnN01zgGl1alteEBkoj/DnA36ZulYl3SuOZaZvCW8egMtyE0NoXKMhJ51QuYkId8sp5ODm/Jm7kHF3n6y0jAs/uI2yD0SBjDDuAFG3eu2DPMNTTnVKAFtgAL9QdCowKfrpF/wis8xj7H3unPQOrHTIuQFRmuyicNepg7usHUaUND4zrPA8Zw=="))
+// console.log(decrypt("eosVizk9aPfgFdifuSYn89wdyIRWC69KMy9Vu1zfw6MA7D5zcFw+IRvIiPPAvtrhnNZy6xw7CbWDX9tsnw/hPKEHW2nVdMBqnc+KtjcB8dbV8XwBk2vbwTzZKakDa8Qp7P/Nxfbak7DJiSUoOTMVA0MqnNQvjNuZsMw/8yh9MYa1hztbrkOAdyDk1buzJHjVe3qpNEvPvKqdHcIU5D9CRZHTmDrdUkPcOy0h4QRuYNgBOra8VWm2ZAyvdHeht+YxkwUOdHMUbOKsB6XZHHpJ4w=="))
 
 app.post("/add", async (req, res) => {
   let data = addData();

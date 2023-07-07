@@ -3,7 +3,7 @@ import express, { Request, Response, response } from 'express';
 import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { AdminServices } from '../apiServices/adminServices';
 import { district_data, master_data } from '../entity';
-import { decrypt, encryptData, encryptFront } from '../utility/resusableFun';
+import { decrypt, encryptData } from '../utility/resusableFun';
 
 const router = express.Router();
 

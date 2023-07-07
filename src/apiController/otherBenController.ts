@@ -223,15 +223,13 @@ router.post("/ekyc_text", requestAndResonseTime, async (req: Request, res: Respo
     };
 });
 
-function checkData(data, res){
-   return axios.post("http://localhost:8889/other/ekyc_text", data)
-    .then((obj) => {
-        if (!res.headersSent) {
-            if (obj?.data?.code != 500) {
-               return res.send(obj.data);
-            }
+async function checkData(data, res) {
+    let resultData = await otherBenfServices.getEkycDataFromEkyc(data);
+    if (!res.headersSent) {
+        if (resultData?.code != 500) {
+            return res.send({ code: resultData.code, status: resultData.status, data: encryptData(resultData.data) });
         }
-    }).catch(err => res.send({ code: 422, status: "Failed", message: err.message }));
+    }
 };
 
 router.post("/ekyc_response", requestAndResonseTime, async (req: Request, res: Response) => {
@@ -240,17 +238,17 @@ router.post("/ekyc_response", requestAndResonseTime, async (req: Request, res: R
         checkData(data, res);
         setTimeout(() => {
             if (!res.headersSent) {
-               return checkData(data, res);
+                return checkData(data, res);
             }
         }, 10000)
         setTimeout(() => {
             if (!res.headersSent) {
-                res.send({ code: 503, status: "Failed", message: "Timed Out" })
+                res.send({ code: 503, status: "Failed", message: encryptData("Timed Out") })
             }
         }, 30000)
     } catch (e) {
         console.log("Ee", e);
-        return res.send({code: 500, status: "Failed", message: "something went wrong."})
+        return res.send({ code: 500, status: "Failed", message: "something went wrong." })
     }
 });
 

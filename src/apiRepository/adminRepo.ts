@@ -4,6 +4,7 @@ import { AppDataSource } from "../dbConfig/mysql";
 import { district_data, ekyc_data, master_data, other_benf_data, students_data, sub_centre_data, taluka_data } from "../entity";
 import { Equal } from "typeorm";
 import { data } from "../b";
+import { state_data } from "../entity/state_data";
 
 @Service()
 export class AdminRepo {
@@ -21,7 +22,7 @@ export class AdminRepo {
     async updateLogin(data) {
         try {
             if (data.type == "state_admin") {
-                let district = AppDataSource.getRepository(district_data);
+                let district = AppDataSource.getRepository(state_data);
                 let result = await district.findOneBy({ mobile_number: data.mobile_number });
                 let finalData = { ...result, ...{ otp: data.otp } };
                 return await district.save(finalData);
@@ -51,7 +52,7 @@ export class AdminRepo {
     async checkTypeWiseLoginData(data) {
         try {
             if (data.type == "state_admin") {
-                return await AppDataSource.getRepository(district_data).findOneBy({ mobile_number: data.mobile_number });
+                return await AppDataSource.getRepository(state_data).findOneBy({ mobile_number: data.mobile_number });
             } else if (data.type == "district_officer") {
                 return await AppDataSource.getRepository(district_data).findOneBy({ mobile_number: data.mobile_number })
             } else if (data.type == "taluka") {

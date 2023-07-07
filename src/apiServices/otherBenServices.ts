@@ -404,18 +404,18 @@ export class OtherBenfServices {
                 let ekycData = await this.OtherBenfRepo.getEkycDataFromEkyc(convertUpperCaseAadhar);
                 let kutumbaData = await this.OtherBenfRepo.getDataOnlyAadharFromKutumba(convertAadhar);
                 if (ekycData == 422 || kutumbaData == 422) {
-                    return { code: 500, message: "Failed" };
+                    return { code: 500, status: "Failed", message: "Ekyc response is not getting." };
                 } else if (ekycData.finalStatus != "S") {
-                    return { code: 422, message: "Ekyc Failed." }
+                    return { code: 422, status: "Failed", message: "Ekyc Respone Failed." }
                 } else if (ekycData.aadhaarHash.toUpperCase() != kutumbaData.aadhar_no) {
-                    return { code: 422, message: "Aadhar hash not matching." }
+                    return { code: 422, status: "Failed", message: "Aadhar hash not matching." }
                 } else {
                     // update ekyc "yes in other benf data ---------- hereeeee
                     await this.OtherBenfRepo.updateEkycStatusInBenf(convertAadhar)
-                    return { message: "Ekyc completed successfully." }
+                    return {code:200, status: "Success", message: "Ekyc completed successfully." }
                 }
             } else {
-                return { code: 422, message: "Aadhar no is mandatory." }
+                return { code: 422, status: "Failed", message: "Aadhar no is mandatory." }
             };
         } catch (e) {
             console.log("OtherBenfServices === updateBenificaryEachID", e);
