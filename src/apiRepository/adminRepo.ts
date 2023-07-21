@@ -1,24 +1,12 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
-import { district_data, ekyc_data, master_data, other_benf_data, students_data, sub_centre_data, taluka_data } from "../entity";
-import { Equal } from "typeorm";
-import { data } from "../b";
+import { district_data, master_data, sub_centre_data, taluka_data } from "../entity";
 import { state_data } from "../entity/state_data";
+import { PrameterizedQueries } from "../utility/resusableFun";
 
 @Service()
 export class AdminRepo {
-
-    async addDistrictsData(data: district_data) {
-        try {
-            data.unique_id = "1";
-            return AppDataSource.getRepository(district_data).save(data);
-        } catch (e) {
-            Logger.error("adminRepo => addDistrictsData", e)
-            return e;
-        }
-    };
-
     async updateLogin(data) {
         try {
             if (data.type == "state_admin") {
@@ -78,57 +66,60 @@ export class AdminRepo {
     };
     async getAllMasters(data) {
         try {
-            const { districtOne, districtTwo, talukaOne, talukaTwo  } = data;
-            // if (type && district && taluka && sub) {
-            //     return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}' and taluka='${taluka}' and sub_centre='${sub}'`);
-            // } else if (type && district && taluka) {
-            //     return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}' and taluka='${taluka}'`);
-            // } else if (type && district) {
-            //     return AppDataSource.getRepository(master_data).query(`select * from master_data where rural_urban='${type}' and district='${district}'`);
-            // } else 
-            if (districtOne || districtTwo) {
-                return AppDataSource.getRepository(master_data).query(`select * from master_data where district='${districtOne}' or district='${districtTwo}'`);
-            } else if(talukaOne || talukaTwo){
-                return AppDataSource.getRepository(master_data).query(`select * from master_data where taluka='${talukaOne}' or taluka='${talukaTwo}'`);
+            const { districts, talukas } = data;
+            if (districts) {
+                if(!Array.isArray(districts)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true); 
+                if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'CALL get_districtOff_refractinoist(?,?,?,?,?,?,?,?,?,?)';
+                let getParamsData = PrameterizedQueries(districts);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result[0];
+            } else if (talukas) {
+                if(!Array.isArray(talukas)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (talukas).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true); 
+                if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'CALL get_districtOff_taluka(?,?,?,?,?,?,?,?,?,?)';
+                let getParamsData = PrameterizedQueries(talukas);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result[0];
             } else {
-                return AppDataSource.getRepository(master_data).query(`select * from master_data;`);
+                let query = `CALL GetAllMasters()`;
+                let result = await AppDataSource.getRepository(master_data).query(query);
+                return result[0];
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
-    async getAllOrders(data) {
+    async getAllOrders() {
         try {
-            let order_sats = await AppDataSource.getRepository(students_data).countBy({ status: 'order_pending' });
-            let ready_sats = await AppDataSource.getRepository(students_data).countBy({ status: 'ready_to_deliver' });
-            let delivered_sats = await AppDataSource.getRepository(students_data).countBy({ status: 'delivered' });
-            let order_benf = await AppDataSource.getRepository(other_benf_data).countBy({ status: 'order_pending' });
-            let ready_benf = await AppDataSource.getRepository(other_benf_data).countBy({ status: 'ready_to_deliver' });
-            let delivered_benf = await AppDataSource.getRepository(other_benf_data).countBy({ status: 'delivered' });
-            return order_benf + ready_benf + delivered_benf + order_sats + ready_sats + delivered_sats;
+            let query = `CALL get_all_count()`;
+            let result = await AppDataSource.getRepository(master_data).query(query);
+            return result[0];
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
-    async getAllDelivered(data) {
+    async getAllDelivered() {
         try {
-            let delivered_sats = await AppDataSource.getRepository(students_data).countBy({ status: 'delivered' });
-            let delivered_benf = await AppDataSource.getRepository(other_benf_data).countBy({ status: 'delivered' });
-            return delivered_benf + delivered_sats;
+            let query = `CALL get_all_delivered()`;
+            let result = await AppDataSource.getRepository(master_data).query(query);
+            return result[0];
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
-    async getAllPending(data) {
+    async getAllPending() {
         try {
-            let order_sats = await AppDataSource.getRepository(students_data).countBy({ status: 'order_pending' });
-            let ready_sats = await AppDataSource.getRepository(students_data).countBy({ status: 'ready_to_deliver' });
-            let order_benf = await AppDataSource.getRepository(other_benf_data).countBy({ status: 'order_pending' });
-            let ready_benf = await AppDataSource.getRepository(other_benf_data).countBy({ status: 'ready_to_deliver' });
-            return order_benf + ready_benf + order_sats + ready_sats;
+            let query = `CALL get_all_pending()`;
+            let result = await AppDataSource.getRepository(master_data).query(query);
+            return result[0];
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -139,7 +130,8 @@ export class AdminRepo {
             let masterData = await AppDataSource.getRepository(master_data);
             let result = await masterData.findOneBy({ user_unique_id: data.user_unique_id });
             let finalData = { ...result, ...data };
-            return await masterData.save(finalData);
+            await masterData.save(finalData);
+            return {};
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -148,21 +140,23 @@ export class AdminRepo {
     async updateDistrictsData(data) {
         try {
             let masterData = await AppDataSource.getRepository(district_data);
-            let result = await AppDataSource.getRepository(master_data).query(`select user_unique_id from master_data where district='${data.district}'`); 
-           return result?.map(async (obj) => {
-            var temp = Object.assign({}, obj);
+            let query = `select user_unique_id from master_data where district=?`;
+            let result = await AppDataSource.getRepository(master_data).query(query, [data.district]);
+            result?.map(async (obj) => {
+                var temp = Object.assign({}, obj);
                 temp.unique_id = temp.user_unique_id
-                temp.mobile_number= data.mobile_number,
-                temp.name = data.name;
+                temp.mobile_number = data.mobile_number,
+                    temp.name = data.name;
                 delete temp.user_unique_id;
-                let findData = await masterData.findOneBy({unique_id: obj.user_unique_id});
+                let findData = await masterData.findOneBy({ unique_id: obj.user_unique_id });
                 if (!findData) {
                     await AppDataSource.getRepository(district_data).save(temp);
                 }
                 let finalData = { ...findData, ...temp };
                 await masterData.save(finalData);
                 return temp;
-           });
+            });
+            return {};
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -171,103 +165,101 @@ export class AdminRepo {
     async updateTalukaData(data) {
         try {
             let masterData = await AppDataSource.getRepository(taluka_data);
-            let result = await AppDataSource.getRepository(master_data).query(`select user_unique_id from master_data where taluka='${data.taluka}'`); 
-            return result?.map(async (obj) => {
-             var temp = Object.assign({}, obj);
-                 temp.unique_id = temp.user_unique_id
-                 temp.mobile_number= data.mobile_number,
-                 temp.name = data.name;
-                 delete temp.user_unique_id;
-                 let findData = await masterData.findOneBy({unique_id: obj.user_unique_id});
-                 if (!findData) {
-                     await AppDataSource.getRepository(taluka_data).save(temp);
-                 }
-                 let finalData = { ...findData, ...temp };
-                 await masterData.save(finalData);
-                 return temp;
+            let query = `select user_unique_id from master_data where taluka=?`
+            let result = await AppDataSource.getRepository(master_data).query(query, [data.taluka]);
+            result?.map(async (obj) => {
+                var temp = Object.assign({}, obj);
+                temp.unique_id = temp.user_unique_id
+                temp.mobile_number = data?.mobile_number,
+                    temp.name = data?.name;
+                delete temp.user_unique_id;
+                let findData = await masterData.findOneBy({ unique_id: obj.user_unique_id });
+                if (!findData) {
+                    await AppDataSource.getRepository(taluka_data).save(temp);
+                }
+                let finalData = { ...findData, ...temp };
+                await masterData.save(finalData);
+                return temp;
             });
+            return {};
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
 
-    async getDistrictsData(data) {
-        const { district } = data;
+    async getReportsData() {
         try {
-            if (district) {
-                return await AppDataSource.getRepository(master_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district, district_data.name,district_data.mobile_number 
-                FROM master_data LEFT JOIN district_data ON master_data.user_unique_id=district_data.unique_id where master_data.district='${district}'`)
-            } else {
-                return await AppDataSource.getRepository(master_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district, district_data.name,district_data.mobile_number 
-                FROM master_data LEFT JOIN district_data ON master_data.user_unique_id=district_data.unique_id`);
-            }
+            let otherQuery = `CALL get_reports_other_benf_data()`;
+            let otherResult = await AppDataSource.getRepository(master_data).query(otherQuery);
+            let query = `CALL get_reports_students_data()`;
+            let result = await AppDataSource.getRepository(master_data).query(query);
+            return [...otherResult[0], ...result[0]];
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
-    async getReportsData(data) {
-        try {
-            let studentsData = await AppDataSource.getRepository(students_data).query(`SELECT st.student_name as name, st.created_at,
-          sd.school_institute_name as details ,st.type, st.status, md.refractionist_name, md.district, md.taluka, md.sub_centre, 
-          md.village, st.parent_phone_number as phone_number FROM students_data st INNER JOIN school_data sd ON 
-          st.school_id=sd.school_id INNER JOIN master_data md ON st.user_id=md.user_unique_id where status='order_pending' 
-          or status='ready_to_deliver' or status='delivered'`);
-            let otherBenfData = await AppDataSource.getRepository(other_benf_data).query(`SELECT ob.benf_name as name, ob.type, 
-          ob.details,md.refractionist_name, md.district, md.taluka, md.sub_centre, md.village, ob.status, ob.phone_number, ob.created_at 
-          FROM other_benf_data ob INNER JOIN master_data md ON ob.user_id=md.user_unique_id where status='order_pending' or 
-          status='ready_to_deliver' or status='delivered';`);
-            return [...studentsData, ...otherBenfData];
-        } catch (e) {
-            Logger.error("userRepo => postUser", e)
-            return e;
-        }
-    };
-    
+
     async getTalukasData(data) {
-        const { districtOne, districtTwo, talukaOne, talukaTwo} = data;
+        const { districts, talukas } = data;
         try {
-            // if (type && district && taluka) {
-            //     return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-            //     FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.rural_urban='${type}' and master_data.district='${district}' and master_data.taluka='${taluka}' GROUP BY master_data.taluka`)
-            // } else if (type && district) {
-            //     return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-            //     FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.rural_urban='${type}' and master_data.district='${district}' GROUP BY master_data.taluka`);
-            // } else 
-            if (districtOne || districtTwo) {
-                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.district='${districtOne}' or master_data.district='${districtTwo}'`);
-            } else if(talukaOne || talukaTwo){
-                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id where master_data.taluka='${talukaOne}' or master_data.taluka='${talukaTwo}'`);
+            if (districts) {
+                if(!Array.isArray(districts)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true); 
+                if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'CALL get_districtOff_taluka_districts(?,?,?,?,?,?,?,?,?,?)';
+                let getParamsData = PrameterizedQueries(districts);
+                let result = await AppDataSource.getRepository(taluka_data).query(query, getParamsData);
+                return result[0];
+            } else if (talukas) {
+                if(!Array.isArray(talukas)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (talukas).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true); 
+                if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'CALL get_districtOff_taluka_districts(?,?,?,?,?,?,?,?,?,?)';
+                let getParamsData = PrameterizedQueries(districts);
+                let result = await AppDataSource.getRepository(taluka_data).query(query, getParamsData);
+                return result[0];
             } else {
-                return await AppDataSource.getRepository(taluka_data).query(`SELECT master_data.user_unique_id, master_data.rural_urban, master_data.district,master_data.taluka, taluka_data.name,taluka_data.mobile_number 
-                FROM master_data LEFT JOIN taluka_data ON master_data.user_unique_id=taluka_data.unique_id`);
+                let query = 'CALL get_districtOff_talukaAll()';
+                let result = await AppDataSource.getRepository(taluka_data).query(query);
+                return result[0];
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
-    
-    async getLoginUserData(data) {
-        try{
-        if(data.type == "District Officer"){
-            let finOne = await AppDataSource.getRepository(district_data).findOneBy({unique_id: data.unique_id});
-            console.log()
-            let getAll = await AppDataSource.getRepository(district_data).query(`SELECT DISTINCT master_data.district FROM district_data INNER JOIN master_data ON master_data.user_unique_id=district_data.unique_id WHERE mobile_number='${finOne.mobile_number}'`);
-            return getAll;
-        } else if(data.type == "Taluka"){
-            let finOne = await AppDataSource.getRepository(taluka_data).findOneBy({unique_id: data.unique_id});
-            console.log()
-            let getAll = await AppDataSource.getRepository(taluka_data).query(`SELECT DISTINCT master_data.taluka FROM taluka_data INNER JOIN master_data ON master_data.user_unique_id=taluka_data.unique_id WHERE mobile_number='${finOne.mobile_number}'`);
-            return getAll;
-        }
-    } catch(e){
-        Logger.error("userRepo => postUser", e)
+
+    async getDistrictsData() {
+        try {
+            let query = 'CALL get_all_districts()';
+                let result = await AppDataSource.getRepository(master_data).query(query);
+                return result[0];
+        } catch (e) {
+            Logger.error("userRepo => postUser", e)
             return e;
-    }
+        }
+    };
+
+    async getLoginUserData(data) {
+        try {
+            if (data.type == "District Officer") {
+                let finOne = await AppDataSource.getRepository(district_data).findOneBy({ unique_id: data.unique_id });
+                let query = `CALL get_user_districtWise(?)`;
+                let result = await AppDataSource.getRepository(district_data).query(query, [finOne?.mobile_number]);
+                return result[0];
+            } else if (data.type == "Taluka") {
+                let finOne = await AppDataSource.getRepository(taluka_data).findOneBy({ unique_id: data.unique_id });
+                let query = `CALL get_user_talukaWise(?)`;
+                let result = await AppDataSource.getRepository(taluka_data).query(query, [finOne?.mobile_number]);
+                return result[0];
+            }
+        } catch (e) {
+            Logger.error("userRepo => postUser", e)
+            return e;
+        }
     }
 };
-// select * from master_data where rural_urban='rural' and district='Bagalkote(2)';

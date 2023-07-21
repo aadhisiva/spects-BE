@@ -10,3 +10,4 @@ export * from "./district_data";
 export * from "./other_benf_data"
 export * from "./rc_data";
 export * from "./sub_centre_data";
+export * from "./redirection_data";

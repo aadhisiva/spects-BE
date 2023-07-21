@@ -46,6 +46,7 @@ export class SchoolServices {
                     reqObj.user_id = data.user_id;
                     reqObj.school_id = data?.school_id;
                     let DuplicateUser = await this.SchoolRepo.getOnlySchool(reqObj);
+                    console.log("dsad", DuplicateUser)
                     if(DuplicateUser){
                         let checkSchoolDataById = await this.SchoolRepo.getSchoolData(reqObj);
                         if (checkSchoolDataById.length == 0) {
@@ -56,6 +57,7 @@ export class SchoolServices {
                         }
                     } else {
                         await this.SchoolRepo.saveSchoolData(reqObj);
+                        return { message: "Data saved." };
                     }
                 }
             } else {
@@ -194,8 +196,10 @@ export class SchoolServices {
                 if (result.length == 0) {
                     return { code: 422, message: "Data not exists." };
                 } else {
-                    const date: any = new Date(Date.now() + 6000);
-                    // const date: any = new Date(Date.now() + 217800000); ------- adding 6 hours
+                    if(!result[0].school_mail) return {code: 422, message: "Mail not exists."}
+                    const date: any = new Date(Date.now() + 2000);
+                    // const date: any = new Date(Date.now() + 217800000); 
+                    //------- adding 6 hours
                     const endTime = new Date(date.getTime() + 1000);
                     await trackExternalLogs(Tables.STUDENT, "send_mail", "", data, '', data.user_id);
                     await schedule.scheduleJob({ start: date, end: endTime, rule: '*/1 * * * * *' }, async function () {
@@ -228,8 +232,10 @@ export class SchoolServices {
                 if (result.length == 0) {
                     return { code: 422, message: "Data not exists." };
                 } else {
-                    const date: any = new Date(Date.now() + 60000);
-                    // const date: any = new Date(Date.now() + 217800000); ------- adding 6 hours
+                    if(!result[0].school_mail) return {code: 422, message: "Mail not exists."}
+                    // const date: any = new Date(Date.now() + 60000);
+                    const date: any = new Date(Date.now() + 217800000); 
+                    // ------- adding 6 hours
                     const endTime = new Date(date.getTime() + 1000);
                     await schedule.scheduleJob({ start: date, end: endTime, rule: '*/1 * * * * *' }, async function () {
                         console.log('Time for tea!');

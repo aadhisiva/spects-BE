@@ -227,7 +227,7 @@ async function checkData(data, res) {
     let resultData = await otherBenfServices.getEkycDataFromEkyc(data);
     if (!res.headersSent) {
         if (resultData?.code != 500) {
-            return res.send({ code: resultData.code, status: resultData.status, data: encryptData(resultData.data) });
+            return res.send({ code: resultData.code, status: resultData.status, data: encryptData(resultData.message) });
         }
     }
 };

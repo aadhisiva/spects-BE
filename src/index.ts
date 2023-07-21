@@ -11,28 +11,65 @@ import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
 import AdminController from "./apiController/adminController";
 import { addData, decrypt } from './utility/resusableFun';
+import path from 'path';
+import sessions from "express-session";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.use(cors({
+  origin:['http://localhost:3000'],
+  methods: ["POST", "GET"],
+  credentials: true,
+}));
+
 app.use(express.json());
-app.use(cors());
+
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+
+const oneHour = 2000 * 60;
+
+//session middleware
+app.use(sessions({
+    secret: process.env.COOKIE_PARSER_KEY,
+    saveUninitialized: true,
+    cookie: { maxAge: oneHour },
+    resave: false,
+}));
+
 app.use(morgan('common', {
   stream: fs.createWriteStream('./logs/application.log', { flags: 'a' })
 }));
+// Have Node serve the files for our built React app
+app.use(express.static(path.resolve(__dirname, '../../../build')));
+
 // Set directory to contain the templates ('views')
 app.set('views', __dirname);
 
 // Set view engine to use
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
-// console.log(decrypt("eosVizk9aPfgFdifuSYn89wdyIRWC69KMy9Vu1zfw6MA7D5zcFw+IRvIiPPAvtrhnNZy6xw7CbWDX9tsnw/hPKEHW2nVdMBqnc+KtjcB8dbV8XwBk2vbwTzZKakDa8Qp7P/Nxfbak7DJiSUoOTMVA0MqnNQvjNuZsMw/8yh9MYa1hztbrkOAdyDk1buzJHjVe3qpNEvPvKqdHcIU5D9CRZHTmDrdUkPcOy0h4QRuYNgBOra8VWm2ZAyvdHeht+YxkwUOdHMUbOKsB6XZHHpJ4w=="))
 
 app.post("/add", async (req, res) => {
   let data = addData();
   res.send(data)
+});
+
+app.get('/session', (req, res) => {
+  if(req?.session?.userid){
+    res.send({login: 200, userData : req.session?.userid});
+  } else {
+    res.send({login: 422});
+  }
+})
+
+// All other GET requests not handled before will return our React app
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../../../build', 'index.html'));
 });
 
 app.use("/login", UserController);

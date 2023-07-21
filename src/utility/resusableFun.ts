@@ -84,14 +84,21 @@ export const addData = async () => {
   return "completed";
 };
 
-const password = '123456789';
-export var encryptFront = function (message) {
-  const ciphertext = crypto.AES.encrypt(JSON.stringify(message), password);
-  return ciphertext.toString();
+export const reUsableResSendFunction = (res, response) => {
+  if (response.code !== 200) {
+    return res.status(422).send({ code: 422, status: 'Failed', message: response?.message, data: response?.data })
+  } else {
+    return res.status(200).send(response)
+  }
+};
+
+export const PrameterizedQueries = (data) => {
+  let givenData: number = data?.length;
+  let arrayLength = ['', '', '', '', '', '', '', '', '', ''];
+  let slicedData = arrayLength.slice(givenData);
+  for (var i = 0; i < givenData; i++) {
+      slicedData.unshift(data[i]);
+  }
+  return slicedData;
 }
 
-export var decryptFront = function (message) {
-  const bytes = crypto.AES.decrypt(message, password);
-  const plaintext = bytes.toString(crypto.enc.Utf8);
-  return plaintext;
-}

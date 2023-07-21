@@ -1,6 +1,5 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
-import { nanoid } from "nanoid";
 import { AppDataSource } from "../dbConfig/mysql";
 import { school_data, students_data } from "../entity";
 import { Equal } from "typeorm";

@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 import { login_user_data, students_data, school_data, ekyc_data, other_benf_data, 
-  external_logs, master_data, district_data, taluka_data, rc_data, sub_centre_data } from "../entity";
+  external_logs, master_data, district_data, taluka_data, rc_data, sub_centre_data, redirection_data } from "../entity";
 import { state_data } from "../entity/state_data";
 
 dotenv.config();
@@ -16,7 +16,7 @@ dotenv.config();
 //   database: "spectacles",
 //   entities: [login_user_data, school_data, students_data, other_benf_data, ekyc_data,
 //     external_logs, rc_data, master_data, sub_centre_data, district_data, taluka_data,
-//     state_data
+//     state_data, redirection_data
 //   ],
 //   logging: false,
 //   synchronize: true,
@@ -40,7 +40,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_DATABASE,
   entities: [login_user_data, school_data, students_data, other_benf_data, ekyc_data,
         external_logs, rc_data, master_data, sub_centre_data, district_data, taluka_data,
-        state_data
+        state_data, redirection_data
       ],
   logging: false,
   synchronize: true,

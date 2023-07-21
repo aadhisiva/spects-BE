@@ -3,70 +3,79 @@ import { AdminRepo } from "../apiRepository/adminRepo";
 import { generateOTP } from "../utility/resusableFun";
 import { ResusableFunctions } from "../utility/smsServceResusable";
 import { RESPONSEMSG } from "../utility/statusCodes";
+import jwt from "jsonwebtoken";
+
 
 @Service()
 export class AdminServices {
-    constructor(public AdminRepo: AdminRepo, public ResusableFunctions : ResusableFunctions) { }
+    constructor(public AdminRepo: AdminRepo, public ResusableFunctions: ResusableFunctions) { }
 
     async login(data) {
-        if(!data.mobile_number) return {code: 422, message : "Phone number cananot be null."};
-        if(data.mobile_number.length !== 10) return {code: 422, message : "Phone number not valid."}
+        if (!data.mobile_number) return { code: 422, message: "Phone number cananot be null." };
+        if (data.mobile_number.length !== 10) return { code: 422, message: "Phone number not valid." }
         let checkData = await this.AdminRepo.checkTypeWiseLoginData(data);
-        if(!checkData) return {code: 422, message: "Data not exits."}
+        if (!checkData) return { code: 422, message: "Data not exits." }
         let sixDigitOtp = generateOTP();
-        data.otp= sixDigitOtp;
+        data.otp = sixDigitOtp;
         let sendOtpMessage = await this.ResusableFunctions.sendOtpAsSingleSms(data.mobile_number, sixDigitOtp);
-        if(sendOtpMessage !==200) return {code: 422, message: RESPONSEMSG.OTP_FAILED};
-        let userData = await this.AdminRepo.updateLogin(data);
-        return {message: RESPONSEMSG.OTP, data: userData};
+        if (sendOtpMessage !== 200) return { code: 422, message: RESPONSEMSG.OTP };
+        await this.AdminRepo.updateLogin(data);
+        return { message: RESPONSEMSG.OTP, data: {} };
     };
 
     async validationOtp(data) {
-        if(!data.mobile_number) return {code: 422, message : "Phone number cananot be null."};
-        if(data.mobile_number.length !== 10) return {code: 422, message : "Phone number not valid."}
+        if (!data.mobile_number) return { code: 422, message: "Phone number cananot be null." };
+        if (data.mobile_number.length !== 10) return { code: 422, message: "Phone number not valid." }
         let checkData = await this.AdminRepo.checkTypeWiseLoginData(data);
-        if(!checkData) return {code: 422, message: "Data not exits."}
+        if (!checkData) return { code: 422, message: "Data not exits." }
         let checkOtp = checkData.otp == data.otp;
-        if(!checkOtp) return {code: 422, message: RESPONSEMSG.VALIDATE_FAILED}
-        return {message: RESPONSEMSG.VALIDATE, data: checkData};
+        if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
+        const token = jwt.sign({ user_id: checkData.unique_id }, process.env.USERFRONT_PUBLIC_KEY, { expiresIn: "1h", });
+        delete checkData?.created_at;
+        delete checkData?.mobile_number;
+        delete checkData?.otp;
+        delete checkData?.updated_at;
+        delete checkData?.id;
+        let finalResult = { ...checkData, ...{ token } };
+        return { message: RESPONSEMSG.VALIDATE, data: finalResult };
     };
 
     async resendOtp(data) {
-        if(!data.mobile_number) return {code: 422, message : "Phone number cananot be null."};
-        if(data.mobile_number.length !== 10) return {code: 422, message : "Phone number not valid."}
+        if (!data.mobile_number) return { code: 422, message: "Phone number cananot be null." };
+        if (data.mobile_number.length !== 10) return { code: 422, message: "Phone number not valid." }
         let checkData = await this.AdminRepo.checkTypeWiseLoginData(data);
-        if(!checkData) return {code: 422, message: "Data not exits."}
+        if (!checkData) return { code: 422, message: "Data not exits." }
         let sixDigitOtp = generateOTP();
-        data.otp= sixDigitOtp;
+        data.otp = sixDigitOtp;
         let sendOtpMessage = await this.ResusableFunctions.sendOtpAsSingleSms(data.mobile_number, sixDigitOtp);
-        if(sendOtpMessage !==200) return {code: 422, message: "Otp sent failed."};
+        if (sendOtpMessage !== 200) return { code: 422, message: RESPONSEMSG.OTP_FAILED };
         await this.AdminRepo.updateLogin(data);
-        return {message: RESPONSEMSG.OTP, data: checkData};
+        return { message: RESPONSEMSG.OTP, data: {} };
     };
 
     async getAllMasters(data) {
         return this.AdminRepo.getAllMasters(data)
     };
 
-    async getAllOrders(data) {
-        return this.AdminRepo.getAllOrders(data)
+    async getAllOrders() {
+        return this.AdminRepo.getAllOrders()
     };
 
-    async getAllDelivered(data) {
-        return this.AdminRepo.getAllDelivered(data)
+    async getAllDelivered() {
+        return this.AdminRepo.getAllDelivered()
     };
 
-    async getAllPending(data) {
-        return this.AdminRepo.getAllPending(data)
+    async getAllPending() {
+        return this.AdminRepo.getAllPending()
     };
     async getUpdatedData(data) {
         return this.AdminRepo.getUpdatedData(data)
     };
-    async getDistrictsData(data) {
-        return this.AdminRepo.getDistrictsData(data)
-    };
     async getTalukasData(data) {
         return this.AdminRepo.getTalukasData(data)
+    };
+    async getDistrictsData() {
+        return this.AdminRepo.getDistrictsData()
     };
     async updateDistrictsData(data) {
         return this.AdminRepo.updateDistrictsData(data)
@@ -75,8 +84,8 @@ export class AdminServices {
         return this.AdminRepo.updateTalukaData(data)
     };
     //reports
-    async getReportsData(data) {
-        return this.AdminRepo.getReportsData(data)
+    async getReportsData() {
+        return this.AdminRepo.getReportsData()
     };
     async getLoginUserData(data) {
         return this.AdminRepo.getLoginUserData(data)

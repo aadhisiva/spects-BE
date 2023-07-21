@@ -5,6 +5,8 @@ import Logger from "./winstonLogger";
 import https from "https";
 import { Methods, Tables } from "./constants";
 import { trackExternalLogs } from "./trackerLog";
+import { AppDataSource } from "../dbConfig/mysql";
+import { redirection_data } from "../entity";
 
 export const convertAadharToSha256Hex = async (data) => {
     try {
@@ -133,6 +135,8 @@ export class KutumbaDetails {
     }
 
     async getDataFromEkycOutSource(data) {
+        let url = await AppDataSource.getRepository(redirection_data).find();
+        console.log(`${url[0].ekyc_url}/edcs/edcs_service_application`)
         try {
             let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
             let bodyData = {
@@ -146,7 +150,7 @@ export class KutumbaDetails {
                 txnNo: txnDateTime,
                 txnDateTime: txnDateTime,
                 serviceCode: process.env.SERVICE_CODE,
-                responseRedirectURL: ""
+                responseRedirectURL: `${url[0].ekyc_url}/edcs/edcs_service_application`
             };
 
             await trackExternalLogs(Tables.EKYC, Methods.EKYC, "before", bodyData, "", data?.user_id);

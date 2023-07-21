@@ -1,34 +1,6 @@
 import nodemailer from "nodemailer";
-
-// export async function emailSenderOne() {
-
-//  // create reusable transporter object using the default SMTP transport
-//  let mailTransporter = nodemailer.createTransport({
-//   host: "smtp.gmail.com",
-//   port: 587,
-//   secure: false, // true for 465, false for other ports
-//   auth: {
-//     user: "aadhisivapanjagala@gmail.com", // generated ethereal user
-//     pass: "cmnwtwiwkpwiborw", // generated ethereal password
-//   },
-// });
-// let mailDetails = {
-//     from: 'aadhisivapanjagala@gmail.com',
-//     to: 'aadhisivapanjagala@gmail.com',
-//     subject: 'Test mail',
-//     html: 'Node.js testing mail for GeeksforGeeks'
-// };
-
-// mailTransporter.sendMail(mailDetails, function(err, data) {
-//     if(err) {
-//         console.log('Error Occurs', err);
-//     } else {
-//         console.log('Email sent successfully');
-//     }
-// });
-
-// };
-
+import { AppDataSource } from "./mysql";
+import { redirection_data } from "../entity";
 
 // async..await is not allowed in global scope, must use a wrapper
 export async function emailSender(data) {
@@ -42,12 +14,12 @@ export async function emailSender(data) {
     pass: "cmnwtwiwkpwiborw", // generated ethereal password
   },
 });
-  
+  let redirection_url = await AppDataSource.getRepository(redirection_data).find();
   // send mail with defined transport object
   let info = await transporter.sendMail({
-    from: '"Fred Foo 👻" <foo@example.com>', // sender address
-    to: "bar@example.com, baz@example.com", // list of receivers
-    subject: "Hello ✔", // Subject line
+    from: '"Spectacles" <noreply@spectacles.com>', // sender address
+    to: `${data[0].school_mail}`, // list of receivers
+    subject: "Spectacles Information", // Subject line
     // text: "Hello world?", // plain text body
     html: `
     <html>
@@ -80,7 +52,7 @@ export async function emailSender(data) {
     
     <div>&nbsp;</div>
 
-    <a href="http://localhost:8889/school/check?s_id=${data.school_id}&id=${data.user_id}&type=${data.type}">check for ready for delivery</a>
+    <a href="${redirection_url[0].mail_url}/school/check?s_id=${data.school_id}&id=${data.user_id}&type=${data.type}">check for ready for delivery</a>
     
     <div>&nbsp;</div>
     

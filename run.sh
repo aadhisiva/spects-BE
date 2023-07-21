@@ -1,1 +1,0 @@
-nohup node dist/index.js > logs/application.log 2> logs/error.log &

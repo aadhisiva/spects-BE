@@ -393,7 +393,7 @@ export class OtherBenfRepo {
         try {
             let otherBenfDataBase = AppDataSource.getRepository(other_benf_data);
             let result = await otherBenfDataBase.findOneBy({ aadhar_no: data.aadhar_no });
-            let newData = { ...data, status: "order_pending"};
+            let newData = data?.details ? { ...data, status: "order_pending"}: data;
             let finalData = { ...result, ...newData }
             return await otherBenfDataBase.save(finalData);
         } catch (e) {

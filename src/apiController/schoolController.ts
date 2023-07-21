@@ -27,7 +27,7 @@ router.post("/add_school",requestAndResonseTime, async (req: Request, res: Respo
     }
 });
 
-router.post('/check',requestAndResonseTime, async (req: Request, res: Response) => {
+router.get('/check',requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let queryData = req.query;
         let data = new students_data({
