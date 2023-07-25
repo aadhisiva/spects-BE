@@ -23,21 +23,19 @@ export class AdminServices {
         return { message: RESPONSEMSG.OTP, data: {} };
     };
 
-    async validationOtp(data) {
+    async validationOtp(data, req) {
+        var session;
         if (!data.mobile_number) return { code: 422, message: "Phone number cananot be null." };
         if (data.mobile_number.length !== 10) return { code: 422, message: "Phone number not valid." }
         let checkData = await this.AdminRepo.checkTypeWiseLoginData(data);
         if (!checkData) return { code: 422, message: "Data not exits." }
         let checkOtp = checkData.otp == data.otp;
         if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
-        const token = jwt.sign({ user_id: checkData.unique_id }, process.env.USERFRONT_PUBLIC_KEY, { expiresIn: "1h", });
-        delete checkData?.created_at;
-        delete checkData?.mobile_number;
-        delete checkData?.otp;
-        delete checkData?.updated_at;
-        delete checkData?.id;
-        let finalResult = { ...checkData, ...{ token } };
-        return { message: RESPONSEMSG.VALIDATE, data: finalResult };
+        const token = jwt.sign({ user_id: checkData.unique_id }, process.env.USERFRONT_PUBLIC_KEY, { expiresIn: "2h", });
+        let finalResult = { unique_id: checkData?.unique_id, type: data?.type, token };
+        session = req.session;
+        session.user = finalResult
+        return { message: RESPONSEMSG.VALIDATE, data: {} };
     };
 
     async resendOtp(data) {

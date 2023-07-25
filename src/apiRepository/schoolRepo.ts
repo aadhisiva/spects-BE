@@ -120,7 +120,6 @@ export class SchoolRepo {
     async saveStudentData(data: students_data) {
         try {
             let findCount = await this.findAllStudents();
-            console.log("frin", findCount)
             data.student_unique_id = (findCount?.length == 0) ? 1 : findCount[0].school_unique_id + 1;
             data.order_number = generateOTP();
             return await AppDataSource.getTreeRepository(students_data).save(data);

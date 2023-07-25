@@ -1,8 +1,10 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
-import { login_user_data, students_data, school_data, ekyc_data, other_benf_data, 
-  external_logs, master_data, district_data, taluka_data, rc_data, sub_centre_data, redirection_data } from "../entity";
+import {
+  login_user_data, students_data, school_data, ekyc_data, other_benf_data,
+  external_logs, master_data, district_data, taluka_data, rc_data, sub_centre_data, redirection_data, Session
+} from "../entity";
 import { state_data } from "../entity/state_data";
 
 dotenv.config();
@@ -39,9 +41,9 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   entities: [login_user_data, school_data, students_data, other_benf_data, ekyc_data,
-        external_logs, rc_data, master_data, sub_centre_data, district_data, taluka_data,
-        state_data, redirection_data
-      ],
+    external_logs, rc_data, master_data, sub_centre_data, district_data, taluka_data,
+    state_data, redirection_data, Session
+  ],
   logging: false,
   synchronize: true,
 })

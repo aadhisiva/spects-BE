@@ -1,13 +1,5 @@
 import { AppDataSource } from "../dbConfig/mysql"
-import { tracker_data } from "../entity"
 import { external_logs } from "../entity/external_logs";
-
-export const trackerCreateLogs = async (type, hitTime) => {
-    let data = {};
-    data['hitting_time'] = hitTime
-    data['type'] = type;
-    return await AppDataSource.getRepository(tracker_data).save(data);
-};
 
 export const trackExternalLogs = async (table, method, type, body, response, user) => {
     let data = new external_logs({});

@@ -141,7 +141,6 @@ export class OtherBenfRepo {
             let other_repo = await AppDataSource.getRepository(rc_data)
             let result = other_repo.findOneBy({ aadhar_no: Equal(data.aadhar_no)});
             let finalData = { ...result, ...data};
-            console.log("ASDa",finalData)
             return other_repo.save(finalData);
         } catch (e) {
             Logger.error("otherBenfRepo => updateDataByRcAndHash", e)

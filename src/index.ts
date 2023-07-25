@@ -10,10 +10,11 @@ import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
 import AdminController from "./apiController/adminController";
-import { addData, decrypt } from './utility/resusableFun';
+import { addData } from './utility/resusableFun';
 import path from 'path';
 import sessions from "express-session";
-import cookieParser from "cookie-parser";
+import { TypeormStore } from "typeorm-store";
+import { Session } from './entity';
 
 dotenv.config();
 
@@ -21,34 +22,39 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors({
-  origin:['http://localhost:3000'],
+  origin: ['http://localhost:3000'],
   methods: ["POST", "GET"],
   credentials: true,
 }));
 
 app.use(express.json());
 
-app.use(cookieParser());
+// app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-const oneHour = 2000 * 60;
+let repository = AppDataSource.getRepository(Session);
+// time milliseconds * minutes * hours
+const oneHour = 1000 * 60 * 2;
 
 //session middleware
 app.use(sessions({
-    secret: process.env.COOKIE_PARSER_KEY,
-    saveUninitialized: true,
-    cookie: { maxAge: oneHour },
-    resave: false,
+  secret: process.env.COOKIE_PARSER_KEY,
+  saveUninitialized: true,
+  cookie: { maxAge: oneHour },
+  store: new TypeormStore({ repository }),
+  resave: false,
 }));
 
 app.use(morgan('common', {
   stream: fs.createWriteStream('./logs/application.log', { flags: 'a' })
 }));
 // Have Node serve the files for our built React app
-app.use(express.static(path.resolve(__dirname, '../../../build')));
+// app.use(express.static(path.resolve(__dirname, '../../../build')));
 
 // Set directory to contain the templates ('views')
 app.set('views', __dirname);
+
+
 
 // Set view engine to use
 app.set('view engine', 'ejs');
@@ -59,18 +65,10 @@ app.post("/add", async (req, res) => {
   res.send(data)
 });
 
-app.get('/session', (req, res) => {
-  if(req?.session?.userid){
-    res.send({login: 200, userData : req.session?.userid});
-  } else {
-    res.send({login: 422});
-  }
-})
-
 // All other GET requests not handled before will return our React app
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../../../build', 'index.html'));
-});
+// app.get('*', (req, res) => {
+//   res.sendFile(path.resolve(__dirname, '../../../build', 'index.html'));
+// });
 
 app.use("/login", UserController);
 app.use("/school", SchoolController);
@@ -81,7 +79,7 @@ app.use("/admin", AdminController);
 app.listen(port, async () => {
   let connection = await AppDataSource.initialize();
   if (connection instanceof Error) {
-    Logger.error("connection error :::::::",connection);
+    Logger.error("connection error :::::::", connection);
     throw new Error(JSON.stringify(connection));
   } else {
     Logger.info(`⚡️[Database]: Database connected....`);

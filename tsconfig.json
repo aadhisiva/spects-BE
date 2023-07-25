@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "target": "es6",
     "emitDecoratorMetadata":true,
     "esModuleInterop": true,
     "experimentalDecorators": true,

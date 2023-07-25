@@ -136,7 +136,6 @@ export class KutumbaDetails {
 
     async getDataFromEkycOutSource(data) {
         let url = await AppDataSource.getRepository(redirection_data).find();
-        console.log(`${url[0].ekyc_url}/edcs/edcs_service_application`)
         try {
             let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
             let bodyData = {

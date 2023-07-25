@@ -68,8 +68,8 @@ export class AdminRepo {
         try {
             const { districts, talukas } = data;
             if (districts) {
-                if(!Array.isArray(districts)) return { code: 422, message: "Give valid inputs." };
-                let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true); 
+                if (!Array.isArray(districts)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
                 if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
 
                 let query = 'CALL get_districtOff_refractinoist(?,?,?,?,?,?,?,?,?,?)';
@@ -77,8 +77,8 @@ export class AdminRepo {
                 let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
                 return result[0];
             } else if (talukas) {
-                if(!Array.isArray(talukas)) return { code: 422, message: "Give valid inputs." };
-                let matchArray = (talukas).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true); 
+                if (!Array.isArray(talukas)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (talukas).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
                 if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
 
                 let query = 'CALL get_districtOff_taluka(?,?,?,?,?,?,?,?,?,?)';
@@ -205,8 +205,8 @@ export class AdminRepo {
         const { districts, talukas } = data;
         try {
             if (districts) {
-                if(!Array.isArray(districts)) return { code: 422, message: "Give valid inputs." };
-                let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true); 
+                if (!Array.isArray(districts)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
                 if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
 
                 let query = 'CALL get_districtOff_taluka_districts(?,?,?,?,?,?,?,?,?,?)';
@@ -214,8 +214,8 @@ export class AdminRepo {
                 let result = await AppDataSource.getRepository(taluka_data).query(query, getParamsData);
                 return result[0];
             } else if (talukas) {
-                if(!Array.isArray(talukas)) return { code: 422, message: "Give valid inputs." };
-                let matchArray = (talukas).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true); 
+                if (!Array.isArray(talukas)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (talukas).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
                 if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
 
                 let query = 'CALL get_districtOff_taluka_districts(?,?,?,?,?,?,?,?,?,?)';
@@ -236,8 +236,8 @@ export class AdminRepo {
     async getDistrictsData() {
         try {
             let query = 'CALL get_all_districts()';
-                let result = await AppDataSource.getRepository(master_data).query(query);
-                return result[0];
+            let result = await AppDataSource.getRepository(master_data).query(query);
+            return result[0];
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -246,12 +246,12 @@ export class AdminRepo {
 
     async getLoginUserData(data) {
         try {
-            if (data.type == "District Officer") {
+            if (data.type == "district_officer") {
                 let finOne = await AppDataSource.getRepository(district_data).findOneBy({ unique_id: data.unique_id });
                 let query = `CALL get_user_districtWise(?)`;
                 let result = await AppDataSource.getRepository(district_data).query(query, [finOne?.mobile_number]);
                 return result[0];
-            } else if (data.type == "Taluka") {
+            } else if (data.type == "taluka") {
                 let finOne = await AppDataSource.getRepository(taluka_data).findOneBy({ unique_id: data.unique_id });
                 let query = `CALL get_user_talukaWise(?)`;
                 let result = await AppDataSource.getRepository(taluka_data).query(query, [finOne?.mobile_number]);
