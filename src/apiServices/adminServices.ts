@@ -81,6 +81,8 @@ export class AdminServices {
     async updateTalukaData(data) {
         return this.AdminRepo.updateTalukaData(data)
     };
+
+    
     //reports
     async getReportsData() {
         return this.AdminRepo.getReportsData()

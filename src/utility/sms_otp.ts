@@ -12,6 +12,17 @@ import cryptoJs from "crypto";
 // secureKey= "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"; //departsecure key for encryption of message...
 // templateId="XXXXXXX";
 
+// convert password to hash-sha1
+function convertPasswordToSha1(userName) {
+    let finalString = `${userName.trim()}`;
+    try {
+        let hash = cryptoJs.createHash(process.env.HASHINGSHA1).update(finalString).digest('hex');
+        return hash;
+    } catch (e) {
+        console.error(e.message);
+        return e.message;
+    }
+};
 // convert message to hashing
 function hashGenerator(userName, senderId, message, secureKey) {
     let finalString = `${userName.trim()}${senderId.trim()}${message.trim()}${secureKey.trim()}`;
@@ -33,7 +44,7 @@ async function post_url(url, data) {
     return urlData;
 };
 
-//convert string to message
+// convert string to message
 export function stringToFinalmessage(message) {
     return Array.from(message)
         .map((c: any) => `&#${c.charCodeAt(0)};`)
@@ -43,12 +54,12 @@ export function stringToFinalmessage(message) {
 @Service()
 export class SMSServices {
 
-    //send sendSingleSMS to user
+    // send sendSingleSMS to user
     async sendSingleSMS(userName, password, senderId, message, mobileno, secureKey, templateId) {
         try {
             let data = {
                 username: userName.trim(),
-                password: password.trim(),
+                password: convertPasswordToSha1(password),
                 senderid: senderId.trim(),
                 content: message.trim(),
                 smsservicetype: "singlemsg",
@@ -56,7 +67,7 @@ export class SMSServices {
                 key: hashGenerator(userName, senderId, message, secureKey),
                 templateid: templateId.trim()
             };
-            let resposne = await post_url(process.env.SMS_API, data);
+            let resposne = await post_url(process.env.SMS_API, data); // calling post_to_url_unicode to send single sms
             return resposne.status;
         } catch (e) {
             console.log("error", e);
@@ -64,14 +75,14 @@ export class SMSServices {
         }
     }
 
-    //send sendSingleUnicode to user
+    // send sendSingleUnicode to user
     async sendSingleUnicode(userName, password, senderId, messageUnicode, mobileno, secureKey, templateId) {
         try {
             let finalmessage = stringToFinalmessage(messageUnicode.trim());
             let key = hashGenerator(userName, senderId, finalmessage, secureKey);
             let data = {
                 username: userName.trim(),
-                password: password.trim(),
+                password: convertPasswordToSha1(password),
                 senderid: senderId.trim(),
                 content: finalmessage.trim(),
                 smsservicetype: "unicodemsg",
@@ -79,7 +90,7 @@ export class SMSServices {
                 key: key.trim(),
                 templateid: templateId.trim()
             };
-            let resposne = await post_url(process.env.SMS_API, data); //calling post_to_url_unicode to send single unicode sms
+            let resposne = await post_url(process.env.SMS_API, data); // calling post_url to send single unicode sms
             return resposne.status;
         } catch (e) {
             console.log("error", e);

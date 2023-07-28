@@ -29,21 +29,36 @@ app.use(cors({
 
 app.use(express.json());
 
-// app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 let repository = AppDataSource.getRepository(Session);
-// time milliseconds * minutes * hours
-const oneHour = 1000 * 60 * 2;
+
+// time milliseconds * seconds * minutes * hours
+const twoHour = 1000 * 60 * 60 * 2;
 
 //session middleware
 app.use(sessions({
   secret: process.env.COOKIE_PARSER_KEY,
   saveUninitialized: true,
-  cookie: { maxAge: oneHour },
+  cookie: { maxAge: twoHour },
   store: new TypeormStore({ repository }),
   resave: false,
 }));
+
+app.use(function(req, res, next){
+  req.headers['X-Frame'] = 'SAMEORIGIN';
+  req.headers['Content-Security-Policy'] = '<policy-directive>; <policy-directive>';
+  req.headers['X-XSS-Protection'] = '1; mode=block';
+  req.headers['X-Content-Type-Options']= 'nosniff';
+  req.headers['strict-transport-security'] = 'max-age=63072000; includeSubdomains; preload';
+  req.headers['content-type']= 'application/json; charset=utf-8'
+  res.header("X-Frame", "SAMEORIGIN");
+  res.header("X-XSS-Protection", "1; mode=block'");
+  res.header("X-Content-Type-Options", "nosniff");
+  res.header("strict-transport-security", "max-age=63072000; includeSubdomains; preload");
+  res.header('Content-Security-Policy', '<policy-directive>; <policy-directive>')
+  next();
+})
 
 app.use(morgan('common', {
   stream: fs.createWriteStream('./logs/application.log', { flags: 'a' })

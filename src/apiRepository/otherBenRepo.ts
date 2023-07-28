@@ -123,7 +123,6 @@ export class OtherBenfRepo {
             let checkUndefined = (getAllCount[0]?.benf_unique_id == undefined) ? 0 : getAllCount[0]?.benf_unique_id;
             data.benf_unique_id = `${Number(checkUndefined) + 1}`;
             let result = await AppDataSource.getRepository(rc_data).findOneBy({ aadhar_no: Equal(data.aadhar_no)});
-            if(!result) return {code: 422, message: "Data not exists."}
             delete result?.id;
             delete result?.created_at;
             delete result?.updated_at;

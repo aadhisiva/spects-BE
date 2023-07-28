@@ -19,7 +19,7 @@ const spectclesAPiReusetData = async (data, getData, type) => {
     reqBody.education_id = getData?.MBR_EDUCATION_ID ? getData.MBR_EDUCATION_ID : "null";
     reqBody.address = getData?.MBR_ADDRESS ? getData.MBR_ADDRESS : "null";
     reqBody.dob = getData?.MBR_DOB ? getData.MBR_DOB : "null";
-    reqBody.aadhar_no = type == "rc" ? getData?.MBR_AADHAR_HASH : await aadharConvert(data.aadhar_no);
+    reqBody.aadhar_no = type == "rc" ? getData?.MBR_HASH_AADHAR : await aadharConvert(data.aadhar_no);
     reqBody.gender = getData?.MBR_GENDER ? getData.MBR_GENDER : "null";
     reqBody.phone_number = getData?.MBR_MOBILE_NO ? getData.MBR_MOBILE_NO : "null";
     reqBody.benf_name = getData?.MEMBER_NAME_ENG ? getData.MEMBER_NAME_ENG : "null";
@@ -242,7 +242,7 @@ export class OtherBenfServices {
             let finalData = await this.OtherBenfRepo.updateDataByRcAndHashUniAadharHas__(data);
             finalData['otp'] = generateOTP();
             if (!checkAadharWith_Other) {
-                let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(checkAadharWith_Other.phone_number, finalData.otp);
+                let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(finalData?.phone_number, finalData.otp);
                 if (smsOtp !== 200) {
                     return { code: 422, message: RESPONSEMSG.OTP_FAILED }
                 } else {
@@ -254,7 +254,7 @@ export class OtherBenfServices {
                 if (!checkAadharDataByHash) {
                     return { code: 422, message: "Aadhar no is already registered.." }
                 } else {
-                    let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(checkAadharWith_Other.phone_number, finalData.otp);
+                    let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(finalData.phone_number, finalData.otp);
                     if (smsOtp !== 200) {
 
                     } else {
