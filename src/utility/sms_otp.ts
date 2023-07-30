@@ -1,6 +1,8 @@
 import { Service } from "typedi";
 import axios from "axios";
 import cryptoJs from "crypto";
+import Logger from "./winstonLogger";
+import { RESPONSEMSG } from "./statusCodes";
 
 // userName="XXXXXX"; //username of the department
 // password="XXXXXX"; //password of the department
@@ -16,7 +18,7 @@ import cryptoJs from "crypto";
 function convertPasswordToSha1(userName) {
     let finalString = `${userName.trim()}`;
     try {
-        let hash = cryptoJs.createHash(process.env.HASHINGSHA1).update(finalString).digest('hex');
+        let hash = cryptoJs.createHash('sha1').update(finalString).digest('hex');
         return hash;
     } catch (e) {
         console.error(e.message);

@@ -18,7 +18,7 @@ export class AdminServices {
         let sixDigitOtp = generateOTP();
         data.otp = sixDigitOtp;
         let sendOtpMessage = await this.ResusableFunctions.sendOtpAsSingleSms(data.mobile_number, sixDigitOtp);
-        if (sendOtpMessage !== 200) return { code: 422, message: RESPONSEMSG.OTP };
+        if (sendOtpMessage !== 200) return { code: 422, message: RESPONSEMSG.OTP_FAILED, actualMessage: sendOtpMessage};
         await this.AdminRepo.updateLogin(data);
         return { message: RESPONSEMSG.OTP, data: {} };
     };
