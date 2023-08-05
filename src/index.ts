@@ -36,6 +36,17 @@ let repository = AppDataSource.getRepository(Session);
 // time milliseconds * seconds * minutes * hours
 const twoHour = 1000 * 60 * 60 * 2;
 
+// production
+// secret: process.env.COOKIE_PARSER_KEY,
+//   saveUninitialized: true,
+//   cookie: {
+//     secure: true, // This will only work if you have https enabled!
+//     httpOnly: true,
+//     maxAge: twoHour,
+//   },
+//   store: new TypeormStore({ repository }),
+//   resave: false,
+
 //session middleware
 app.use(sessions({
   secret: process.env.COOKIE_PARSER_KEY,

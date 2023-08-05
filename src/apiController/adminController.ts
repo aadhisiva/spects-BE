@@ -48,6 +48,7 @@ router.post("/verify-token", async (req,res) => {
 
 // get current session details
 router.get('/getMe', (req, res) => {
+    console.log("session", req.session)
     if (req?.session?.user) {
         res.status(200).send({ success: true, userData: req.session?.user });
     } else {

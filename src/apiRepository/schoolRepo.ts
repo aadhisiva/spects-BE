@@ -27,8 +27,8 @@ export class SchoolRepo {
 
     async findAllStudents() {
         try {
-            return await AppDataSource.getRepository(students_data).query(`select student_unique_id from students_data ORDER BY id DESC LIMIT 1`);
-            // return await AppDataSource.getRepository(students_data).query(`select top 1 student_unique_id from students_data ORDER BY id DESC`);
+            // return await AppDataSource.getRepository(students_data).query(`select student_unique_id from students_data ORDER BY id DESC LIMIT 1`);
+            return await AppDataSource.getRepository(students_data).query(`select top 1 student_unique_id from students_data ORDER BY id DESC`);
         } catch (e) {
             Logger.error("schoolRepo => findAllStudents", e)
             return e;
@@ -48,8 +48,8 @@ export class SchoolRepo {
 
     async findDescOrderWise() {
         try {
-            return await AppDataSource.getTreeRepository(school_data).query(`select school_unique_id from school_data ORDER BY id DESC LIMIT 1`);
-            // return await AppDataSource.getTreeRepository(school_data).query(`select top 1 school_unique_id from school_data ORDER BY id DESC`); 
+            // return await AppDataSource.getTreeRepository(school_data).query(`select school_unique_id from school_data ORDER BY id DESC LIMIT 1`);
+            return await AppDataSource.getTreeRepository(school_data).query(`select top 1 school_unique_id from school_data ORDER BY id DESC`); 
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;
