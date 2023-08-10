@@ -8,6 +8,7 @@
     "build": "npx tsc",
     "start": "nodemon src/index.ts",
     "start-build": "node dist/src/index.js",
+    "start-pro_build": "set NODE_ENV=production&&node dist/src/index.js",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\""
   },
   "keywords": [],

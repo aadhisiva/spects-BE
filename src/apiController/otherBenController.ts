@@ -1,3 +1,12 @@
+/**
+ * Name: Aadhi siva panjagala
+ * Author: aadhisivapanjagala@gmail.com
+ * File: controlling for routes
+ * created: [2023-05-10]
+ * last Modified: [2023-08-07]
+ * Project: Spectacles Distribution
+ */
+
 import { Container } from 'typedi';
 import express, { Request, Response } from 'express';
 import Logger from '../utility/winstonLogger';

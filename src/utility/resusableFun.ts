@@ -2,7 +2,7 @@ import cryptoJs from "crypto";
 import { data } from "../b";
 import { AppDataSource } from "../dbConfig/mysql";
 import { master_data } from "../entity/master_data";
-import crypto from "crypto-js";
+import { Equal } from "typeorm";
 
 let method = "aes-256-cbc";
 
@@ -97,8 +97,25 @@ export const PrameterizedQueries = (data) => {
   let arrayLength = ['', '', '', '', '', '', '', '', '', ''];
   let slicedData = arrayLength.slice(givenData);
   for (var i = 0; i < givenData; i++) {
-      slicedData.unshift(data[i]);
+    slicedData.unshift(data[i]);
   }
   return slicedData;
-}
+};
+
+export const createUniqueIdBasedOnCodes = async (id) => {
+  // formate codes-Wise = district/taluka/village/user_id/order_number
+  let orderNumber = generateOTP();
+  let userData = await AppDataSource.getRepository(master_data).findOneBy({ user_unique_id: Equal(id) });
+  let addString = "";
+  for (const key in userData) {
+    if (key == 'district') {
+      addString += userData[key].replace(/\D/g, "") + "/";
+    } else if (key === 'taluka') {
+      addString += userData[key].replace(/\D/g, "") + "/";
+    } else if (key === "village") {
+      addString += userData[key].replace(/\D/g, "") + "/";
+    }
+  }
+  return addString + id + "/" + orderNumber;
+};
 

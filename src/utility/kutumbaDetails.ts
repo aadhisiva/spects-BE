@@ -149,7 +149,7 @@ export class KutumbaDetails {
                 txnNo: txnDateTime,
                 txnDateTime: txnDateTime,
                 serviceCode: process.env.SERVICE_CODE,
-                responseRedirectURL: `${url[0].ekyc_url}/edcs/edcs_service_application`
+                responseRedirectURL: `${url[0]?.ekyc_url}/edcs/edcs_service_application`
             };
 
             await trackExternalLogs(Tables.EKYC, Methods.EKYC, "before", bodyData, "", data?.user_id);

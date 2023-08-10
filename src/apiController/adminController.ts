@@ -1,3 +1,12 @@
+/**
+ * Name: Aadhi siva panjagala
+ * Author: aadhisivapanjagala@gmail.com
+ * File: controlling for routes
+ * created: [2023-05-10]
+ * last Modified: [2023-08-07]
+ * Project: Spectacles Distribution
+ */
+
 import Container from 'typedi';
 import express, { Request, Response, response } from 'express';
 import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
@@ -48,7 +57,6 @@ router.post("/verify-token", async (req,res) => {
 
 // get current session details
 router.get('/getMe', (req, res) => {
-    console.log("session", req.session)
     if (req?.session?.user) {
         res.status(200).send({ success: true, userData: req.session?.user });
     } else {
@@ -61,6 +69,7 @@ router.post("/logout", async (req: Request, res: Response) => {
     try {
         req?.session?.destroy((err) => {
             if (err) return res.status(400).json({ code: 400, msg: "please try again" });
+            res.clearCookie('user', {path: '/'});
             res.status(200).json({ code: 200, msg: "logout" });
         });
     } catch (e) {

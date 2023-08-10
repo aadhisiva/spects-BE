@@ -1,6 +1,15 @@
+/**
+ * Name: Aadhi siva panjagala
+ * Author: aadhisivapanjagala@gmail.com
+ * File: controlling for routes
+ * created: [2023-05-10]
+ * last Modified: [2023-08-07]
+ * Project: Spectacles Distribution
+ */
+
 import Container from 'typedi';
 import express, { Request, Response } from 'express';
-import {  RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
+import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { EkycServices } from '../apiServices/ekycServices';
 import { requestAndResonseTime } from '../utility/middlewares';
 
@@ -11,11 +20,25 @@ const ekycServices = Container.get(EkycServices);
 router.post("/edcs_service", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = req.body;
-       let result = await ekycServices.saveEkycData(data);
-       let response = (result?.code || result instanceof Error) ?
-       ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-       ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-       res.send(response);
+        let result = await ekycServices.saveEkycData(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
+        res.send(response);
+    } catch (e) {
+        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/dummy_edcs_service", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = req.body;
+        let result = await ekycServices.saveEkycData(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
+        res.send(response);
     } catch (e) {
         console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);

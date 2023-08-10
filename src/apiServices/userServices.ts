@@ -12,55 +12,33 @@ import { RESPONSEMSG } from "../utility/statusCodes";
 export class UserServices {
     constructor(public UserRepo: UserRepo, public SMSServices: SMSServices, public ResusableFunctions: ResusableFunctions) { }
 
-    // async addUser(data){
-    //     return this.UserRepo.postUser(data);
-    // }
-
     async postUser(data: login_user_data) {
         try {
             let sixDigitsOtp = generateOTP();
-            if (data.user_mobile_number.length !== 10) {
-                return { code: 422, message: "Enter valid number." };
-            }
-            if (data?.user_mobile_number) {
-                data.otp = sixDigitsOtp;
-                let mobile_no = data?.user_mobile_number;
-                let checkMobile = await this.UserRepo.getUserByMobile(mobile_no);
-                if (checkMobile?.length == 0) {
-                    return { code: 422, message: "Invalid mobile number." };
-                } else {
-                    let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(checkMobile[0]?.user_mobile_number, data.otp);
-                    await this.UserRepo.updateOtp(data);
-                    if (sendSingleSms == 200) {
-                        return { message: RESPONSEMSG.OTP, data: checkMobile };
-                    } else {
-                        return { code: 422, message: RESPONSEMSG.OTP_FAILED };
-                    }
-                }
-            } else {
-                return { code: 422, message: "mobilenumber is mandatory." };
-            }
+            if (!data?.user_mobile_number) return { code: 422, message: "mobilenumber is mandatory." };
+            if (data.user_mobile_number.length !== 10) return { code: 422, message: "Enter valid number." };
+            data.otp = sixDigitsOtp;
+            let mobile_no = data?.user_mobile_number;
+            let checkMobile = await this.UserRepo.getUserByMobile(mobile_no);
+            if (checkMobile?.length == 0) return { code: 422, message: "Data not exists." };
+            let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(checkMobile[0]?.user_mobile_number, data.otp);
+            await this.UserRepo.updateOtp(data);
+            if (sendSingleSms !== 200) return { code: 422, message: RESPONSEMSG.OTP_FAILED };
+            return { message: RESPONSEMSG.OTP, data: checkMobile };
         } catch (e) {
-            console.log("UserServices ====== postUser", e);
-            Logger.error("UserServices ====== postUser", e);
-            return e;
+            Logger.error("UserServices ====== postUser", e?.message);
         }
     }
 
     async validateUser(data) {
         try {
-            if (data?.user_mobile_number.length !== 10) {
-                return { code: 422, message: "Enter valid number." }
-            }
+            if (!data?.user_mobile_number || !data?.otp) return { code: 422, message: "mobilenumber and otp is mandatory." };
+            if (data?.user_mobile_number.length !== 10) return { code: 422, message: "Enter valid number." };
             let result = await this.UserRepo.getUserByMobileObj(data.user_mobile_number);
             let checkOtp = data?.otp == result.otp;
-            if (checkOtp) {
-                return { message: RESPONSEMSG.VALIDATE };
-            } else {
-                return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
-            }
+            if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
+            return { message: RESPONSEMSG.VALIDATE };
         } catch (e) {
-            console.log("UserServices ====== validateUser", e);
             Logger.error("UserServices ====== validateUser", e);
             return e;
         }
@@ -70,23 +48,15 @@ export class UserServices {
         try {
             let sixDigitsOtp = generateOTP();
             data.otp = sixDigitsOtp;
-            if (data.user_mobile_number.length !== 10) {
-                return { code: 422, message: "Enter valid number." }
-            }
-            if (data?.user_mobile_number) {
-                let updatedData = await this.UserRepo.getUserByMobileObj(data.user_mobile_number);
-                let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(updatedData.user_mobile_number, data.otp)
-                await this.UserRepo.updateOtp(data);
-                if (sendSingleSms == 200) {
-                    return { message: RESPONSEMSG.OTP };
-                } else {
-                    return { code: 422, message: RESPONSEMSG.OTP_FAILED };
-                };
-            } else {
-                return { code: 422, message: "Mobile number is mandtory." }
-            }
+            if (data?.user_mobile_number.length !== 10) return { code: 422, message: "Enter valid number." };
+            if (!data?.user_mobile_number) return { code: 422, message: "Mobile number is mandtory." };
+            let updatedData = await this.UserRepo.getUserByMobileObj(data.user_mobile_number);
+            if(!updatedData) return {code : 422, message: "Data not exists."};
+            let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(updatedData.refractionist_mobile, data.otp)
+            await this.UserRepo.updateOtp(data);
+            if (sendSingleSms !== 200) return { code: 422, message: RESPONSEMSG.OTP_FAILED };
+            return { message: RESPONSEMSG.OTP };
         } catch (e) {
-            console.log("UserServices ====== validateUser", e);
             Logger.error("UserServices ====== validateUser", e);
             return e;
         }

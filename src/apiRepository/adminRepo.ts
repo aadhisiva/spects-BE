@@ -72,23 +72,23 @@ export class AdminRepo {
                 let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
                 if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
 
-                let query = 'CALL get_districtOff_refractinoist(?,?,?,?,?,?,?,?,?,?)';
+                let query = 'exec get_districtOff_refractinoist @0,1,@2,@3,@4,@5,@6,@7,@8,@9';
                 let getParamsData = PrameterizedQueries(districts);
                 let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
-                return result[0];
+                return result;
             } else if (talukas) {
                 if (!Array.isArray(talukas)) return { code: 422, message: "Give valid inputs." };
                 let matchArray = (talukas).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
                 if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
 
-                let query = 'CALL get_districtOff_taluka(?,?,?,?,?,?,?,?,?,?)';
+                let query = 'exec get_districtOff_taluka @0,1,@2,@3,@4,@5,@6,@7,@8,@9';
                 let getParamsData = PrameterizedQueries(talukas);
                 let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
-                return result[0];
+                return result;
             } else {
-                let query = `CALL GetAllMasters()`;
+                let query = `exec GetAllMasters`;
                 let result = await AppDataSource.getRepository(master_data).query(query);
-                return result[0];
+                return result;
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
@@ -97,9 +97,9 @@ export class AdminRepo {
     };
     async getAllOrders() {
         try {
-            let query = `CALL get_all_count()`;
+            let query = `exec get_all_count`;
             let result = await AppDataSource.getRepository(master_data).query(query);
-            return result[0];
+            return result;
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -107,9 +107,9 @@ export class AdminRepo {
     };
     async getAllDelivered() {
         try {
-            let query = `CALL get_all_delivered()`;
+            let query = `exec get_all_delivered`;
             let result = await AppDataSource.getRepository(master_data).query(query);
-            return result[0];
+            return result;
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -117,9 +117,9 @@ export class AdminRepo {
     };
     async getAllPending() {
         try {
-            let query = `CALL get_all_pending()`;
+            let query = `exec get_all_pending`;
             let result = await AppDataSource.getRepository(master_data).query(query);
-            return result[0];
+            return result;
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -140,10 +140,9 @@ export class AdminRepo {
     async updateDistrictsData(data) {
         try {
             let masterData = await AppDataSource.getRepository(district_data);
-            let query = `select user_unique_id from master_data where district=?`;
-            let result = await AppDataSource.getRepository(master_data).query(query, [data.district]);
+            let result = await AppDataSource.getRepository(master_data).find({where : { district: data.district}});
             result?.map(async (obj) => {
-                var temp = Object.assign({}, obj);
+                var temp: any = Object.assign({}, obj);
                 temp.unique_id = temp.user_unique_id
                 temp.mobile_number = data.mobile_number,
                     temp.name = data.name;
@@ -165,10 +164,9 @@ export class AdminRepo {
     async updateTalukaData(data) {
         try {
             let masterData = await AppDataSource.getRepository(taluka_data);
-            let query = `select user_unique_id from master_data where taluka=?`
-            let result = await AppDataSource.getRepository(master_data).query(query, [data.taluka]);
+            let result = await AppDataSource.getRepository(master_data).find({where : { taluka: data.taluka}});
             result?.map(async (obj) => {
-                var temp = Object.assign({}, obj);
+                var temp: any = Object.assign({}, obj);
                 temp.unique_id = temp.user_unique_id
                 temp.mobile_number = data?.mobile_number,
                     temp.name = data?.name;
@@ -190,11 +188,11 @@ export class AdminRepo {
 
     async getReportsData() {
         try {
-            let otherQuery = `CALL get_reports_other_benf_data()`;
+            let otherQuery = `exec get_reports_other_benf_data`;
             let otherResult = await AppDataSource.getRepository(master_data).query(otherQuery);
-            let query = `CALL get_reports_students_data()`;
+            let query = `exec get_reports_students_data`;
             let result = await AppDataSource.getRepository(master_data).query(query);
-            return [...otherResult[0], ...result[0]];
+            return [...otherResult, ...result];
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -209,23 +207,23 @@ export class AdminRepo {
                 let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
                 if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
 
-                let query = 'CALL get_districtOff_taluka_districts(?,?,?,?,?,?,?,?,?,?)';
+                let query = 'exec get_districtOff_taluka_districts @0,1,@2,@3,@4,@5,@6,@7,@8,@9';
                 let getParamsData = PrameterizedQueries(districts);
                 let result = await AppDataSource.getRepository(taluka_data).query(query, getParamsData);
-                return result[0];
+                return result;
             } else if (talukas) {
                 if (!Array.isArray(talukas)) return { code: 422, message: "Give valid inputs." };
                 let matchArray = (talukas).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
                 if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
 
-                let query = 'CALL get_districtOff_taluka_districts(?,?,?,?,?,?,?,?,?,?)';
+                let query = 'exec get_districtOff_taluka_districts @0,1,@2,@3,@4,@5,@6,@7,@8,@9';
                 let getParamsData = PrameterizedQueries(districts);
                 let result = await AppDataSource.getRepository(taluka_data).query(query, getParamsData);
-                return result[0];
+                return result;
             } else {
-                let query = 'CALL get_districtOff_talukaAll()';
+                let query = 'exec get_districtOff_talukaAll';
                 let result = await AppDataSource.getRepository(taluka_data).query(query);
-                return result[0];
+                return result;
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
@@ -235,9 +233,9 @@ export class AdminRepo {
 
     async getDistrictsData() {
         try {
-            let query = 'CALL get_all_districts()';
+            let query = 'exec get_all_districts';
             let result = await AppDataSource.getRepository(master_data).query(query);
-            return result[0];
+            return result;
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -248,14 +246,14 @@ export class AdminRepo {
         try {
             if (data.type == "district_officer") {
                 let finOne = await AppDataSource.getRepository(district_data).findOneBy({ unique_id: data.unique_id });
-                let query = `CALL get_user_districtWise(?)`;
+                let query = `exec get_user_districtWise @0`;
                 let result = await AppDataSource.getRepository(district_data).query(query, [finOne?.mobile_number]);
-                return result[0];
+                return result;
             } else if (data.type == "taluka") {
                 let finOne = await AppDataSource.getRepository(taluka_data).findOneBy({ unique_id: data.unique_id });
-                let query = `CALL get_user_talukaWise(?)`;
+                let query = `exec get_user_talukaWise @0`;
                 let result = await AppDataSource.getRepository(taluka_data).query(query, [finOne?.mobile_number]);
-                return result[0];
+                return result;
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)

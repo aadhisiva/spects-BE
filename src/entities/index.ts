@@ -1,3 +1,13 @@
+
+/**
+ * Name: Aadhi siva panjagala
+ * Author: aadhisivapanjagala@gmail.com
+ * File: entities for db
+ * created: [2023-05-10]
+ * last Modified: [2023-08-07]
+ * Project: Spectacles Distribution
+ */
+
 import {
     login_user_data,
     students_data,

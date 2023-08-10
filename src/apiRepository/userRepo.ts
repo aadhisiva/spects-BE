@@ -28,7 +28,7 @@ export class UserRepo {
 
     async getUserByMobileObj(no) {
         try {
-            return await AppDataSource.getRepository(master_data).findOneBy({refractionist_mobile: no});
+            return await AppDataSource.getRepository(master_data).findOneBy({ refractionist_mobile: no });
         } catch (e) {
             Logger.error("userRepo => getUserByMobile", e)
             return e;
@@ -38,7 +38,7 @@ export class UserRepo {
     async updateOtp(data) {
         try {
             let login_User_data = AppDataSource.getRepository(master_data);
-            let result = await login_User_data.findOneBy({refractionist_mobile: data.user_mobile_number });
+            let result = await login_User_data.findOneBy({ refractionist_mobile: data.user_mobile_number });
             result.otp = data.otp;
             return await login_User_data.save(result);
         } catch (e) {

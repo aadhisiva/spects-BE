@@ -1,3 +1,13 @@
+
+/**
+ * Name: Aadhi siva panjagala
+ * Author: aadhisivapanjagala@gmail.com
+ * File: db connection for localhost
+ * created: [2023-05-10]
+ * last Modified: [2023-08-07]
+ * Project: Spectacles Distribution
+ */
+
 import nodemailer from "nodemailer";
 import { AppDataSource } from "./mysql";
 import { redirection_data } from "../entity";
@@ -5,15 +15,15 @@ import { redirection_data } from "../entity";
 // async..await is not allowed in global scope, must use a wrapper
 export async function emailSender(data) {
   // create reusable transporter object using the default SMTP transport
- let transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: "aadhisivapanjagala@gmail.com", // generated ethereal user
-    pass: "cmnwtwiwkpwiborw", // generated ethereal password
-  },
-});
+  let transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: "aadhisivapanjagala@gmail.com", // generated ethereal user
+      pass: "cmnwtwiwkpwiborw", // generated ethereal password
+    },
+  });
   let redirection_url = await AppDataSource.getRepository(redirection_data).find();
   // send mail with defined transport object
   let info = await transporter.sendMail({
@@ -52,7 +62,7 @@ export async function emailSender(data) {
     
     <div>&nbsp;</div>
 
-    <a href="${redirection_url[0].mail_url}/school/check?s_id=${data.school_id}&id=${data.user_id}&type=${data.type}">check for ready for delivery</a>
+    <a href="${redirection_url[0]?.mail_url}/school/check?s_id=${data.school_id}&id=${data.user_id}&type=${data.type}">check for ready for delivery</a>
     
     <div>&nbsp;</div>
     
