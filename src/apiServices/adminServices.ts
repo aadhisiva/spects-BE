@@ -50,7 +50,7 @@ export class AdminServices {
         await this.AdminRepo.updateLogin(data);
         return { message: RESPONSEMSG.OTP, data: {} };
     };
-
+    /* state login data */
     async getAllMasters(data) {
         return this.AdminRepo.getAllMasters(data)
     };
@@ -72,6 +72,11 @@ export class AdminServices {
     async getTalukasData(data) {
         return this.AdminRepo.getTalukasData(data)
     };
+    /* phco */
+    async getPhcosData(data) {
+        return this.AdminRepo.getPhcosData(data)
+    };
+
     async getDistrictsData() {
         return this.AdminRepo.getDistrictsData()
     };

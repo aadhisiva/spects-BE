@@ -1,7 +1,7 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
-import { district_data, master_data, sub_centre_data, taluka_data } from "../entity";
+import { district_data, master_data, phco_data, sub_centre_data, taluka_data } from "../entity";
 import { state_data } from "../entity/state_data";
 import { PrameterizedQueries } from "../utility/resusableFun";
 
@@ -24,6 +24,11 @@ export class AdminRepo {
                 let result = await taluka.findOneBy({ mobile_number: data.mobile_number });
                 let finalData = { ...result, ...{ otp: data.otp } };
                 return await taluka.save(finalData);
+            } else if (data.type == "phco") {
+                let sub_centre = AppDataSource.getRepository(phco_data);
+                let result = await sub_centre.findOneBy({ mobile_number: data.mobile_number });
+                let finalData = { ...result, ...{ otp: data.otp } };
+                return await sub_centre.save(finalData);
             } else if (data.type == "subcenter") {
                 let sub_centre = AppDataSource.getRepository(sub_centre_data);
                 let result = await sub_centre.findOneBy({ mobile_number: data.mobile_number });
@@ -45,8 +50,8 @@ export class AdminRepo {
                 return await AppDataSource.getRepository(district_data).findOneBy({ mobile_number: data.mobile_number })
             } else if (data.type == "taluka") {
                 return await AppDataSource.getRepository(taluka_data).findOneBy({ mobile_number: data.mobile_number })
-            } else if (data.type == "subcenter") {
-                return await AppDataSource.getRepository(sub_centre_data).findOneBy({ mobile_number: data.mobile_number })
+            } else if (data.type == "phco") {
+                return await AppDataSource.getRepository(phco_data).findOneBy({ mobile_number: data.mobile_number })
             }
             return AppDataSource.getRepository(district_data)
         } catch (e) {
@@ -66,7 +71,7 @@ export class AdminRepo {
     };
     async getAllMasters(data) {
         try {
-            const { districts, talukas } = data;
+            const { districts, talukas,health_facility } = data;
             if (districts) {
                 if (!Array.isArray(districts)) return { code: 422, message: "Give valid inputs." };
                 let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
@@ -83,6 +88,15 @@ export class AdminRepo {
 
                 let query = 'exec get_districtOff_taluka @0,1,@2,@3,@4,@5,@6,@7,@8,@9';
                 let getParamsData = PrameterizedQueries(talukas);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else if (health_facility) {
+                if (!Array.isArray(health_facility)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (health_facility).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
+                if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec refraction_data_by_phco_login @0,1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(health_facility);
                 let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
                 return result;
             } else {
@@ -199,6 +213,37 @@ export class AdminRepo {
         }
     };
 
+    async getPhcosData(data) {
+        const { districts, talukas } = data;
+        try {
+            if (districts) {
+                if (!Array.isArray(districts)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (districts).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
+                if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec phcos_district_login_wise @0,1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(districts);
+                let result = await AppDataSource.getRepository(phco_data).query(query, getParamsData);
+                return result;
+            } else if (talukas) {
+                if (!Array.isArray(talukas)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (talukas).find(obj => /^[A-Za-z0-9()\s]*$/.test(obj) === true);
+                if (matchArray === undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec phcos_taluka_login_wise @0,1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(districts);
+                let result = await AppDataSource.getRepository(phco_data).query(query, getParamsData);
+                return result;
+            } else {
+                let query = 'exec phcos_all_data';
+                let result = await AppDataSource.getRepository(phco_data).query(query);
+                return result;
+            }
+        } catch (e) {
+            Logger.error("userRepo => postUser", e)
+            return e;
+        }
+    };
     async getTalukasData(data) {
         const { districts, talukas } = data;
         try {
@@ -254,6 +299,11 @@ export class AdminRepo {
                 let query = `exec get_user_talukaWise @0`;
                 let result = await AppDataSource.getRepository(taluka_data).query(query, [finOne?.mobile_number]);
                 return result;
+            } else {
+                let finOne = await AppDataSource.getRepository(phco_data).findOneBy({ unique_id: data.unique_id });
+                let query = `exec phco_login_data @0`;
+                let result = await AppDataSource.getRepository(phco_data).query(query, [finOne?.mobile_number]);
+                return result; 
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)

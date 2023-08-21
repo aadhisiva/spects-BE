@@ -56,7 +56,7 @@ router.post("/verify-token", async (req,res) => {
 });
 
 // get current session details
-router.get('/getMe', (req, res) => {
+router.post('/getMe', (req, res) => {
     if (req?.session?.user) {
         res.status(200).send({ success: true, userData: req.session?.user });
     } else {
@@ -187,6 +187,23 @@ router.post("/talukas_data", authenticateToken, verifyUser, async (req: Request,
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
+
+// get phco's data  phco_data
+router.post("/phco_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+    try {
+        let data = req.body;
+        let result = await adminServices.getPhcosData(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
+        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+
 // get district data
 router.post("/districts_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
     try {

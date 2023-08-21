@@ -50,7 +50,7 @@ let setOrigin = process.env.NODE_ENV == "production" ? process.env.NODE_PRO : pr
 
 // cors setup for communication of sever and client
 app.use(cors({
-  origin: [setOrigin],
+  origin: ["http://localhost:3000"],
   methods: ["POST", "GET"],
   credentials: true,
 }));
@@ -62,7 +62,7 @@ app.use(sessions({
   cookie: {
     maxAge: twoHour, // max age set in milliseconds
     secure, // secure true is only works in https - rememeber this
-    sameSite: true // protection against a variety of cross-site attacks, including CSRF, cross-site leaks, and some CORS exploits.
+    // sameSite: true // protection against a variety of cross-site attacks, including CSRF, cross-site leaks, and some CORS exploits.
   },
   store: new TypeormStore({ repository }),
   resave: false,
@@ -106,7 +106,7 @@ app.use("/admin", AdminController);
 
 
 // we are adding port connection here
-app.listen(port, process.env.IP, async () => {
+app.listen(port, async () => {
   let connection = await AppDataSource.initialize();
   if (connection instanceof Error) {
     Logger.error("connection error :::::::", connection);

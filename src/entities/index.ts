@@ -22,7 +22,8 @@ import {
     sub_centre_data,
     redirection_data,
     Session,
-    state_data
+    state_data,
+    phco_data
 } from "../entity";
 
 export const entities = () => {
@@ -39,6 +40,7 @@ export const entities = () => {
         sub_centre_data,
         redirection_data,
         Session,
-        state_data
+        state_data,
+        phco_data
     ]
 }
