@@ -11,7 +11,6 @@ import { Container } from 'typedi';
 import express, { Request, Response } from 'express';
 import Logger from '../utility/winstonLogger';
 import { UserServices } from '../apiServices/userServices';
-import { login_user_data } from '../entity/login_user_data';
 import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { encryptData } from '../utility/resusableFun';
 import { requestAndResonseTime } from '../utility/middlewares';
@@ -23,7 +22,7 @@ const userServices = Container.get(UserServices);
 
 router.post('/login', requestAndResonseTime, async (req: Request, res: Response) => {
     try {
-        let tableData = new login_user_data(req.body);
+        let tableData = req.body;
         const result = await userServices.postUser(tableData);
         let response = (result.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
@@ -37,11 +36,11 @@ router.post('/login', requestAndResonseTime, async (req: Request, res: Response)
 
 router.post("/validate_otp", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
-        let data = new login_user_data(req.body);
+        let data = req.body;
         let result = await userServices.validateUser(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result?.data));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), result?.data);
         res.send(response);
     } catch (e) {
         Logger.error("UserController => ", e);
@@ -51,7 +50,7 @@ router.post("/validate_otp", requestAndResonseTime, async (req: Request, res: Re
 
 router.post("/resend_otp", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
-        let data = new login_user_data(req.body);
+        let data = req.body;
         let result = await userServices.resendOtp(data);
         let response = (result.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :

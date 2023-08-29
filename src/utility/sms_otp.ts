@@ -1,6 +1,7 @@
 import { Service } from "typedi";
 import axios from "axios";
 import cryptoJs from "crypto";
+import Logger from "./winstonLogger";
 
 // userName="XXXXXX"; //username of the department
 // password="XXXXXX"; //password of the department
@@ -68,10 +69,11 @@ export class SMSServices {
                 templateid: templateId.trim()
             };
             let resposne = await post_url(process.env.SMS_API, data); // calling post_to_url_unicode to send single sms
+            Logger.info(resposne.statusText);
             let result = ((resposne.data?.includes("402" ) !== true) || (resposne.status !== 200) || (resposne?.statusText !== "OK"))? 422 : 200;
             return result;
         } catch (e) {
-            console.log("error", e);
+            Logger.error("error",e);
             return e.message;
         }
     }
@@ -95,6 +97,7 @@ export class SMSServices {
             return resposne.status;
         } catch (e) {
             console.log("error", e);
+            Logger.error("error",e);
             return e;
         }
     };

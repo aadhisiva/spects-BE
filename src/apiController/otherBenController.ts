@@ -14,7 +14,6 @@ import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from
 import { OtherBenfServices } from '../apiServices/otherBenServices';
 import { other_benf_data } from '../entity/other_benf_data';
 import { encryptData } from '../utility/resusableFun';
-import axios from 'axios';
 import { rc_data } from '../entity/rc_data';
 import { requestAndResonseTime } from '../utility/middlewares';
 
@@ -98,7 +97,7 @@ router.post("/send_otp_by_aadhar", requestAndResonseTime, async (req: Request, r
         let result = await otherBenfServices.sendOtpByAadharAndHash(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.OTP), encryptData(result.data));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -127,6 +126,34 @@ router.post("/update_by_aadhar_rc", requestAndResonseTime, async (req: Request, 
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.UPDATE_SUCCESS), encryptData(result.data));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/get_bef_status", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.getBenificaryStatus(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/get_status_data_byId", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.statusDataByIdWith(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);

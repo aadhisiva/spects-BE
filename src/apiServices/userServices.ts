@@ -1,7 +1,6 @@
 import { Service } from "typedi";
 import { UserRepo } from "../apiRepository/userRepo";
 import { SMSServices } from "../utility/sms_otp";
-import { login_user_data } from "../entity";
 import { generateOTP } from "../utility/resusableFun";
 import { ResusableFunctions } from "../utility/smsServceResusable";
 import Logger from "../utility/winstonLogger";
@@ -12,7 +11,7 @@ import { RESPONSEMSG } from "../utility/statusCodes";
 export class UserServices {
     constructor(public UserRepo: UserRepo, public SMSServices: SMSServices, public ResusableFunctions: ResusableFunctions) { }
 
-    async postUser(data: login_user_data) {
+    async postUser(data) {
         try {
             let sixDigitsOtp = generateOTP();
             if (!data?.user_mobile_number) return { code: 422, message: "mobilenumber is mandatory." };
@@ -37,14 +36,14 @@ export class UserServices {
             let result = await this.UserRepo.getUserByMobileObj(data.user_mobile_number);
             let checkOtp = data?.otp == result.otp;
             if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
-            return { message: RESPONSEMSG.VALIDATE };
+            return { message: RESPONSEMSG.VALIDATE, data: result?.phco };
         } catch (e) {
             Logger.error("UserServices ====== validateUser", e);
             return e;
         }
     };
 
-    async resendOtp(data: login_user_data) {
+    async resendOtp(data) {
         try {
             let sixDigitsOtp = generateOTP();
             data.otp = sixDigitsOtp;

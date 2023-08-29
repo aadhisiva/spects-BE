@@ -55,6 +55,12 @@ export class students_data {
   parent_phone_number: string;
 
   @Column({ default: null })
+  frame_type: string;
+
+  @Column({ default: null })
+  frame_size: string;
+
+  @Column({ default: null })
   left_eye_sph_plus: string;
 
   @Column({ default: null })
@@ -107,6 +113,18 @@ export class students_data {
 
   @Column({ default: null })
   status: string;
+
+  @Column({ default: null })
+  near_vision_sph: string;
+
+  @Column({ default: null })
+  near_vision_cyl: string;
+
+  @Column({ default: null })
+  near_vision_axis: string;
+
+  @Column({ default: null })
+  near_vision_va: string;
 
   @CreateDateColumn()
   created_at: Date;

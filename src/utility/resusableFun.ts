@@ -97,7 +97,7 @@ export const PrameterizedQueries = (data) => {
   let arrayLength = ['', '', '', '', '', '', '', '', '', ''];
   let slicedData = arrayLength.slice(givenData);
   for (var i = 0; i < givenData; i++) {
-    slicedData.unshift(data[i]);
+    slicedData.unshift(data[i]?.code);
   }
   return slicedData;
 };

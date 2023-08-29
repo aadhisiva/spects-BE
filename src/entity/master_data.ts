@@ -34,6 +34,18 @@ import {
     sub_centre: string;
     
     @Column({default: null})
+    district_code: string;
+    
+    @Column({default: null})
+    health_facility_code: string;
+    
+    @Column({default: null})
+    sub_centre_code: string;
+    
+    @Column({default: null})
+    taluka_code: string;
+    
+    @Column({default: null})
     village: string;
 
     @Column({default: null})
@@ -44,6 +56,12 @@ import {
 
     @Column({default: null})
     refractionist_mobile: string;
+
+    @Column({default: null})
+    total_primary_screening_completed: string;
+
+    @Column({default: null})
+    total_secondary_screening_required: string;
 
     @Column({default: null})
     otp: string;

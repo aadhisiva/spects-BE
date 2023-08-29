@@ -16,7 +16,8 @@ dotenv.config();
 
 export const AppDataSource= new DataSource({
   type: "mssql",
-  host: process.env.DB_HOST,
+  // host: "EDCS-DB-VP22",
+  host: "LAPTOP-D97QEO1R",
   port: Number(process.env.PRO_DB_PORT),
   username: process.env.PRO_DB_USERNAME,
   password: process.env.PRO_DB_PASSWORD,

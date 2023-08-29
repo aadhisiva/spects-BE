@@ -86,6 +86,15 @@ export class other_benf_data {
     @Column({default: null})
     scheme_eligability: string;
 
+    @Column({default: null})
+    frame_type: string;
+
+    @Column({default: null})
+    frame_size: string;
+
+    @Column('text', { default: null })
+    initial_image: string;
+
     @Column({ default: null })
     left_eye_sph_plus: string;
 

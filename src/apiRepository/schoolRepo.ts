@@ -1,9 +1,9 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
-import { school_data, students_data } from "../entity";
-import { Equal } from "typeorm";
-import { createUniqueIdBasedOnCodes, generateOTP } from "../utility/resusableFun";
+import { other_benf_data, school_data, students_data } from "../entity";
+import { Between, Equal, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
+import { createUniqueIdBasedOnCodes } from "../utility/resusableFun";
 
 @Service()
 export class SchoolRepo {
@@ -26,10 +26,10 @@ export class SchoolRepo {
         }
     };
 
-    async saveSchoolData(data: school_data) {
+    async saveSchoolData(data: any) {
         try {
             let findLength = await this.findDescOrderWise();
-            data.school_unique_id = (findLength?.length == 0) ? 1 : findLength[0].school_unique_id + 1;
+            data.school_unique_id = (findLength?.length == 0) ? 1 : `${Number(findLength[0].school_unique_id) + 1}`;
             return await AppDataSource.getTreeRepository(school_data).save(data);
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
@@ -107,10 +107,10 @@ export class SchoolRepo {
         }
     };
 
-    async saveStudentData(data: students_data) {
+    async saveStudentData(data: any) {
         try {
             let findCount = await this.findAllStudents();
-            data.student_unique_id = (findCount?.length == 0) ? 1 : findCount[0].school_unique_id + 1;
+            data.student_unique_id = (findCount?.length == 0) ? 1 :`${Number(findCount[0].student_unique_id) + 1}`;
             data.order_number = await createUniqueIdBasedOnCodes(data.user_id);
             return await AppDataSource.getTreeRepository(students_data).save(data);
         } catch (e) {
@@ -121,9 +121,10 @@ export class SchoolRepo {
 
     async getStudentDataById(data: students_data) {
         try {
-            return await AppDataSource.getTreeRepository(students_data).query(`SELECT s.sats_id, s.dob, s.age, 
-                h.school_institute_name, s.student_name, h.school_id, s.gender, s.father_name, s.parent_phone_number FROM students_data 
-                as s INNER JOIN school_data as h ON h.school_id = '${data.school_id}' where s.user_id='${data.user_id}' and s.sats_id='${data.sats_id}'`)
+            let result = await AppDataSource.getTreeRepository(students_data).query(`SELECT s.sats_id, s.dob, s.age,h.address, s.order_number,  
+            h.school_institute_name, s.student_name, h.school_id, s.gender, s.father_name, s.parent_phone_number FROM students_data 
+            as s INNER JOIN school_data as h ON s.school_id ='${data.school_id}' where s.user_id='${data.user_id}' and s.sats_id='${data.sats_id}';`)
+            return result;
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;
@@ -229,6 +230,57 @@ export class SchoolRepo {
                 let finalData = { ...result, ...data }
                 return await studentDataBase.save(finalData);
             }
+        } catch (e) {
+            Logger.error("schoolRepo => updateSchoolById", e)
+            return e;
+        }
+    };
+
+    async filterByValuesWise(data) {
+        const { type, user_id, school_id, sats_id, status, state_date, end_date } = data;
+        try {
+            if (!user_id && !type) return { code: 422, message: "User Id, Type And Status Required." };
+            if (type == "school") {
+                if (!school_id) return { code: 422, message: "School Id Required." };
+                if (!sats_id) return { code: 422, message: "Sats Id Required." };
+                if (!status) return { code: 422, message: "Status Id Required." };
+                if (!state_date && !end_date) {
+                    return await AppDataSource.getRepository(students_data).find(
+                        {
+                            where: {
+                                user_id: Equal(user_id),
+                                school_id: Equal(school_id),
+                                sats_id: Equal(sats_id),
+                                status: Equal(status),
+                            }
+                        });
+                } else {
+                    return await AppDataSource.getRepository(students_data).find(
+                        {
+                            where: {
+                                user_id: Equal(user_id),
+                                school_id: Equal(school_id),
+                                sats_id: Equal(sats_id),
+                                status: Equal(status),
+                                created_at: Between(new Date(state_date), new Date(end_date))
+                            }
+                        });
+                }
+            } else if (type == "other") {
+                if (!status) return { code: 422, message: "Status Id Required." };
+                if (!state_date && !end_date) return { code: 422, message: "Dates are Required." };
+                return await AppDataSource.getRepository(other_benf_data).find(
+                    {
+                        where:
+                        {
+                            user_id: Equal(user_id),
+                            status: Equal(status),
+                            created_at: Between(new Date(state_date), new Date(end_date))
+                        }
+                    });
+            } else {
+                return { code: 422, message: "Enter ProperType." };
+            };
         } catch (e) {
             Logger.error("schoolRepo => updateSchoolById", e)
             return e;

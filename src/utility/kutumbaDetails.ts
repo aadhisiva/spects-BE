@@ -36,7 +36,6 @@ const HashHMACHex = (hMACKey, InputValue) => {
         const hash = HashHMAC(messageBytes, hmacsha256);
         hashHMACHex = HashEncode(hash);
     } catch (ex) {
-        console.error(ex);
         Logger.error("Error Message: [" + ex.message.toString() + "]");
         return ex.message;
     }
@@ -70,7 +69,7 @@ export const DecryptStringFromEncrypt = (key, IV, cipherText) => {
 };
 
 export const post_axios = async (url, body) => {
-    return await axios.post(url, body, { headers: { Authorization: "QWxhZGsdfsd45GVuIHNlc2FtZQ==" } });
+    return await axios.post(url, body, { headers: { Authorization: "QWxhZGRpbjpvcGVuIHNlc2FtZQ==" } });
 };
 
 export const ekyc_post_axis = async (url, body) => {
@@ -107,7 +106,6 @@ export class KutumbaDetails {
                 return 422;
             }
         } catch (e) {
-            console.log("getFamilyAdDataFromKutumba", e);
             Logger.error("getFamilyAdDataFromKutumba", e);
             return e.message;
         };

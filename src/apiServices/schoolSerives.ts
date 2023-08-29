@@ -238,4 +238,13 @@ export class SchoolServices {
             return e;
         }
     }
+
+    async filterByValuesWise(data) {
+        try {
+            return await this.SchoolRepo.filterByValuesWise(data);
+        } catch (e) {
+            Logger.error("schoolservice ===== filterByValuesWise", e);
+            return e;
+        }
+    }
 }

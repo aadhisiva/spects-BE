@@ -20,7 +20,16 @@ export const update_taluka = yup.object({
       name: yup.string().trim().matches(/^[A-Za-z\s]*$/, 'please give valid name').required(),
       mobile_number: yup.string().min(10).max(10).required(),
       taluka: yup.string().trim().matches(/^[A-Za-z0-9()\s]*$/, 'please give valid taluka').required(),
-      unique_id: yup.string().trim().matches(/^[0-9_]*$/, 'please give valid id').required()
+      code: yup.string().trim().matches(/^[0-9_]*$/, 'please give valid id').required()
+    })
+  });
+
+export const update_phco_validate = yup.object({
+    body: yup.object({
+      name: yup.string().trim().matches(/^[A-Za-z\s]*$/, 'please give valid name').required(),
+      mobile_number: yup.string().min(10).max(10).required(),
+      health_facility: yup.string().trim().required(),
+      code: yup.string().trim().matches(/^[0-9_]*$/, 'please give valid id').required()
     })
   });
 
@@ -28,21 +37,16 @@ export const update_district = yup.object({
     body: yup.object({
       name: yup.string().trim().matches(/^[A-Za-z\s]*$/, 'please give valid name').required(),
       mobile_number: yup.string().min(10).max(10).required(),
-      district: yup.string().trim().matches(/^[A-Za-z0-9()\s]*$/, 'please give valid district').required(),
-      unique_id: yup.string().trim().matches(/^[0-9_]*$/, 'please give valid id')
+      district: yup.string().trim().matches(/^[A-Za-z0-9()-\s]*$/, 'please give valid district').required(),
+      code: yup.string().trim().matches(/^[0-9_]*$/, 'please give valid id')
     })
   });
 
 export const update_refractionist = yup.object({
     body: yup.object({
-      district: yup.string().trim().matches(/^[A-Za-z0-9()\s]*$/, 'please give valid district'),
-      health_block: yup.string().trim().matches(/^[A-Za-z0-9()\s]*$/, 'please give valid health_block'),
-      health_facility: yup.string().trim().matches(/^[A-Za-z0-9()\s]*$/, 'please give valid health_facility'),
       refractionist_mobile: yup.string().min(10).max(10).required(),
       refractionist_name: yup.string().trim().matches(/^[A-Za-z\s]*$/, 'please give valid refractionist_name').required(),
       rural_urban: yup.string().trim().matches(/^[A-Za-z\s]*$/, 'please give valid rural_urban'),
-      sub_centre: yup.string().trim().matches(/^[A-Za-z0-9()\s]*$/, 'please give valid sub_centre'),
-      taluka: yup.string().trim().matches(/^[A-Za-z0-9()\s]*$/, 'please give valid taluka'),
-      user_unique_id: yup.string().trim().matches(/^[0-9_]*$/, 'please give valid id').required(),
+      code: yup.string().trim().matches(/^[0-9]*$/, 'please give valid id').required(),
     })
   });

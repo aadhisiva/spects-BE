@@ -8,14 +8,13 @@
  */
 
 import Container from 'typedi';
-import express, { Request, Response, response } from 'express';
+import express, { Request, Response } from 'express';
 import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { AdminServices } from '../apiServices/adminServices';
 import { district_data, master_data } from '../entity';
 import { reUsableResSendFunction } from '../utility/resusableFun';
 import { authenticateToken, validateFeilds, verifyUser } from '../utility/middlewares';
-import { login_validation, otp_validation, update_district, update_refractionist, update_taluka } from '../utility/validations';
-import axios from 'axios';
+import { login_validation, otp_validation, update_district, update_phco_validate, update_refractionist, update_taluka } from '../utility/validations';
 
 const router = express.Router();
 
@@ -31,32 +30,12 @@ router.post("/login", validateFeilds(login_validation), async (req: Request, res
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), result.data);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-// verify token by google recapctha
-router.post("/verify-token", async (req,res) => {
-    try{
-        let token = req.body.token;
-        // replace APP_SECRET_KEY with your reCAPTCHA secret key
-        let APP_SECRET_KEY = process.env.APP_SECRET_KEY;
-        let response = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${APP_SECRET_KEY}&response=${token}`);
-        return res.status(200).json({
-            success:true,
-            message: "Token successfully verified",
-            data: response.data
-        });
-    }catch(error){
-        return res.status(500).json({
-            success:false,
-            message: "Error verifying token"
-        })
     }
 });
 
 // get current session details
-router.post('/getMe', (req, res) => {
+router.post('/getMe', (req: any, res) => {
     if (req?.session?.user) {
         res.status(200).send({ success: true, userData: req.session?.user });
     } else {
@@ -68,12 +47,11 @@ router.post('/getMe', (req, res) => {
 router.post("/logout", async (req: Request, res: Response) => {
     try {
         req?.session?.destroy((err) => {
-            if (err) return res.status(400).json({ code: 400, msg: "please try again" });
+            if (err) return res.status(400).json({ code: 400, msg: "Please Try Again" });
             res.clearCookie('user', {path: '/'});
             res.status(200).json({ code: 200, msg: "logout" });
         });
     } catch (e) {
-        console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     };
 });
@@ -88,7 +66,6 @@ router.post("/otp_check", validateFeilds(otp_validation), async (req: Request, r
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), result.data);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -102,7 +79,6 @@ router.post("/resend_otp", validateFeilds(login_validation), async (req: Request
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), result.data);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -116,7 +92,6 @@ router.post("/all_masters", authenticateToken, verifyUser, async (req: Request, 
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -129,7 +104,6 @@ router.post("/get_orders_count", authenticateToken, verifyUser, async (req: Requ
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -142,7 +116,6 @@ router.post("/delivered", authenticateToken, verifyUser, async (req: Request, re
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -155,7 +128,6 @@ router.post("/pending", authenticateToken, verifyUser, async (req: Request, res:
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -169,7 +141,19 @@ router.post("/update_data", authenticateToken, verifyUser, validateFeilds(update
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.UPDATE_SUCCESS, result);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+// addd new multiple users to same village user data
+router.post("/add_new_data_with_exist", authenticateToken, verifyUser, validateFeilds(update_refractionist), async (req: Request, res: Response) => {
+    try {
+        let data = new master_data(req.body);
+        let result = await adminServices.addNewDataWithExistsRow(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.UPDATE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
@@ -183,11 +167,10 @@ router.post("/talukas_data", authenticateToken, verifyUser, async (req: Request,
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-
+/* ---------------------------------------------------------------------------------------------------------- */
 // get phco's data  phco_data
 router.post("/phco_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
     try {
@@ -198,11 +181,51 @@ router.post("/phco_data", authenticateToken, verifyUser, async (req: Request, re
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
         return reUsableResSendFunction(res, response);
     } catch (e) {
-        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+// update phco table data
+router.post("/update_phco_data", authenticateToken, verifyUser, validateFeilds(update_phco_validate), async (req: Request, res: Response) => {
+    try {
+        let data = req.body;
+        let result = await adminServices.updatePhcoData(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.UPDATE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/update_phco_screenings", authenticateToken, verifyUser, async (req: any, res: Response) => {
+    try {
+        let data = req.body;
+        let result = await adminServices.updatePhcoScreeningData(data);
+        // result?.code || result instanceof Error? req.session.user.isIntialLogin = "N": "";
+        let response = (result?.code || result instanceof Error) ?
+        ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+        ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.UPDATE_SUCCESS, result);
+        req.session.user.isIntialLogin = typeof result === 'object' && 'N'
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+// phco data village wise
+router.post("/get_phco_wise_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+    try {
+        let data = req.body;
+        let result: any = await adminServices.getPhcoWiseData(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.UPDATE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
 
+/* -------------------------------------------------------------------------------------------------------------- */
 
 // get district data
 router.post("/districts_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
@@ -248,7 +271,8 @@ router.post("/update_taluka_data", authenticateToken, verifyUser, validateFeilds
 // reports data
 router.post("/reports_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
     try {
-        let result = await adminServices.getReportsData();
+        let data = req.body;
+        let result = await adminServices.getReportsData(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);

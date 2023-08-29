@@ -9,7 +9,6 @@
  */
 
 import {
-    login_user_data,
     students_data,
     school_data,
     ekyc_data,
@@ -28,7 +27,6 @@ import {
 
 export const entities = () => {
     return [
-        login_user_data,
         students_data,
         school_data,
         ekyc_data,

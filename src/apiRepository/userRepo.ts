@@ -1,21 +1,11 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
-import { login_user_data } from "../entity/login_user_data";
 import { AppDataSource } from "../dbConfig/mysql";
 import { master_data } from "../entity";
 
 @Service()
 export class UserRepo {
-    async postUser(data: login_user_data) {
-        try {
-            let dat = await AppDataSource.getRepository(login_user_data).save(data);
-            return dat;
-        } catch (e) {
-            Logger.error("userRepo => postUser", e)
-            return e;
-        }
-    };
-
+    
     async getUserByMobile(no) {
         try {
             let data = await AppDataSource.getRepository(master_data).query(`SELECT user_unique_id, refractionist_mobile as user_mobile_number from master_data where refractionist_mobile='${no}'`);
@@ -28,7 +18,12 @@ export class UserRepo {
 
     async getUserByMobileObj(no) {
         try {
-            return await AppDataSource.getRepository(master_data).findOneBy({ refractionist_mobile: no });
+            let result = await AppDataSource.getRepository(master_data).findOneBy({ refractionist_mobile: no });
+            let data = await AppDataSource.getRepository(master_data).
+                createQueryBuilder('child').select('distinct child.health_facility', 'health_facility')
+                .where("child.refractionist_mobile =:id", {id: no})
+                .getRawMany();
+            return {...result, ...{phco: data}};
         } catch (e) {
             Logger.error("userRepo => getUserByMobile", e)
             return e;

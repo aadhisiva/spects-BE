@@ -71,7 +71,6 @@ export class OtherBenfRepo {
     async findAll() {
         try {
             let res = await AppDataSource.getRepository(other_benf_data).query(`select TOP 1 benf_unique_id from other_benf_data ORDER BY id DESC`);
-            // let res = await AppDataSource.getRepository(other_benf_data).query(`select benf_unique_id from other_benf_data ORDER BY id DESC LIMIT 1`);
             return res;
         } catch (e) {
             Logger.error("otherBenfRepo => getDataByAadharHash", e)
@@ -254,6 +253,16 @@ export class OtherBenfRepo {
     async checkBenfUniId(data) {
         try {
             return await AppDataSource.getRepository(other_benf_data).findOneBy({ benf_unique_id: data });
+        } catch (e) {
+            Logger.error("otherBenfRepo => getBenificaryStatus", e)
+            return e;
+        }
+    };
+
+    async statusDataByIdWith(data) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, address, aadhar_no,order_number, 
+            benf_name, phone_number, initial_image status from other_benf_data where user_id='${data.user_id}' and aadhar_no='${data.aadhar_no}'`);
         } catch (e) {
             Logger.error("otherBenfRepo => getBenificaryStatus", e)
             return e;
