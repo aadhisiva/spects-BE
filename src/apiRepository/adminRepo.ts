@@ -1,7 +1,7 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
-import { district_data, master_data, phco_data, sub_centre_data, taluka_data } from "../entity";
+import { district_data, master_data, other_benf_data, phco_data, sub_centre_data, taluka_data } from "../entity";
 import { state_data } from "../entity/state_data";
 import { PrameterizedQueries } from "../utility/resusableFun";
 import { Equal } from "typeorm";
@@ -52,19 +52,18 @@ export class AdminRepo {
             } else if (data.type == "district_officer") {
                 let result = await AppDataSource.getRepository(district_data).findOneBy({ mobile_number: data.mobile_number });
                 if (!result) return 422;
-                let distinct = await AppDataSource.getRepository(district_data).query(`select distinct code from district_data where mobile_number='${data.mobile_number}'`);
-                console.log("dist", distinct)
-                return { ...result, ...{ name: distinct } };
+                let distinct = await AppDataSource.getRepository(district_data).query(`select distinct code, unique_name from district_data where mobile_number='${data.mobile_number}'`);
+                return { ...result, ...{ codes: distinct } };
             } else if (data.type == "taluka") {
                 let result = await AppDataSource.getRepository(taluka_data).findOneBy({ mobile_number: data.mobile_number });
                 if (!result) return 422;
-                let distinct = await AppDataSource.query(`select distinct code from taluka_data where mobile_number='${data.mobile_number}'`);
-                return { ...result, ...{ name: distinct } };
+                let distinct = await AppDataSource.query(`select distinct code, unique_name from taluka_data where mobile_number='${data.mobile_number}'`);
+                return { ...result, ...{ codes: distinct } };
             } else if (data.type == "phco") {
                 let result = await AppDataSource.getRepository(phco_data).findOneBy({ mobile_number: data.mobile_number });
                 if (!result) return 422;
-                let distinct = await AppDataSource.query(`select distinct code from phco_data where mobile_number='${data.mobile_number}'`);
-                return { ...result, ...{ name: distinct } };
+                let distinct = await AppDataSource.query(`select distinct code, is_initial_login, unique_name from phco_data where mobile_number='${data.mobile_number}'`);
+                return { ...result, ...{ codes: distinct } };
             }
             return AppDataSource.getRepository(district_data)
         } catch (e) {
@@ -125,31 +124,121 @@ export class AdminRepo {
             return e;
         }
     };
-    async getAllOrders() {
-        try {
-            let query = `exec get_all_count`;
-            let result = await AppDataSource.getRepository(master_data).query(query);
-            return result;
+    async getAllOrders(data) {
+            const { codes, type } = data;
+            try {
+                if (type == "district_officer") {
+                    if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                    let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                    if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+    
+                    let query = 'exec districtLogin_all_count @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                    let getParamsData = PrameterizedQueries(codes);
+                    let result = await AppDataSource.query(query, getParamsData);
+                    return result;
+                } else if (type == "taluka") {
+                    if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                    let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                    if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+    
+                    let query = 'exec talukaLogin_allCount @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                    let getParamsData = PrameterizedQueries(codes);
+                    let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                    return result;
+                } else if (type == 'phco') {
+                    if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                    let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                    if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+    
+                    let query = 'exec phcoLogin_allCount @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                    let getParamsData = PrameterizedQueries(codes);
+                    let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                    return result;
+                } else {
+                    let query = `exec get_all_count`;
+                    let result = await AppDataSource.getRepository(master_data).query(query);
+                    return result;
+                }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
-    async getAllDelivered() {
+    async getAllDelivered(data) {
+        const { codes, type } = data;
         try {
-            let query = `exec get_all_delivered`;
-            let result = await AppDataSource.getRepository(master_data).query(query);
-            return result;
+            if (type == "district_officer") {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec districtLogin_delivered @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.query(query, getParamsData);
+                return result;
+            } else if (type == "taluka") {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec talukaLogin_delivered @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else if (type == 'phco') {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec phcoLogin_delivered @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else {
+                let query = `exec get_all_delivered`;
+                let result = await AppDataSource.getRepository(master_data).query(query);
+                return result;
+            }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
-    async getAllPending() {
+    async getAllPending(data) {
+        const { codes, type } = data;
         try {
-            let query = `exec get_all_pending`;
-            let result = await AppDataSource.getRepository(master_data).query(query);
-            return result;
+            if (type == "district_officer") {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec districtLogin_pending @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.query(query, getParamsData);
+                return result;
+            } else if (type == "taluka") {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec talukaLogin_pending @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else if (type == 'phco') {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec phcoLogin_pending @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else {
+                let query = `exec get_all_pending`;
+                let result = await AppDataSource.getRepository(master_data).query(query);
+                return result;
+            }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -164,6 +253,7 @@ export class AdminRepo {
                 var temp: master_data = Object.assign({}, obj);
                 temp.refractionist_name = data?.refractionist_name;
                 temp.refractionist_mobile = data?.refractionist_mobile;
+                temp.ngo_gov = data?.ngo_gov;
                 await masterData.save(temp);
             })
             return {};
@@ -256,7 +346,7 @@ export class AdminRepo {
     };
 
     async getReportsData(data) {
-        const { codes, type } = data;
+        const { codes, type, skip, limit } = data;
         try {
             if (type == "district_officer") {
                 if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
@@ -286,9 +376,10 @@ export class AdminRepo {
                 let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
                 return result;
             } else {
-                let query = `exec stateLogin_reports`;
-                let result = await AppDataSource.getRepository(master_data).query(query);
-                return result;
+                let query = `exec stateLogin_OtherReports @0,@1`;
+                const length = await AppDataSource.getRepository(other_benf_data).count({where : {applicationStatus: 'Completed'}});
+                let result = await AppDataSource.getRepository(other_benf_data).query(query, [skip, limit]);
+                return {total : length, result};
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
@@ -358,28 +449,39 @@ export class AdminRepo {
     };
 
     async updatePhcoScreeningData(data) {
-        const { screenings, codes } = data;
-        let uniqueData = Array.from(new Set(screenings.map((item: any) => item.health_facility_code)));
+        const { code, row } = data;
         try {
             let masterData = await AppDataSource.getRepository(master_data);
-            let phcoData = await AppDataSource.getRepository(phco_data);
-            screenings?.map(async (obj) => {
-                let findData = await masterData.findOneBy({ user_unique_id: obj?.user_unique_id });
+            let uniqueData = await masterData.find({where: {sub_centre_code: code}});
+            uniqueData?.map(async (obj) => {
+                let findData = await masterData.findOneBy({ user_unique_id: obj.user_unique_id });
                 let finalData = {
                     ...findData,
                     ...{
-                        total_primary_screening_completed: obj?.total_primary_screening_completed,
-                        total_secondary_screening_required: obj?.total_secondary_screening_required
+                        total_primary_screening_completed: row?.total_primary_screening_completed,
+                        total_secondary_screening_required: row?.total_secondary_screening_required
                     }
                 };
-                codes.map(async obj => {
-                    let checkData = await phcoData.findOneBy({ code: Equal(obj?.code) });
-                    let updatedData = { ...checkData, ...{ is_initial_login: "N" } }
-                    await phcoData.save(updatedData);
-                })
                 await masterData.save(finalData);
                 return {};
             });
+            // screenings?.map(async (obj) => {
+            //     let findData = await masterData.findOneBy({ user_unique_id: obj?.user_unique_id });
+            //     let finalData = {
+            //         ...findData,
+            //         ...{
+            //             total_primary_screening_completed: obj?.total_primary_screening_completed,
+            //             total_secondary_screening_required: obj?.total_secondary_screening_required
+            //         }
+            //     };
+            //     codes.map(async obj => {
+            //         let checkData = await phcoData.findOneBy({ code: Equal(obj?.code) });
+            //         let updatedData = { ...checkData, ...{ is_initial_login: "N" } }
+            //         await phcoData.save(updatedData);
+            //     })
+            //     await masterData.save(finalData);
+            //     return {};
+            // });
             return {};
         } catch (e) {
             Logger.error("userRepo => postUser", e)
@@ -387,24 +489,65 @@ export class AdminRepo {
         }
     };
 
+    // async getPhcoWiseData(data) {
+    //     const { codes } = data;
+    //     let res = await AppDataSource.getRepository(master_data).find({
+    //         where:
+    //             [
+    //                 { health_facility_code: Equal(codes[0]?.code) },
+    //                 { health_facility_code: Equal(codes[1]?.code) },
+    //                 { health_facility_code: Equal(codes[2]?.code) },
+    //                 { health_facility_code: Equal(codes[3]?.code) },
+    //                 { health_facility_code: Equal(codes[4]?.code) },
+    //                 { health_facility_code: Equal(codes[5]?.code) },
+    //                 { health_facility_code: Equal(codes[6]?.code) },
+    //                 { health_facility_code: Equal(codes[7]?.code) },
+    //                 { health_facility_code: Equal(codes[8]?.code) },
+    //                 { health_facility_code: Equal(codes[9]?.code) },
+    //             ]
+    //     });
+    //     return res
+    // };
+
     async getPhcoWiseData(data) {
-        const { codes } = data;
-        let res = await AppDataSource.getRepository(master_data).find({
-            where:
-                [
-                    { health_facility_code: Equal(codes[0]?.code) },
-                    { health_facility_code: Equal(codes[1]?.code) },
-                    { health_facility_code: Equal(codes[2]?.code) },
-                    { health_facility_code: Equal(codes[3]?.code) },
-                    { health_facility_code: Equal(codes[4]?.code) },
-                    { health_facility_code: Equal(codes[5]?.code) },
-                    { health_facility_code: Equal(codes[6]?.code) },
-                    { health_facility_code: Equal(codes[7]?.code) },
-                    { health_facility_code: Equal(codes[8]?.code) },
-                    { health_facility_code: Equal(codes[9]?.code) },
-                ]
-        });
-        return res
+        const { codes, type } = data;
+        try {
+            if (type == "district_officer") {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec districtLogin_primaryScreening @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.query(query, getParamsData);
+                return result;
+            } else if (type == "taluka") {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec talukaLogin_primaryScreening @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else if (type == 'phco') {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec phcoLogin_primaryScreenings @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else {
+                let query = `exec GetAllMasters`;
+                let result = await AppDataSource.getRepository(master_data).query(query);
+                return result;
+            }
+        } catch (e) {
+            Logger.error("userRepo => postUser", e)
+            return e;
+        }
     };
 
     async getTalukasData(data) {
@@ -462,6 +605,44 @@ export class AdminRepo {
                 let result = await AppDataSource.getRepository(phco_data).query(query, [finOne?.mobile_number]);
                 return result;
             }
+        } catch (e) {
+            Logger.error("userRepo => postUser", e)
+            return e;
+        }
+    };
+
+
+    async uniqueDistricts(data) {
+        const {district, taluka, phc} = data;
+        try {
+            if(district){
+                return await AppDataSource.getRepository(master_data).
+                query(`select distinct taluka from master_data where district='${district}'`);
+            } else if(taluka){
+                return await AppDataSource.getRepository(master_data).
+                query(`select distinct health_facility from master_data where taluka='${taluka}'`);
+                
+            } else if(phc){
+                return await AppDataSource.getRepository(master_data).
+                query(`select distinct sub_centre from master_data where health_facility='${phc}'`);
+                
+            } else {
+                return await AppDataSource.getRepository(master_data).
+                  createQueryBuilder('entity').select('DISTINCT ("district")')
+                  .getRawMany();
+            }
+        } catch (e) {
+            Logger.error("userRepo => postUser", e)
+            return e;
+        }
+    }
+
+    async searchData(data) {
+        const {district, taluka, phco, sub_centre, date, status, type} = data;
+        if(!district && !taluka && !phco && !sub_centre && !date && !status) return {code: 422, message: "Give Mandatory Fields."}
+        try {
+            let query = `exec stateLogin_OtherReportsFilterWise @0,@1,@2,@3,@4,@5,@6,@7`;
+            return await AppDataSource.getRepository(phco_data).query(query, [district, taluka, phco, sub_centre, date[0], date[1], status, type]);
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;

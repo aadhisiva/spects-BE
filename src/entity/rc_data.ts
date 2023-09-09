@@ -15,52 +15,55 @@ export class rc_data {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ default: null })
+    @Column()
+    benf_unique_id: string;
+
+    @Column({ default: '' })
     benf_name: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     dob: string;
 
-    @Column({default: null})
+    @Column({default: ''})
     user_id: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     taluk: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     age: number;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     district: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     otp: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     phone_number: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     category: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     caste: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     gender: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     education_id: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     father_name: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     address: string;
 
     @Column({ default: "" })
     aadhar_no: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     rc_no: string;
 
     @CreateDateColumn()

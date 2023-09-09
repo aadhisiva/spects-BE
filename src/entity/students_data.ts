@@ -15,115 +15,118 @@ export class students_data {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   student_unique_id: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   sats_id: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   school_id: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   user_id: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   student_name: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   order_number: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   dob: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   age: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   gender: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   father_name: string;
 
-  @Column('text', { default: null })
+  @Column('text', { default: '' })
   image: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   mother_name: string;
+  
+  @Column({default: ''})
+  applicationStatus: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   parent_phone_number: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   frame_type: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   frame_size: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   left_eye_sph_plus: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   left_eye_sph_minus: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   left_eye_cyl_plus: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   left_eye_cyl_minus: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   left_eye_axis: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   left_eye_va: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   right_eye_sph_plus: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   right_eye_sph_minus: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   right_eye_cyl_plus: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   right_eye_cyl_minus: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   right_eye_axis: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   right_eye_va: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   state: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   district: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   village: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   hobly: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   type: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   status: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   near_vision_sph: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   near_vision_cyl: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   near_vision_axis: string;
 
-  @Column({ default: null })
+  @Column({ default: '' })
   near_vision_va: string;
 
   @CreateDateColumn()

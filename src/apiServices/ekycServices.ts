@@ -9,12 +9,9 @@ export class EkycServices {
     constructor(public EkycRepo: EkycRepo, public SMSServices: SMSServices, public ResusableFunctions: ResusableFunctions) { }
 
     async saveEkycData(data) {
-        if (Object.keys(data).length == 0 || data?.finalStatus != "S") {
-            return {code: 200, message: "E-KYC Failed."};
-        } else {
-            let newData = new ekyc_data({});
-            let eKYCData = data['eKYCData'];
-            let localData = data['localKYCData'];
+        let newData = new ekyc_data({});
+        let eKYCData = data.eKYCData;
+            let localData = data.localKYCData;
             newData.txnNo = data.txnNo;
             newData.txnDateTime = data.txnDateTime;
             newData.aadhaarHash = data.aadhaarHash;
@@ -37,7 +34,7 @@ export class EkycServices {
             newData.ekyc_name = eKYCData.name;
             newData.ekyc_co = eKYCData.co;
             newData.ekyc_country = eKYCData.country;
-            newData.ekyc_country = eKYCData.dist;
+            newData.ekyc_dist = eKYCData.dist;
             newData.ekyc_house = eKYCData.house;
             newData.ekyc_street = eKYCData.street;
             newData.ekyc_lm = eKYCData.lm;
@@ -70,7 +67,11 @@ export class EkycServices {
             newData.npciError = data.npciError;
             newData.npciBankName = data.npciBankName;
             newData.npciLastUpdateDate = data.npciLastUpdateDate;
+            let ekyc_result = await this.EkycRepo.getDataFromEkyc(data);
+        if(!ekyc_result){
             return await this.EkycRepo.saveEkycData(newData);
+        } else {
+            return await this.EkycRepo.UpdateExistingEkycData(newData);
         }
     };
     

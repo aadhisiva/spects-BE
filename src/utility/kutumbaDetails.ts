@@ -79,6 +79,38 @@ export const ekyc_post_axis = async (url, body) => {
 
 @Service()
 export class KutumbaDetails {
+    async KutumbaDetailsFrom(data) {
+        try {
+            let inputValue = "";
+            inputValue = (data?.aadhar_no) ?
+                `${process.env.KUTUMA_CLIENT_CODE}___${data.aadhar_no}_` :
+                `${process.env.KUTUMA_CLIENT_CODE}__${data.rc_no}__`;
+
+            let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY, inputValue);
+            let response = await axios.post(process.env.KUTUMBA_API, await getReqBody(data, creteHMAC), {
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+            console.log("kuuu",inputValue)
+            console.log("kuuu",await getReqBody(data, creteHMAC))
+            if (response.status == 200 && response.data?.StatusCode == 0) {
+                let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
+                let pasingDecryptData = JSON.parse(decryptString);
+                await trackExternalLogs(Tables.OTHER, `kutumba ${data?.aadhar_no ? "aadhar" : "rc"} api`, "after", "", pasingDecryptData, data?.user_id);
+                if (pasingDecryptData?.StatusCode === 0 && pasingDecryptData?.StatusText === "Sucess") {
+                    return pasingDecryptData?.ResultDataList;
+                } else {
+                    return 422;
+                }
+            } else {
+                return 422;
+            }
+        } catch (e) {
+            Logger.error("getFamilyAdDataFromKutumba", e);
+            return e.message;
+        };
+    };
     async getFamilyAdDataFromKutumba(data) {
         try {
             let inputValue = "";
@@ -88,6 +120,7 @@ export class KutumbaDetails {
 
             let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY, inputValue);
             await trackExternalLogs(Tables.OTHER, `kutumba ${data?.aadhar_no ? "aadhar" : "rc"} api`, "before", await getReqBody(data, creteHMAC), "", data?.user_id);
+            console.log("tr", await getReqBody(data, creteHMAC))
             let response = await axios.post(process.env.KUTUMBA_API, await getReqBody(data, creteHMAC), {
                 headers: {
                     "Accept": "application/json"
@@ -97,6 +130,7 @@ export class KutumbaDetails {
                 let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
                 let pasingDecryptData = JSON.parse(decryptString);
                 await trackExternalLogs(Tables.OTHER, `kutumba ${data?.aadhar_no ? "aadhar" : "rc"} api`, "after", "", pasingDecryptData, data?.user_id);
+                console.log("tr", await getReqBody(data, pasingDecryptData.ResultDataList))
                 if (pasingDecryptData?.StatusCode === 0 && pasingDecryptData?.StatusText === "Sucess") {
                     return pasingDecryptData?.ResultDataList;
                 } else {
@@ -133,24 +167,21 @@ export class KutumbaDetails {
     }
 
     async getDataFromEkycOutSource(data) {
-        let url = await AppDataSource.getRepository(redirection_data).find();
+        const {name, uniqueId, txnDateTime} = data;
         try {
-            let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
             let bodyData = {
                 deptCode: process.env.DEP_CODE,
                 applnCode: process.env.APPLI_CODE,
                 schemeCode: process.env.SCHEME_CODE,
-                beneficiaryID: data.benf_unique_id,
-                beneficiaryName: data.benf_name,
+                beneficiaryID: uniqueId,
+                beneficiaryName: name,
                 integrationKey: process.env.INTEGRATION_KEY,
                 integrationPassword: process.env.INTEGRATION_PASS,
                 txnNo: txnDateTime,
                 txnDateTime: txnDateTime,
                 serviceCode: process.env.SERVICE_CODE,
-                responseRedirectURL: `${url[0]?.ekyc_url}/edcs/edcs_service_application`
+                responseRedirectURL: process.env.EKYC_REDIRECTION_URL
             };
-
-            await trackExternalLogs(Tables.EKYC, Methods.EKYC, "before", bodyData, "", data?.user_id);
             let res = await ekyc_post_axis(process.env.EKYC_URL, bodyData);
             await trackExternalLogs(Tables.EKYC, Methods.EKYC, "after", "", res.data, data?.user_id);
             if (!res?.data?.Token) {

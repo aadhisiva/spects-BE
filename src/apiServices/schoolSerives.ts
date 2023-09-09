@@ -40,13 +40,17 @@ export class SchoolServices {
             if (!data?.school_id || !data.user_id) return { code: 422, message: "school id and user id is mandatory." };
             let req = { sats_code: data.school_id }
             let getSchoolData = await this.KutumbaDetails.getSchoolDataFromExternal(req, "school");
-            if (getSchoolData == 500) return { code: 422, message: "Third party api is not working." }
+            if (getSchoolData == 500) return { code: 422, message: "Access Denied." }
             let reqObj = schoolDataAssignToLocal(getSchoolData[0])
             reqObj.user_id = data.user_id;
             reqObj.school_id = data?.school_id;
             let DuplicateUser = await this.SchoolRepo.getOnlySchool(reqObj);
             if (DuplicateUser) {
-                return { code: 422, message: "School id is already added." }
+                if(DuplicateUser.applicationStatus == 'Completed'){
+                    return { message: "Data saved." };
+                } else {
+                    return { code: 422, message: "School Already Registered." };
+                }
                 // let checkSchoolDataById = await this.SchoolRepo.getSchoolData(reqObj);
                 // if (checkSchoolDataById.length == 0) return { code: 422, message: "School id is already added." }
                 // await this.SchoolRepo.updateSchoolById(reqObj);
@@ -63,20 +67,22 @@ export class SchoolServices {
     async getStudentDataByOutSource(data: students_data) {
         try {
             if (!data?.school_id || !data.user_id || !data?.sats_id) return { code: 422, message: "School id, user id and sats id is mandatory." };
+            let checkDuplicates = await this.SchoolRepo.checkDuplicatesWithSats(data.sats_id);
+            if(checkDuplicates) return {code:422, message: `You Are Already Applied With Beneficiary. This Is Your ${checkDuplicates.order_number}`};
             let req = { satsCode: data.sats_id }
             let getSchoolData = await this.KutumbaDetails.getSchoolDataFromExternal(req, "child");
-            if (getSchoolData == 500) return { code: 422, message: "Third party api is not working." }
+            if (getSchoolData == 500) return { code: 422, message: "Access Denied." }
             let reqObj = studentDataAssignToLocal(getSchoolData[0])
             reqObj.user_id = data.user_id;
             reqObj.school_id = data.school_id;
             reqObj.sats_id = data.sats_id;
             let duplicateUser = await this.SchoolRepo.getOnlyStudent(reqObj);
             if (duplicateUser) {
-                return { code: 422, message: "Student Id is already added." }
-                // let checkSatsDataById = await this.SchoolRepo.getStudentDataById(reqObj);
-                // if (checkSatsDataById.length == 0) return { code: 422, message: "Student Id is already added." }
-                // await this.SchoolRepo.updateSchoolById(reqObj);
-                // return { message: "Data saved." };
+                if(duplicateUser.applicationStatus == 'Completed'){
+                    return { message: "Data saved." };
+                } else {
+                    return { code: 422, message: "Student Already Registered." };
+                }
             } else {
                 await this.SchoolRepo.saveStudentData(reqObj);
                 return { message: "Data saved." };
@@ -210,6 +216,16 @@ export class SchoolServices {
             if (!data?.school_id || !data?.user_id) return { code: 422, message: "school id, user id and is is mandatory." };
                 let result = await this.SchoolRepo.getAllStudentData(data);
                 return (!result) ? { code: 422, message: "Data not exists." } : { ...result, ...data };
+        } catch (e) {
+            Logger.error("schoolservice ===== getAllStudentData", e);
+            return e;
+        }
+    }
+    async getImageStudentWise(data: students_data) {
+        try {
+                let result = await this.SchoolRepo.getImageStudentWise(data);
+                console.log("result", result)
+                return result;
         } catch (e) {
             Logger.error("schoolservice ===== getAllStudentData", e);
             return e;

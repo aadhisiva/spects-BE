@@ -17,41 +17,44 @@ import {
     @PrimaryGeneratedColumn()
     id: number;
   
-    @Column({default: null})
+    @Column({default: ''})
     school_id: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     h_block: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     user_id: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     school_unique_id: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     school_institute_name: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     school_incharge_name: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     school_mail: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     address: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     school_incharge_contact_no: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     village: string;
     
-    @Column({default: null})
+    @Column({default: ''})
     taluk: string;
   
-    @Column({default: null})
+    @Column({default: ''})
     district: string;
+  
+    @Column({default: ''})
+    applicationStatus: string;
 
     // @Column({ default: 0 })
     // status: string;

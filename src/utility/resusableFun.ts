@@ -104,15 +104,17 @@ export const PrameterizedQueries = (data) => {
 
 export const createUniqueIdBasedOnCodes = async (id) => {
   // formate codes-Wise = district/taluka/village/user_id/order_number
-  let orderNumber = generateOTP();
-  let userData = await AppDataSource.getRepository(master_data).findOneBy({ user_unique_id: Equal(id) });
+  let orderNumber = new Date().getFullYear() + "" + new Date().getTime();
+  let userData = await AppDataSource.getRepository(master_data).findOneBy({ sub_centre_code: Equal(id) });
   let addString = "";
   for (const key in userData) {
     if (key == 'district') {
       addString += userData[key].replace(/\D/g, "") + "/";
     } else if (key === 'taluka') {
       addString += userData[key].replace(/\D/g, "") + "/";
-    } else if (key === "village") {
+    } else if (key === "health_facility") {
+      addString += userData[key].replace(/\D/g, "") + "/";
+    } else if(key === "sub_centre"){
       addString += userData[key].replace(/\D/g, "") + "/";
     }
   }

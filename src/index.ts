@@ -23,6 +23,7 @@ import { addData, decrypt } from './utility/resusableFun';
 import sessions from "express-session";
 import { TypeormStore } from "typeorm-store";
 import { Session } from './entity';
+import path from 'path';
 
 // for acceessing env variables
 dotenv.config();
@@ -97,7 +98,7 @@ app.post("/add", async (req, res) => {
   res.send(data)
 });
 
-console.log(decrypt("BXYUyLhLowdqgeJRfG8VUQq9Uw6RqBWtHNik+o8JaX9FSvhlUYChLWI3Ly9YybP95Q18a7n4fFcY5cGEs5Eu/fXMKCHxXS5Zwn7AFqb7Y2lBDHcszB08tdEjxy56M09+xcPOUyL4B36ITAs147PZMwVsz4xVMQGQfIO1ste4T0g7QbdjUANAq7NRSeUNBsdooQ//KJvzoKjOnTNejcVJL+ltauhFEKxnUK73pYwjbpNiIaKVFA1QGnHwVTcXtQ0WR2+cSPoEtNniZosSbLA3/cb1eeR2Dja9tDJQh0IT9qhffGJaY46z/GrzeStESnPgE67judMpdpgo60sY8i5N82lkL9lVMpD4v+j7PkDpQ24ikyQ3B5nEnOUjiZsTMUSbGO5hCjB9zoZV2+T4xVDExQKzX+8zzxxixZPHac81BnWfEprjMpWjt+u+540NYAL/xsNSiEd7YWJmftbxD/qfsTvowUWKCO3vgjP/xvuRZjZH/mO44PuXSSLzCZ7RBNoykpZKkIJezQIa9osglyNfAxmDIRn6f1/x1Y1h1V4Pbj+4KmRbPkCcQsmGlTxW7xWNLBnY2Jdqy07F0HscuBI3luUFBTmSPj+VaYeR4D8qvWQcSnynlcQeYBH1RVocvcQP9Rki1YMXOKgcxKzaAHRw9wlCUGiQfyZa23qFryPIZC2k+UYoPwpWxIjXktllCykZYDQ7ohXxHp9rAgB4xTy5L9NsQWOsFtGMSbmVvbC+ANJD2Y99E6q13iDAoAmMAumCxJJTwuizKkOshFvq0e56uX+2ZH18BoU8g5gpflIADScHaJHiHtCROKflsa77N19vX/ePmYQopdzpRwOFcFjOFMM8Fv/zTQF7/7wox8PIXtTAu+JhQpbNPkf1O9/qfLPy7aCAtTv5dPyf8TtJaw74PT846arnAoss4OhL/RKyKeJ187XqtuK29BJA/pffGuDRG1tnkbhhUpHsWqzJ/v/komV0qCbYIdGByaNRRNcplvU="))
+// console.log(decrypt("8EWwZqahNyH3OowTjCvsL//55qAQzowyBA4vhbOagB+QVmlSjmWgkC/VkX9lkoSAPtJYPVFHl3vQUSRRYkohDVFB1S8VA7G3fUiGvFAIZdshrGFqPRqz6aTHHe1Sg+GK3chZ6awPU99c9GAkLlR0CXrjs2OvUYu6aK+g+8fBBWS1Kwk9bl7InKjezBxrNtwOAjYEtnnq9odqu1FSFZboNj5wjwk86sWyYGGiaIVmxE4ceeckXDuBma8QqiqYPJu/wwUxkCMhxDbaOxr7qG7RIymmVze4eGdSFzHTAwhU1W4="))
 
 // controllers for routes
 app.use("/login", UserController);
@@ -105,6 +106,7 @@ app.use("/school", SchoolController);
 app.use("/other", OtherBenfController);
 app.use("/edcs", EkycController);
 app.use("/admin", AdminController);
+
 
 // we are adding port connection here
 app.listen(port, async () => {

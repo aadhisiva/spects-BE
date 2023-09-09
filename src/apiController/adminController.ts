@@ -18,8 +18,16 @@ import { login_validation, otp_validation, update_district, update_phco_validate
 
 const router = express.Router();
 
-const adminServices = Container.get(AdminServices);
-
+const adminServices = Container.get(AdminServices); 
+// skip user
+router.post("/skip", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+    try {
+        req.session.user.isIntialLogin = "N"
+        return res.send("");
+    } catch (e) {
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
 // loing user
 router.post("/login", validateFeilds(login_validation), async (req: Request, res: Response) => {
     try {
@@ -98,7 +106,8 @@ router.post("/all_masters", authenticateToken, verifyUser, async (req: Request, 
 // all eligibale users api
 router.post("/get_orders_count", authenticateToken, verifyUser, async (req: Request, res: Response) => {
     try {
-        let result = await adminServices.getAllOrders();
+        let data = req.body;
+        let result = await adminServices.getAllOrders(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
@@ -110,7 +119,8 @@ router.post("/get_orders_count", authenticateToken, verifyUser, async (req: Requ
 // delivered users api
 router.post("/delivered", authenticateToken, verifyUser, async (req: Request, res: Response) => {
     try {
-        let result = await adminServices.getAllDelivered();
+        let data = req.body;
+        let result = await adminServices.getAllDelivered(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
@@ -122,7 +132,8 @@ router.post("/delivered", authenticateToken, verifyUser, async (req: Request, re
 // oending users
 router.post("/pending", authenticateToken, verifyUser, async (req: Request, res: Response) => {
     try {
-        let result = await adminServices.getAllPending();
+        let data = req.body;
+        let result = await adminServices.getAllPending(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
@@ -205,7 +216,6 @@ router.post("/update_phco_screenings", authenticateToken, verifyUser, async (req
         let response = (result?.code || result instanceof Error) ?
         ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
         ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.UPDATE_SUCCESS, result);
-        req.session.user.isIntialLogin = typeof result === 'object' && 'N'
         return reUsableResSendFunction(res, response);
     } catch (e) {
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
@@ -299,4 +309,33 @@ router.post("/getUser_data", authenticateToken, verifyUser, async (req: Request,
     }
 });
 
+
+// new apis for managing more records
+
+router.post("/uniqueDistricts", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+    try {
+        let data = new master_data(req.body);
+        let result = await adminServices.uniqueDistricts(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
+        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/searchData", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+    try {
+        let data = new master_data(req.body);
+        let result = await adminServices.searchData(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
+        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
 export default router;

@@ -4,12 +4,14 @@ import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
 import { other_benf_data } from "../entity/other_benf_data";
 import { generateOTP } from "../utility/resusableFun";
-import { ekyc_data } from "../entity";
+import { ekyc_data, students_data } from "../entity";
 import { rc_data } from "../entity/rc_data";
+import { data } from "../b";
+import { ACCESS_DENIED } from "../utility/constants";
 
 
 const dataDriven = (data = "Yes") => {
-    switch(data) {
+    switch (data) {
         case "Yes":
             return "Yes";
         default:
@@ -19,6 +21,131 @@ const dataDriven = (data = "Yes") => {
 
 @Service()
 export class OtherBenfRepo {
+
+    async FetchDataFromEkyc(id) {
+        try {
+            return await AppDataSource.getRepository(ekyc_data).findOneBy({ txnNo: id });
+        } catch (e) {
+            return Logger.error("other repo ####FetchDataFromEkyc", e);
+        }
+    };
+
+    async FetchDataFromOtherBenf(id) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).findOneBy({ aadhar_no: id });
+        } catch (e) {
+            return Logger.error("other repo ####FetchDataFromOtherBenf", e);
+        }
+    };
+    async savingNewData(data) {
+        try {
+            data.ekyc_check= "Y";
+            data.scheme_eligability= "Yes";
+            return await AppDataSource.getRepository(other_benf_data).save(data);
+        } catch (e) {
+            return Logger.error("other repo ####savingNewData", e);
+        }
+    };
+    async checkEducationId(id) {
+        try {
+            return await AppDataSource.getRepository(students_data).findOneBy({ sats_id: id });
+        } catch (e) {
+            return Logger.error("other repo ####checkEducationId", e);
+        }
+    };
+    async updateAadharData(data) {
+        try {
+            let aadharData = await AppDataSource.getRepository(other_benf_data);
+            let findData = await aadharData.findOneBy({ benf_unique_id: data.benf_unique_id });
+            if (!findData) return { code: 422, message: ACCESS_DENIED };
+            let newData = { ...findData, ...data };
+            return await aadharData.save(newData);
+        } catch (e) {
+            return Logger.error("other repo ####updateAadharData", e);
+        }
+    };
+    async FaechRcData(id) {
+        try {
+            return await AppDataSource.getRepository(rc_data).createQueryBuilder('child')
+                .select(['child.id as id', 'child.age as age', 'child.benf_name as benf_name', 'child.phone_number as phone_number'])
+                .where("child.rc_no= :id", { id }).getRawMany();
+        } catch (e) {
+            return Logger.error("other repo ####FaechRcData", e);
+        }
+    };
+
+    async findOneMemberInRC(id) {
+        try {
+            return await AppDataSource.getRepository(rc_data).findOneBy({ id });
+        } catch (e) {
+            Logger.error("OtherBenfRepo => addDeatilsFromKutumbaAPI", e)
+            return e;
+        }
+    };
+
+    async findOneMemberInOther(id) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).findOneBy({ aadhar_no: id });
+        } catch (e) {
+            Logger.error("OtherBenfRepo => addDeatilsFromKutumbaAPI", e)
+            return e;
+        }
+    };
+
+    async addNewDataFromRC(data: other_benf_data) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).save(data);
+        } catch (e) {
+            Logger.error("OtherBenfRepo => addDeatilsFromKutumbaAPI", e)
+            return e;
+        }
+    };
+
+    async updateDataExistsRecord(data: other_benf_data) {
+        try {
+            let other_repo = await AppDataSource.getRepository(other_benf_data)
+            let result = await other_repo.findOneBy({ aadhar_no: Equal(data.aadhar_no) });
+            let finalData = { ...result, ...{ otp: data?.otp, phone_number: data.phone_number } };
+            return other_repo.save(finalData);
+        } catch (e) {
+            Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
+            return e;
+        }
+    };
+
+    async mapRcDataTOOtherBenf(data: other_benf_data) {
+        try {
+            let result = await AppDataSource.getRepository(rc_data).findOneBy({ aadhar_no: Equal(data.aadhar_no) });
+            delete result?.id;
+            delete result?.created_at;
+            delete result?.updated_at;
+            delete result?.user_id;
+            return { ...result, ...data };
+        } catch (e) {
+            Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
+            return e;
+        }
+    };
+
+    async fetchRcUserData(data: other_benf_data) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).createQueryBuilder('child')
+                .select(['child.benf_name as benf_name', 'child.dob as dob', 'child.age as age', 'child.district as district',
+                        'child.district as district', 'child.phone_number as phone_number', 'child.category as category',
+                        'child.caste as caste','child.address as address', 'child.scheme_eligability as scheme_eligability'])
+                .where('child.user_id= :user and child.benf_unique_id= :id', {user: data.user_id, id: data.benf_unique_id});
+        } catch (e) {
+            Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
+            return e;
+        }
+    };
+
+    /* *******************************************  ******************************************** */
+    /* *******************************************  ******************************************** */
+    /* *******************************************  ******************************************** */
+        // old apis
+    /* *******************************************  ******************************************** */
+    /* *******************************************  ******************************************** */
     async addDeatilsFromKutumbaAPI(data: other_benf_data) {
         try {
             data.scheme_eligability = dataDriven();
@@ -30,6 +157,7 @@ export class OtherBenfRepo {
     };
     async createRcDataOfEach(data: rc_data) {
         try {
+            data.benf_unique_id = new Date().getTime().toString();
             return await AppDataSource.getRepository(rc_data).save(data);
         } catch (e) {
             Logger.error("OtherBenfRepo => addDeatilsFromKutumbaAPI", e)
@@ -47,7 +175,7 @@ export class OtherBenfRepo {
         }
     };
 
-    async getRcBasedOnAadharData(data :other_benf_data) {
+    async getRcBasedOnAadharData(data: other_benf_data) {
         try {
             return await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_name, dob, age, taluk, district, 
                 phone_number, category, caste, address, scheme_eligability from other_benf_data where aadhar_no="${data.aadhar_no}" 
@@ -58,10 +186,10 @@ export class OtherBenfRepo {
         }
     };
 
-    async getRcBasedOnAadharDataUniId(data :other_benf_data) {
+    async getRcBasedOnAadharDataUniId(data: other_benf_data) {
         try {
             return await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_name, dob, age, taluk, district, 
-                phone_number, category, caste, address, scheme_eligability from other_benf_data where benf_unique_id="${data.benf_unique_id}"`);
+                phone_number, category, caste, address, scheme_eligability from other_benf_data where aadhar_no='${data.aadhar_no}' and user_id='${data.user_id}'`);
         } catch (e) {
             Logger.error("otherBenfRepo => getDataByAadharHash", e)
             return e;
@@ -89,7 +217,7 @@ export class OtherBenfRepo {
 
     async checkOnlyAadharHash(data) {
         try {
-            return await AppDataSource.getRepository(other_benf_data).findOne({ where: { aadhar_no: Equal(data.aadhar_no)}});
+            return await AppDataSource.getRepository(other_benf_data).findOne({ where: { aadhar_no: Equal(data.aadhar_no) } });
         } catch (e) {
             Logger.error("otherBenfRepo => checkOnlyAadharHash", e)
             return e;
@@ -100,15 +228,15 @@ export class OtherBenfRepo {
         try {
             data.order_number = generateOTP();
             let getAllCount = await this.findAll();
-            data.status= "order_pending";
+            data.status = "order_pending";
             let checkUndefined = (getAllCount[0]?.benf_unique_id == undefined) ? 0 : getAllCount[0]?.benf_unique_id;
             data.benf_unique_id = `${Number(checkUndefined) + 1}`;
-            let result = await AppDataSource.getRepository(rc_data).findOneBy({ aadhar_no: Equal(data.aadhar_no)});
+            let result = await AppDataSource.getRepository(rc_data).findOneBy({ aadhar_no: Equal(data.aadhar_no) });
             delete result?.id;
             delete result?.created_at;
             delete result?.updated_at;
             delete result?.user_id;
-            let finalData = { ...data, ...result};
+            let finalData = { ...data, ...result };
             return [result, finalData];
         } catch (e) {
             Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
@@ -121,13 +249,24 @@ export class OtherBenfRepo {
             let getAllCount = await this.findAll();
             let checkUndefined = (getAllCount[0]?.benf_unique_id == undefined) ? 0 : getAllCount[0]?.benf_unique_id;
             data.benf_unique_id = `${Number(checkUndefined) + 1}`;
-            let result = await AppDataSource.getRepository(rc_data).findOneBy({ aadhar_no: Equal(data.aadhar_no)});
+            let result = await AppDataSource.getRepository(rc_data).findOneBy({ aadhar_no: Equal(data.aadhar_no) });
             delete result?.id;
             delete result?.created_at;
             delete result?.updated_at;
             delete result?.user_id;
-            return { ...result, ...data};
-            // return await AppDataSource.getRepository(rc_data).save(finalData);
+            return { ...result, ...data };
+        } catch (e) {
+            Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
+            return e;
+        }
+    };
+
+    async UpdateOtpInOtherBenficiary(data: other_benf_data) {
+        try {
+            let other_repo = await AppDataSource.getRepository(other_benf_data)
+            let result = await other_repo.findOneBy({ aadhar_no: Equal(data.aadhar_no) });
+            let finalData = { ...result, ...{ otp: data?.otp, phone_number: data.phone_number } };
+            return other_repo.save(finalData);
         } catch (e) {
             Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
             return e;
@@ -137,8 +276,8 @@ export class OtherBenfRepo {
     async updateDataByRcAndHashUniAadharHash(data: other_benf_data) {
         try {
             let other_repo = await AppDataSource.getRepository(rc_data)
-            let result = other_repo.findOneBy({ aadhar_no: Equal(data.aadhar_no)});
-            let finalData = { ...result, ...data};
+            let result = other_repo.findOneBy({ aadhar_no: Equal(data.aadhar_no) });
+            let finalData = { ...result, ...data };
             return other_repo.save(finalData);
         } catch (e) {
             Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
@@ -168,10 +307,10 @@ export class OtherBenfRepo {
             return e;
         }
     };
-     // rc_Data 
-     async __checkAadharWithRcTable(data: rc_data){
-        return await AppDataSource.getRepository(rc_data).findOneBy({aadhar_no: Equal(data.aadhar_no)});
-     }
+    // rc_Data 
+    async __checkAadharWithRcTable(data: rc_data) {
+        return await AppDataSource.getRepository(rc_data).findOneBy({ aadhar_no: Equal(data.aadhar_no) });
+    }
 
     async getDataByRcNo(data) {
         try {
@@ -186,6 +325,16 @@ export class OtherBenfRepo {
     async checkLoginUser(data) {
         try {
             return await AppDataSource.getRepository(other_benf_data).findOneBy({ user_id: data });
+        } catch (e) {
+            Logger.error("otherBenfRepo => getDataByRcNo", e)
+            return e;
+        }
+    };
+
+    async checkStatusWiseData(data) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, address,order_number, 
+            benf_name, phone_number, initial_image, status from other_benf_data where benf_unique_id='${data.benf_unique_id}'`);
         } catch (e) {
             Logger.error("otherBenfRepo => getDataByRcNo", e)
             return e;
@@ -214,7 +363,18 @@ export class OtherBenfRepo {
 
     async getDataByRcNoAnadAadharHashWithUniId(data) {
         try {
-            let result = await AppDataSource.getRepository(other_benf_data).findOne({ where: { aadhar_no: Equal(data.aadhar_no) } });
+            let result = await AppDataSource.getRepository(other_benf_data).findOne({ where: { aadhar_no: Equal(data.aadhar_no), user_id: Equal(data.user_id) } });
+            return result;
+        } catch (e) {
+            Logger.error("otherBenfRepo => getDataByRcNoAnadAadharHash", e)
+            return e;
+        }
+    };
+    async checkDuplicatesWithSats(data) {
+        try {
+            let result = await AppDataSource.getRepository(other_benf_data).createQueryBuilder('child')
+                .select(['child.order_number as order_number', 'child.status as status'])
+                .where("education_id = :education_id", { education_id: data.education_id }).getOne();
             return result;
         } catch (e) {
             Logger.error("otherBenfRepo => getDataByRcNoAnadAadharHash", e)
@@ -226,22 +386,22 @@ export class OtherBenfRepo {
         try {
             let checkUser = this.checkLoginUser(data);
             if (!checkUser) {
-                return {code: 422, message: "Data not exits."};
+                return { code: 422, message: "Data not exits." };
             } else {
-                let pending_count = await AppDataSource.getRepository(other_benf_data).query(`SELECT COUNT(*) as count FROM other_benf_data WHERE status='order_pending' and user_id='${data.user_id}';`)
-                let ready_count = await AppDataSource.getRepository(other_benf_data).query(`SELECT COUNT(*) as count FROM other_benf_data WHERE status='ready_to_deliver' and user_id='${data.user_id}';`)
-                let delivered_count = await AppDataSource.getRepository(other_benf_data).query(`SELECT COUNT(*) as count FROM other_benf_data WHERE status='delivered' and user_id='${data.user_id}';`)
+                let pending_count = await AppDataSource.getRepository(other_benf_data).countBy({user_id: data.user_id, status: 'order_pending', applicationStatus: 'Completed'});
+                let ready_count = await AppDataSource.getRepository(other_benf_data).countBy({user_id: data.user_id, status: 'ready_to_deliver', applicationStatus: 'Completed'});
+                let delivered_count = await AppDataSource.getRepository(other_benf_data).countBy({user_id: data.user_id, status: 'delivered', applicationStatus: 'Completed'});                
                 let order_pending = await this.getBenfOrderPending(data);
                 let ready_to_deliver = await this.getBenfReayToDeliver(data);
                 let delivered = await this.getBenfDevliverd(data);
-                return { 
-                    total: Number(pending_count[0].count)+Number(ready_count[0].count)+Number(delivered_count[0].count), 
-                    pending_count: pending_count[0].count,
-                    ready_count: ready_count[0].count,
-                    delivered_count: delivered_count[0].count, 
-                    order_pending, 
-                    ready_to_deliver, 
-                    delivered 
+                return {
+                    total: Number(pending_count) + Number(ready_count) + Number(delivered_count),
+                    pending_count: pending_count,
+                    ready_count: ready_count,
+                    delivered_count: delivered_count,
+                    order_pending,
+                    ready_to_deliver,
+                    delivered
                 };
             }
         } catch (e) {
@@ -307,7 +467,7 @@ export class OtherBenfRepo {
             if (!result) {
                 return 422;
             } else {
-                let newData = { status: "ready_to_deliver"};
+                let newData = { status: "ready_to_deliver" };
                 let finalData = { ...result, ...newData };
                 return await otherBenfDataBase.save(finalData);
             }
@@ -336,7 +496,9 @@ export class OtherBenfRepo {
 
     async getBenfOrderPending(data) {
         try {
-            let orderPending = await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, benf_name, order_number, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='order_pending'`)
+            let orderPending = await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, benf_name, 
+            order_number,address, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='order_pending'
+            and applicationStatus='Completed'`)
             return (orderPending?.length == 0) ? [] : orderPending;
         } catch (e) {
             Logger.error("otherBenfRepo => getBenfOrderPending", e)
@@ -346,7 +508,7 @@ export class OtherBenfRepo {
 
     async getEkycDataFromEkyc(data) {
         try {
-            let result = await AppDataSource.getRepository(ekyc_data).findOneBy({aadhaarHash : data});
+            let result = await AppDataSource.getRepository(ekyc_data).findOneBy({ aadhaarHash: data });
             return (!result) ? 422 : result;
         } catch (e) {
             Logger.error("otherBenfRepo => getEkycDataFromEkyc", e)
@@ -356,7 +518,7 @@ export class OtherBenfRepo {
 
     async getDataOnlyAadharFromKutumba(data) {
         try {
-            let result = await AppDataSource.getRepository(other_benf_data).findOneBy({aadhar_no: data});
+            let result = await AppDataSource.getRepository(other_benf_data).findOneBy({ aadhar_no: data });
             return (!result) ? 422 : result;
         } catch (e) {
             Logger.error("otherBenfRepo => getDataOnlyAadharFromKutumba", e)
@@ -367,8 +529,8 @@ export class OtherBenfRepo {
     async updateEkycStatusInBenf(data) {
         try {
             let result = await AppDataSource.getRepository(other_benf_data);
-            let finOneRes = await result.findOneBy({aadhar_no: data});
-            let updatedData = {...finOneRes, ...{ekyc_check: "Y"}};
+            let finOneRes = await result.findOneBy({ aadhar_no: data });
+            let updatedData = { ...finOneRes, ...{ ekyc_check: "Y" } };
             return result.save(updatedData);
         } catch (e) {
             Logger.error("otherBenfRepo => getDataOnlyAadharFromKutumba", e)
@@ -378,7 +540,9 @@ export class OtherBenfRepo {
 
     async getBenfReayToDeliver(data) {
         try {
-            let readyToDel = await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, benf_name, order_number, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='ready_to_deliver'`)
+            let readyToDel = await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, benf_name,address, 
+            order_number, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='ready_to_deliver'
+            and applicationStatus='Completed'`)
             return (readyToDel?.length == 0) ? [] : readyToDel;;
         } catch (e) {
             Logger.error("otherBenfRepo => getBenfReayToDeliver", e)
@@ -388,7 +552,9 @@ export class OtherBenfRepo {
 
     async getBenfDevliverd(data) {
         try {
-            let devlivered = await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, benf_name, order_number, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='delivered'`)
+            let devlivered = await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, benf_name,address, 
+            order_number, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='delivered'
+            and applicationStatus='Completed'`)
             return (devlivered?.length == 0) ? [] : devlivered;;
         } catch (e) {
             Logger.error("otherBenfRepo => getBenfDevliverd", e)
@@ -400,7 +566,7 @@ export class OtherBenfRepo {
         try {
             let otherBenfDataBase = AppDataSource.getRepository(other_benf_data);
             let result = await otherBenfDataBase.findOneBy({ aadhar_no: data.aadhar_no });
-            let newData = data?.details ? { ...data, status: "order_pending"}: data;
+            let newData = data?.details ? { ...data, status: "order_pending" } : data;
             let finalData = { ...result, ...newData }
             return await otherBenfDataBase.save(finalData);
         } catch (e) {
@@ -415,6 +581,35 @@ export class OtherBenfRepo {
             let result = await otherBenfDataBase.findOneBy({ aadhar_no: data.aadhar_no });
             let finalData = { ...result, ...data }
             return await otherBenfDataBase.save(finalData);
+        } catch (e) {
+            Logger.error("otherBenfRepo => updateBefDataByAadhar", e)
+            return e;
+        }
+    };
+    async updateOtpAndMobileNumber(data) {
+        try {
+            let otherBenfDataBase = AppDataSource.getRepository(other_benf_data);
+            let result = await otherBenfDataBase.findOneBy({ aadhar_no: data.aadhar_no });
+            let finalData = { ...result, ...data }
+            return await otherBenfDataBase.save(finalData);
+        } catch (e) {
+            Logger.error("otherBenfRepo => updateBefDataByAadhar", e)
+            return e;
+        }
+    };
+
+    async checkUserWithMobile(data) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).findOneBy({ phone_number: data.phone_number });
+        } catch (e) {
+            Logger.error("otherBenfRepo => updateBefDataByAadhar", e)
+            return e;
+        }
+    };
+
+    async checkUserWithMobileWithAadhar(data) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).findOneBy({ phone_number: data.phone_number, aadhar_no: data.aadhar_no });
         } catch (e) {
             Logger.error("otherBenfRepo => updateBefDataByAadhar", e)
             return e;

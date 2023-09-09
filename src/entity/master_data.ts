@@ -58,6 +58,15 @@ import {
     refractionist_mobile: string;
 
     @Column({default: null})
+    ngo_gov: string;
+
+    @Column({default: null})
+    unique_id: string;
+
+    @Column({default: null})
+    village_unique: string;
+
+    @Column({default: null})
     total_primary_screening_completed: string;
 
     @Column({default: null})

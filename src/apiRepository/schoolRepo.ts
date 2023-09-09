@@ -55,6 +55,15 @@ export class SchoolRepo {
         }
     };
 
+    async checkDuplicatesWithSats(data) {
+        try {
+            return await AppDataSource.getTreeRepository(other_benf_data).findOneBy({education_id: data});;
+        } catch (e) {
+            Logger.error("schoolRepo => postSchoolData", e);
+            return e;
+        }
+    };
+
     async getOnlySchool(data: school_data) {
         try {
             return await AppDataSource.getTreeRepository(school_data).findOneBy({ school_id: Equal(data.school_id) });
@@ -176,6 +185,15 @@ export class SchoolRepo {
         }
     };
 
+    async getImageStudentWise(data: students_data) {
+        try {
+            return await AppDataSource.getTreeRepository(students_data).query(`select image from students_data where student_unique_id='${data.student_unique_id}'`);
+        } catch (e) {
+            Logger.error("schoolRepo => postSchoolData", e)
+            return e;
+        }
+    };
+
     async getAllReadyToDeliver(data: students_data) {
         try {
             return await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
@@ -209,6 +227,7 @@ export class SchoolRepo {
             if (!result) {
                 return 422;
             } else {
+                data.applicationStatus = "Completed";
                 let finalData = { ...result, ...data }
                 return await schoolDataBase.save(finalData);
             }
@@ -227,6 +246,7 @@ export class SchoolRepo {
             } else {
                 data.status = "order_pending";
                 data.type = "school";
+                data.applicationStatus = "Completed"
                 let finalData = { ...result, ...data }
                 return await studentDataBase.save(finalData);
             }

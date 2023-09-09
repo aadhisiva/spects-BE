@@ -3,7 +3,7 @@
  * Author: aadhisivapanjagala@gmail.com
  * File: controlling for routes
  * created: [2023-05-10]
- * last Modified: [2023-08-07]
+ * last Modified: [2023-08-31]
  * Project: Spectacles Distribution
  */
 
@@ -31,23 +31,9 @@ router.post("/edcs_service", requestAndResonseTime, async (req: Request, res: Re
     }
 });
 
-router.post("/dummy_edcs_service", requestAndResonseTime, async (req: Request, res: Response) => {
-    try {
-        let data = req.body;
-        let result = await ekycServices.saveEkycData(data);
-        let response = (result?.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-        res.send(response);
-    } catch (e) {
-        console.log("error", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
-
 router.get("/edcs_service_application", async (req: Request, res: Response) => {
     try {
-        res.send({});
+        res.send('');
     } catch (e) {
         console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);

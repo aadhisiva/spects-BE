@@ -8,7 +8,7 @@ export class UserRepo {
     
     async getUserByMobile(no) {
         try {
-            let data = await AppDataSource.getRepository(master_data).query(`SELECT user_unique_id, refractionist_mobile as user_mobile_number from master_data where refractionist_mobile='${no}'`);
+            let data = await AppDataSource.getRepository(master_data).query(`SELECT distinct sub_centre, unique_id, refractionist_mobile as user_mobile_number, district from master_data where refractionist_mobile='${no}'`);
             return data;
         } catch (e) {
             Logger.error("userRepo => getUserByMobile", e)

@@ -197,6 +197,20 @@ router.post("/all_student", requestAndResonseTime, async (req: Request, res: Res
     }
 });
 
+router.post("/getImageStudentWise", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new students_data(req.body);
+        let result = await schoolServices.getImageStudentWise(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("SchoolController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
 router.post("/all_delivered", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new students_data(req.body);

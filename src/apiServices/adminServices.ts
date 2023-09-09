@@ -43,7 +43,7 @@ export class AdminServices {
         let checkOtp = checkData.otp == data?.otp;
         if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
         const token = jwt.sign({ user_id: checkData.code }, process.env.USERFRONT_PUBLIC_KEY, { expiresIn: "12h", });
-        let finalResult = { unique_id: checkData?.code, isIntialLogin: checkData?.is_initial_login, type: data?.type, token, codes: checkData?.name, loginName: checkData?.unique_name };
+        let finalResult = { unique_id: checkData?.code, isIntialLogin: checkData?.is_initial_login, type: data?.type, token, codes: checkData?.codes };
         session = req.session;
         session.user = finalResult
         return { message: RESPONSEMSG.VALIDATE, data: {} };
@@ -66,16 +66,16 @@ export class AdminServices {
         return this.AdminRepo.getAllMasters(data)
     };
 
-    async getAllOrders() {
-        return this.AdminRepo.getAllOrders()
+    async getAllOrders(data) {
+        return this.AdminRepo.getAllOrders(data)
     };
 
-    async getAllDelivered() {
-        return this.AdminRepo.getAllDelivered()
+    async getAllDelivered(data) {
+        return this.AdminRepo.getAllDelivered(data)
     };
 
-    async getAllPending() {
-        return this.AdminRepo.getAllPending()
+    async getAllPending(data) {
+        return this.AdminRepo.getAllPending(data)
     };
 
     async getUpdatedData(data) {
@@ -121,6 +121,15 @@ export class AdminServices {
     };
     async getLoginUserData(data) {
         return this.AdminRepo.getLoginUserData(data)
+    };
+
+
+    async uniqueDistricts(data) {
+        return this.AdminRepo.uniqueDistricts(data)
+    };
+
+    async searchData(data) {
+        return this.AdminRepo.searchData(data)
     };
 
 };

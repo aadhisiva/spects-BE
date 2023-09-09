@@ -20,7 +20,101 @@ import { requestAndResonseTime } from '../utility/middlewares';
 const router = express.Router();
 
 const otherBenfServices = Container.get(OtherBenfServices);
+/* new version apis for other beneficiary */
 
+router.post("/addAadharData", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = req.body;
+        let result: any = await otherBenfServices.directEkycForAadhar(body);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/addDataAfterEkyc", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = req.body;
+        let result: any = await otherBenfServices.addDataAfterEkyc(body);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/updateAadharData", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = req.body;
+        let result: any = await otherBenfServices.updateAadharData(body);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/addRcData", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = new rc_data(req.body);
+        let result: any = await otherBenfServices.addRcDataAndGet(body);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/rcBasedOnNumberWise", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = new other_benf_data(req.body);
+        let result: any = await otherBenfServices.rcBasedOnNumberWise(body);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/fetchRcUserData", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = new other_benf_data(req.body);
+        let result: any = await otherBenfServices.fetchRcUserData(body);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/updateRcAadharData", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = new other_benf_data(req.body);
+        let result: any = await otherBenfServices.updateRcAadharData(body);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+/************************************ ********************************************/
 router.post("/add_datails_adr", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
@@ -137,6 +231,20 @@ router.post("/get_bef_status", requestAndResonseTime, async (req: Request, res: 
     try {
         let data = new other_benf_data(req.body);
         let result = await otherBenfServices.getBenificaryStatus(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/statusWise", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.statusWiseData(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
@@ -271,19 +379,12 @@ async function checkData(data, res) {
 router.post("/ekyc_response", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
-        checkData(data, res);
-        setTimeout(() => {
-            if (!res.headersSent) {
-                return checkData(data, res);
-            }
+        setTimeout( async () => {
+                let result  = await otherBenfServices.getEkycDataFromEkyc(data);
+            res.send(result)
         }, 10000)
-        setTimeout(() => {
-            if (!res.headersSent) {
-                res.send({ code: 503, status: "Failed", message: encryptData("Timed Out") })
-            }
-        }, 30000)
     } catch (e) {
-        console.log("Ee", e);
+        Logger.error("error", e);
         return res.send({ code: 500, status: "Failed", message: "something went wrong." })
     }
 });
@@ -292,6 +393,34 @@ router.post("/get_bef_history", requestAndResonseTime, async (req: Request, res:
     try {
         let data = new other_benf_data(req.body);
         let result = await otherBenfServices.getBenificaryHistory(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/otp-sent", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.otpSentToENteredNumber(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/otp-validate", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.otpValidateToENteredNumber(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));

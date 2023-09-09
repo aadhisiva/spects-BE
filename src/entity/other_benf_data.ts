@@ -23,127 +23,130 @@ export class other_benf_data {
     @Column()
     benf_unique_id: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     benf_name: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     dob: string;
 
-    @Column({default: null})
+    @Column({default: ''})
     user_id: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     taluk: string;
 
-    @Column('text', {default: null})
+    @Column('text', {default: ''})
     image: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     age: number;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     district: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     otp: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     phone_number: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     category: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     caste: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     order_number: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     gender: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     education_id: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     father_name: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     address: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     aadhar_no: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     rc_no: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     type: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     details: string;
 
-    @Column({default: null})
+    @Column({default: ''})
     scheme_eligability: string;
 
-    @Column({default: null})
+    @Column({default: ''})
     frame_type: string;
 
-    @Column({default: null})
+    @Column({default: ''})
     frame_size: string;
 
-    @Column('text', { default: null })
+    @Column({default: ''})
+    applicationStatus: string;
+
+    @Column('text', { default: '' })
     initial_image: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     left_eye_sph_plus: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     left_eye_sph_minus: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     left_eye_cyl_plus: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     left_eye_cyl_minus: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     left_eye_axis: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     left_eye_va: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     right_eye_sph_plus: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     right_eye_sph_minus: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     right_eye_cyl_plus: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     right_eye_cyl_minus: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     right_eye_axis: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     right_eye_va: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     near_vision_sph: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     near_vision_cyl: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     near_vision_axis: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     near_vision_va: string;
 
-    @Column({ default: null })
+    @Column({ default: '' })
     status: string;
 
     @Column({ default: "N" })
