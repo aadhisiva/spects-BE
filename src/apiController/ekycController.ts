@@ -20,6 +20,7 @@ const ekycServices = Container.get(EkycServices);
 router.post("/edcs_service", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = req.body;
+        console.log("data")
         let result = await ekycServices.saveEkycData(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :

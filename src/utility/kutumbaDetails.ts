@@ -60,6 +60,24 @@ const getReqBody = async (data, creteHMAC) => {
     };
 };
 
+const bodyForEkycNew = async (data, creteHMAC) => {
+    const { aadhar_no, rc_no } = data;
+    return {
+        DeptID: "",
+        BenID: "",
+        RC_Number: rc_no ? `${rc_no}` : "",
+        Aadhar_No: aadhar_no ? aadhar_no : "",
+        ClientCode: process.env.KUTUMA_CLIENT_CODE,
+        HashedMac: creteHMAC,
+        APIVersion: "1.0",
+        IsPhotoRequired: "0",
+        Member_ID: "",
+        Mobile_No: "",
+        Request_ID: "0123456789",
+        UIDType: "1"
+    };
+};
+
 export const DecryptStringFromEncrypt = (key, IV, cipherText) => {
     const buffer = Buffer.from(cipherText, 'base64');
     const aes = cryptoJs.createDecipheriv('aes-256-cbc', key, IV);
@@ -85,15 +103,12 @@ export class KutumbaDetails {
             inputValue = (data?.aadhar_no) ?
                 `${process.env.KUTUMA_CLIENT_CODE}___${data.aadhar_no}_` :
                 `${process.env.KUTUMA_CLIENT_CODE}__${data.rc_no}__`;
-
             let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY, inputValue);
-            let response = await axios.post(process.env.KUTUMBA_API, await getReqBody(data, creteHMAC), {
+            let response = await axios.post(process.env.KUTUMBA_API, await bodyForEkycNew(data, creteHMAC), {
                 headers: {
                     "Accept": "application/json"
                 }
             });
-            console.log("kuuu",inputValue)
-            console.log("kuuu",await getReqBody(data, creteHMAC))
             if (response.status == 200 && response.data?.StatusCode == 0) {
                 let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
                 let pasingDecryptData = JSON.parse(decryptString);
@@ -120,7 +135,6 @@ export class KutumbaDetails {
 
             let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY, inputValue);
             await trackExternalLogs(Tables.OTHER, `kutumba ${data?.aadhar_no ? "aadhar" : "rc"} api`, "before", await getReqBody(data, creteHMAC), "", data?.user_id);
-            console.log("tr", await getReqBody(data, creteHMAC))
             let response = await axios.post(process.env.KUTUMBA_API, await getReqBody(data, creteHMAC), {
                 headers: {
                     "Accept": "application/json"
@@ -130,7 +144,6 @@ export class KutumbaDetails {
                 let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
                 let pasingDecryptData = JSON.parse(decryptString);
                 await trackExternalLogs(Tables.OTHER, `kutumba ${data?.aadhar_no ? "aadhar" : "rc"} api`, "after", "", pasingDecryptData, data?.user_id);
-                console.log("tr", await getReqBody(data, pasingDecryptData.ResultDataList))
                 if (pasingDecryptData?.StatusCode === 0 && pasingDecryptData?.StatusText === "Sucess") {
                     return pasingDecryptData?.ResultDataList;
                 } else {
@@ -166,7 +179,7 @@ export class KutumbaDetails {
         }
     }
 
-    async getDataFromEkycOutSource(data) {
+    async ekycVerification(data) {
         const {name, uniqueId, txnDateTime} = data;
         try {
             let bodyData = {
@@ -179,6 +192,33 @@ export class KutumbaDetails {
                 integrationPassword: process.env.INTEGRATION_PASS,
                 txnNo: txnDateTime,
                 txnDateTime: txnDateTime,
+                serviceCode: process.env.SERVICE_CODE,
+                responseRedirectURL: process.env.EKYC_REDIRECTION_URL
+            };
+            let res = await ekyc_post_axis(process.env.EKYC_URL, bodyData);
+            await trackExternalLogs(Tables.EKYC, Methods.EKYC, "after", "", res.data, data?.user_id);
+            if (!res?.data?.Token) {
+                return 422;
+            } else {
+                return `${process.env.EKYC_TOKEN_URL}?key=${process.env.INTEGRATION_KEY}&token=${res?.data?.Token}`
+            }
+        } catch (e) {
+            return e;
+        }
+    }
+    async getDataFromEkycOutSource(data) {
+        let dateTime = new Date().getFullYear() + "" + new Date().getTime();
+        try {
+            let bodyData = {
+                deptCode: process.env.DEP_CODE,
+                applnCode: process.env.APPLI_CODE,
+                schemeCode: process.env.SCHEME_CODE,
+                beneficiaryID: data.benf_unique_id,
+                beneficiaryName: data.benf_name,
+                integrationKey: process.env.INTEGRATION_KEY,
+                integrationPassword: process.env.INTEGRATION_PASS,
+                txnNo: dateTime,
+                txnDateTime: dateTime,
                 serviceCode: process.env.SERVICE_CODE,
                 responseRedirectURL: process.env.EKYC_REDIRECTION_URL
             };

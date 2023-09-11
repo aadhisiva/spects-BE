@@ -22,8 +22,10 @@ import {
     redirection_data,
     Session,
     state_data,
-    phco_data
+    phco_data,
+    apiVersions
 } from "../entity";
+import { otherBeneficiary } from "../entity/otherBenfeficiary";
 
 export const entities = () => {
     return [
@@ -39,6 +41,8 @@ export const entities = () => {
         redirection_data,
         Session,
         state_data,
-        phco_data
+        phco_data,
+        apiVersions,
+        otherBeneficiary
     ]
 }

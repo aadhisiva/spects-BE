@@ -1,5 +1,5 @@
 import cryptoJs from "crypto";
-import { data } from "../b";
+// import { data } from "../b";
 import { AppDataSource } from "../dbConfig/mysql";
 import { master_data } from "../entity/master_data";
 import { Equal } from "typeorm";
@@ -35,6 +35,14 @@ export function generateOTP() {
 export const getAgeFromBirthDate = (dob) => {
   let currentDate: any = new Date();
   let [day, mon, year] = dob.split("/");
+  let originDate: any = new Date(`"${mon + "/" + day + "/" + year}"`);
+  var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
+  let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
+  return age;
+};
+export const getAgeFromBirthDateToEkyc = (dob) => {
+  let currentDate: any = new Date();
+  let [day, mon, year] = dob.split("-");
   let originDate: any = new Date(`"${mon + "/" + day + "/" + year}"`);
   var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
   let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
@@ -76,13 +84,13 @@ export function decrypt(ivHashCiphertext) {
 };
 
 
-export const addData = async () => {
-  for (let i = 0; i < data.length; i++) {
-    let saveData = new master_data(data[i]);
-    await AppDataSource.getRepository(master_data).save(saveData);
-  }
-  return "completed";
-};
+// export const addData = async () => {
+//   for (let i = 0; i < data.length; i++) {
+//     let saveData = new master_data(data[i]);
+//     await AppDataSource.getRepository(master_data).save(saveData);
+//   }
+//   return "completed";
+// };
 
 export const reUsableResSendFunction = (res, response) => {
   if (response.code !== 200) {
@@ -105,7 +113,7 @@ export const PrameterizedQueries = (data) => {
 export const createUniqueIdBasedOnCodes = async (id) => {
   // formate codes-Wise = district/taluka/village/user_id/order_number
   let orderNumber = new Date().getFullYear() + "" + new Date().getTime();
-  let userData = await AppDataSource.getRepository(master_data).findOneBy({ sub_centre_code: Equal(id) });
+  let userData = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: Equal(id) });
   let addString = "";
   for (const key in userData) {
     if (key == 'district') {

@@ -1,7 +1,8 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
-import { master_data } from "../entity";
+import { apiVersions, master_data } from "../entity";
+import jwt from 'jsonwebtoken';
 
 @Service()
 export class UserRepo {
@@ -23,7 +24,9 @@ export class UserRepo {
                 createQueryBuilder('child').select('distinct child.health_facility', 'health_facility')
                 .where("child.refractionist_mobile =:id", {id: no})
                 .getRawMany();
-            return {...result, ...{phco: data}};
+            let version = await AppDataSource.getRepository(apiVersions).find();
+            const token = jwt.sign({ user_id: result.refractionist_mobile }, process.env.USERFRONT_PUBLIC_KEY, { expiresIn: "12h", });
+            return {...result, ...{ res : { token: token, version: version[0].version }}};
         } catch (e) {
             Logger.error("userRepo => getUserByMobile", e)
             return e;

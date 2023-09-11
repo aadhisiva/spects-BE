@@ -648,4 +648,16 @@ export class AdminRepo {
             return e;
         }
     }
+
+    async eachDataIdWise(data) {
+        const {type, id} = data;
+        if(!type && !id) return {code: 422, message: "Give Mandatory Fields."}
+        try {
+            let query = `exec reportsFilterIdWise @0,@1`;
+            return await AppDataSource.getRepository(phco_data).query(query, [type, id]);
+        } catch (e) {
+            Logger.error("userRepo => postUser", e)
+            return e;
+        }
+    }
 };

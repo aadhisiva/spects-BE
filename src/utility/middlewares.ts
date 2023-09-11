@@ -1,5 +1,5 @@
 import { AppDataSource } from "../dbConfig/mysql";
-import { district_data, sub_centre_data, taluka_data } from "../entity";
+import { apiVersions, district_data, sub_centre_data, taluka_data } from "../entity";
 import { state_data } from "../entity/state_data";
 import { trackExternalLogs } from "./trackerLog";
 import jwt from "jsonwebtoken";
@@ -54,6 +54,27 @@ export function authenticateToken(req, res, next) {
   // Verify the token using the Userfront public key
   jwt.verify(token, process.env.USERFRONT_PUBLIC_KEY, (err, auth) => {
     if (err) return res.status(403).send("Forbidden"); // Return 403 if there is an error verifying
+    req.auth = auth;
+    next();
+  });
+};
+
+
+export async function authTokenAndVersion(req, res, next) {
+
+  // Read the JWT access token from the request header
+  const authHeader = req.headers["authorization"];
+  const authVersion = req.headers["apiversion"];
+  if(!authVersion) return  res.status(422).send({code: 422, message: "Api Version Header Missing."})
+  let getVersion = await AppDataSource.getRepository(apiVersions).find();
+  let checkVersion = authVersion == getVersion[0].version;
+  if(!checkVersion) return res.status(422).send({code: 422, message: "Api Version Not Matching"});
+  const token = authHeader && authHeader.split(" ")[1];
+  if (token == null) return res.status(401).send({code: 401, message: "UnAuthorized User"}); // Return 401 if no token
+
+  // Verify the token using the Userfront public key
+  jwt.verify(token, process.env.USERFRONT_PUBLIC_KEY, (err, auth) => {
+    if (err) return res.status(403).send({ code: 403, message: "Forbidden"}); // Return 403 if there is an error verifying
     req.auth = auth;
     next();
   });

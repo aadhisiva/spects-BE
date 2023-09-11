@@ -13,3 +13,5 @@ export * from "./redirection_data";
 export * from "./sessions";
 export * from "./state_data";
 export * from "./phco_data";
+export * from "./apiVersion";
+export * from "./otherBenfeficiary";

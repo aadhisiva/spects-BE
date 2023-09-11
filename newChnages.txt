@@ -1,0 +1,21 @@
+as per we discussed.
+
+Backend Activities :::::::::::::::::::
+
+1.Direct Ekyc - >   
+        1.1 - > we need check kutumba data with ekyc hash, if data comes from kutumba update education id, district
+        1.2 -> if data not come then save district as it is ekyc district;
+2. rc -> 
+    2.1 -> direct update page with details and matching of district case yes or no;
+    2.3 -< district matching fails send error message through api.
+3. other beneficiary ready to deliver and delivered apis need to be implemented.
+
+
+Front End App Side Activities ::::::::::::::::::::::
+
+rc flow need to implemented.
+sub centre name is not there in all pages.
+other beneficiary based scheme eligibalility yes or no conditions  
+    -> yes they will enter eye details and update.
+    -> no will disable eye values and OK button. He clicks on ok button he will redirect to dashboard.
+other beneficiary readyTODeliver and delivered api need to be implemented.

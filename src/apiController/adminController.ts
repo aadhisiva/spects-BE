@@ -20,7 +20,7 @@ const router = express.Router();
 
 const adminServices = Container.get(AdminServices); 
 // skip user
-router.post("/skip", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/skip", authenticateToken, verifyUser, async (req: any, res: Response) => {
     try {
         req.session.user.isIntialLogin = "N"
         return res.send("");
@@ -329,6 +329,19 @@ router.post("/searchData", authenticateToken, verifyUser, async (req: Request, r
     try {
         let data = new master_data(req.body);
         let result = await adminServices.searchData(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
+        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/eachDataIdWise", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+    try {
+        let data = new master_data(req.body);
+        let result = await adminServices.eachDataIdWise(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);

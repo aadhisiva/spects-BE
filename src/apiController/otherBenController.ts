@@ -39,7 +39,7 @@ router.post("/addDataAfterEkyc", requestAndResonseTime, async (req: Request, res
     try {
         let body = req.body;
         let result: any = await otherBenfServices.addDataAfterEkyc(body);
-        let response = (result.code || result instanceof Error) ?
+        let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
         res.send(response);
@@ -65,7 +65,7 @@ router.post("/addRcData", requestAndResonseTime, async (req: Request, res: Respo
     try {
         let body = new rc_data(req.body);
         let result: any = await otherBenfServices.addRcDataAndGet(body);
-        let response = (result.code || result instanceof Error) ?
+        let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
@@ -78,9 +78,35 @@ router.post("/rcBasedOnNumberWise", requestAndResonseTime, async (req: Request, 
     try {
         let body = new other_benf_data(req.body);
         let result: any = await otherBenfServices.rcBasedOnNumberWise(body);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/rcBasedOnNumberWise", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = new other_benf_data(req.body);
+        let result: any = await otherBenfServices.rcBasedOnNumberWise(body);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result?.data));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/otpCheckRcMember", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = new other_benf_data(req.body);
+        let result: any = await otherBenfServices.otpCheckRcMember(body);
         let response = (result.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -113,7 +139,119 @@ router.post("/updateRcAadharData", requestAndResonseTime, async (req: Request, r
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
+router.post("/ekycCheck", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = new other_benf_data(req.body);
+        let result: any = await otherBenfServices.ekycResutltCheck(body);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
 
+router.post("/getBenfAllStatus", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.getBenfAllStatus(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/eachStatusWise", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.eachStatusWise(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/readyToDeliverOtp", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.readyToDeliverOtp(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/validateReadyToDeliverOtp", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.validateReadyToDeliverOtp(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/delivered", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.delivered(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+
+router.post("/otpSentToNewNumber", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.otpSentToNewNumber(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/validateWithNewNumber", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new other_benf_data(req.body);
+        let result = await otherBenfServices.validateWithNewNumber(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+/************************************ ********************************************/
+/************************************ ********************************************/
+/************************************ ********************************************/
 /************************************ ********************************************/
 router.post("/add_datails_adr", requestAndResonseTime, async (req: Request, res: Response) => {
     try {

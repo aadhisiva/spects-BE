@@ -19,7 +19,7 @@ import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
 import AdminController from "./apiController/adminController";
-import { addData, decrypt } from './utility/resusableFun';
+import { decrypt } from './utility/resusableFun';
 import sessions from "express-session";
 import { TypeormStore } from "typeorm-store";
 import { Session } from './entity';
@@ -93,12 +93,12 @@ app.set('view engine', 'ejs');
 app.use(morgan('dev'));
 
 // add masters data
-app.post("/add", async (req, res) => {
-  let data = addData();
-  res.send(data)
-});
+// app.post("/add", async (req, res) => {
+//   let data = addData();
+//   res.send(data)
+// });
 
-// console.log(decrypt("8EWwZqahNyH3OowTjCvsL//55qAQzowyBA4vhbOagB+QVmlSjmWgkC/VkX9lkoSAPtJYPVFHl3vQUSRRYkohDVFB1S8VA7G3fUiGvFAIZdshrGFqPRqz6aTHHe1Sg+GK3chZ6awPU99c9GAkLlR0CXrjs2OvUYu6aK+g+8fBBWS1Kwk9bl7InKjezBxrNtwOAjYEtnnq9odqu1FSFZboNj5wjwk86sWyYGGiaIVmxE4ceeckXDuBma8QqiqYPJu/wwUxkCMhxDbaOxr7qG7RIymmVze4eGdSFzHTAwhU1W4="))
+// console.log(decrypt("waDo/orhls7BPo9cZUGE8isn5EOApmV/uMhoylZypiWxRdRDDlblGpxmPS6as20/dwPzeL/y2uKOKH8wN0Z1ogy/cbY/NbT1PB9yXc2JEXSkJwm1qc87hc0GhF49V0IpjPK4rH9vFQJIsvN4cFIeIWnVVSziUEt3459KOm8a7dGQ8dS9Z9Vn9QeRzpLUlr/nmMgXQWY7YejSPZZn0kpVos9zm3VINlj4g2GXeZ+temyLT74xURUZ7p4kKQLq1I7FMr0eNP/YJvvFgPSa+ThUgWhi4N6GJBHiCvUJQ1k8Cswufidj4cVhQdnhnvjKEc6tmNC7sR/q3LjbqMUJXpOsCD3FnOLaz5wsz6ldUe7lFU8sEAP29sFCP/a/FtZ4hhU+z2WlfRg8M8wVfXWd+2SIpO800Y/lM3irodLsXyfb+8/PfuPTobo/lhjxdAhQYI4a"))
 
 // controllers for routes
 app.use("/login", UserController);

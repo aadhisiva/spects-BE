@@ -60,6 +60,12 @@ export class rc_data {
     @Column({ default: '' })
     address: string;
 
+    @Column({ default: '' })
+    lgd_district: string;
+
+    @Column({ default: '' })
+    lgd_taluka: string;
+
     @Column({ default: "" })
     aadhar_no: string;
 

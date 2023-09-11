@@ -40,7 +40,7 @@ router.post("/validate_otp", requestAndResonseTime, async (req: Request, res: Re
         let result = await userServices.validateUser(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result?.data));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), result?.data);
         res.send(response);
     } catch (e) {
         Logger.error("UserController => ", e);

@@ -67,12 +67,7 @@ export class EkycServices {
             newData.npciError = data.npciError;
             newData.npciBankName = data.npciBankName;
             newData.npciLastUpdateDate = data.npciLastUpdateDate;
-            let ekyc_result = await this.EkycRepo.getDataFromEkyc(data);
-        if(!ekyc_result){
             return await this.EkycRepo.saveEkycData(newData);
-        } else {
-            return await this.EkycRepo.UpdateExistingEkycData(newData);
-        }
     };
     
     async createApplication(data) {

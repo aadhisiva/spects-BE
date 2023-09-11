@@ -36,7 +36,7 @@ export class UserServices {
             let result = await this.UserRepo.getUserByMobileObj(data.user_mobile_number);
             let checkOtp = data?.otp == result.otp;
             if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
-            return { message: RESPONSEMSG.VALIDATE, data: result?.phco };
+            return { message: RESPONSEMSG.VALIDATE, data: result?.res };
         } catch (e) {
             Logger.error("UserServices ====== validateUser", e);
             return e;

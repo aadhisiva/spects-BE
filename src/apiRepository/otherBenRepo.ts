@@ -4,9 +4,8 @@ import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
 import { other_benf_data } from "../entity/other_benf_data";
 import { generateOTP } from "../utility/resusableFun";
-import { ekyc_data, students_data } from "../entity";
+import { ekyc_data, master_data, students_data } from "../entity";
 import { rc_data } from "../entity/rc_data";
-import { data } from "../b";
 import { ACCESS_DENIED } from "../utility/constants";
 
 
@@ -39,8 +38,8 @@ export class OtherBenfRepo {
     };
     async savingNewData(data) {
         try {
-            data.ekyc_check= "Y";
-            data.scheme_eligability= "Yes";
+            data.ekyc_check = "Y";
+            data.scheme_eligability = "Yes";
             return await AppDataSource.getRepository(other_benf_data).save(data);
         } catch (e) {
             return Logger.error("other repo ####savingNewData", e);
@@ -56,7 +55,7 @@ export class OtherBenfRepo {
     async updateAadharData(data) {
         try {
             let aadharData = await AppDataSource.getRepository(other_benf_data);
-            let findData = await aadharData.findOneBy({ benf_unique_id: data.benf_unique_id });
+            let findData = await aadharData.findOneBy({ benf_unique_id: data.benf_unique_id, aadhar_no: data.aadhar_no });
             if (!findData) return { code: 422, message: ACCESS_DENIED };
             let newData = { ...findData, ...data };
             return await aadharData.save(newData);
@@ -64,10 +63,10 @@ export class OtherBenfRepo {
             return Logger.error("other repo ####updateAadharData", e);
         }
     };
-    async FaechRcData(id) {
+    async FatchRcData(id) {
         try {
             return await AppDataSource.getRepository(rc_data).createQueryBuilder('child')
-                .select(['child.id as id', 'child.age as age', 'child.benf_name as benf_name', 'child.phone_number as phone_number'])
+                .select(['child.benf_unique_id as benf_unique_id', 'child.age as age', 'child.benf_name as benf_name', 'child.phone_number as phone_number'])
                 .where("child.rc_no= :id", { id }).getRawMany();
         } catch (e) {
             return Logger.error("other repo ####FaechRcData", e);
@@ -76,9 +75,9 @@ export class OtherBenfRepo {
 
     async findOneMemberInRC(id) {
         try {
-            return await AppDataSource.getRepository(rc_data).findOneBy({ id });
+            return await AppDataSource.getRepository(rc_data).findOneBy({ benf_unique_id: id });
         } catch (e) {
-            Logger.error("OtherBenfRepo => addDeatilsFromKutumbaAPI", e)
+            Logger.error("OtherBenfRepo => findOneMemberInRC", e)
             return e;
         }
     };
@@ -87,7 +86,7 @@ export class OtherBenfRepo {
         try {
             return await AppDataSource.getRepository(other_benf_data).findOneBy({ aadhar_no: id });
         } catch (e) {
-            Logger.error("OtherBenfRepo => addDeatilsFromKutumbaAPI", e)
+            Logger.error("OtherBenfRepo => findOneMemberInOther", e)
             return e;
         }
     };
@@ -96,7 +95,7 @@ export class OtherBenfRepo {
         try {
             return await AppDataSource.getRepository(other_benf_data).save(data);
         } catch (e) {
-            Logger.error("OtherBenfRepo => addDeatilsFromKutumbaAPI", e)
+            Logger.error("OtherBenfRepo => addNewDataFromRC", e)
             return e;
         }
     };
@@ -108,7 +107,7 @@ export class OtherBenfRepo {
             let finalData = { ...result, ...{ otp: data?.otp, phone_number: data.phone_number } };
             return other_repo.save(finalData);
         } catch (e) {
-            Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
+            Logger.error("otherBenfRepo => updateDataExistsRecord", e)
             return e;
         }
     };
@@ -116,26 +115,118 @@ export class OtherBenfRepo {
     async mapRcDataTOOtherBenf(data: other_benf_data) {
         try {
             let result = await AppDataSource.getRepository(rc_data).findOneBy({ aadhar_no: Equal(data.aadhar_no) });
-            delete result?.id;
-            delete result?.created_at;
-            delete result?.updated_at;
-            delete result?.user_id;
+            delete result.id;
+            delete result.created_at;
+            delete result.updated_at;
+            delete result.user_id;
+            delete data?.id;
+            delete data.created_at;
+            delete data.updated_at;
+            delete data.user_id;
             return { ...result, ...data };
         } catch (e) {
-            Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
+            Logger.error("otherBenfRepo => mapRcDataTOOtherBenf", e)
+            return e;
+        }
+    };
+
+    async getAllDataByUserAndUnique(data: other_benf_data) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).findOneBy({ benf_unique_id: data.benf_unique_id, user_id: data.user_id });
+        } catch (e) {
+            Logger.error("otherBenfRepo => fetchRcUserData", e)
             return e;
         }
     };
 
     async fetchRcUserData(data: other_benf_data) {
         try {
-            return await AppDataSource.getRepository(other_benf_data).createQueryBuilder('child')
-                .select(['child.benf_name as benf_name', 'child.dob as dob', 'child.age as age', 'child.district as district',
-                        'child.district as district', 'child.phone_number as phone_number', 'child.category as category',
-                        'child.caste as caste','child.address as address', 'child.scheme_eligability as scheme_eligability'])
-                .where('child.user_id= :user and child.benf_unique_id= :id', {user: data.user_id, id: data.benf_unique_id});
+            const { user_id, benf_unique_id } = data;
+            let checkDistrict = await AppDataSource.getRepository(other_benf_data).createQueryBuilder('child')
+                .select(['child.benf_name as benf_name', 'child.dob as dob', 'child.age as age', 'child.taluk as taluk',
+                    'child.district as district', 'child.phone_number as phone_number', 'child.category as category',
+                    'child.caste as caste', 'child.address as address', 'child.scheme_eligability as scheme_eligability'])
+                .where("child.user_id= :user and child.benf_unique_id= :id", { user: user_id, id: benf_unique_id }).getRawOne();
+            let findDistrict = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: user_id });
+            let removeExtraCharacters = findDistrict?.district.replace(/\W/g, "").replace(/\d/g, "");
+            checkDistrict.scheme_eligability = removeExtraCharacters.toLowerCase() == data.district.toLowerCase() ? "Yes" : "No";
+            return checkDistrict;
         } catch (e) {
-            Logger.error("otherBenfRepo => updateDataByRcAndHash", e)
+            Logger.error("otherBenfRepo => fetchRcUserData", e)
+            return e;
+        }
+    };
+    async checkDistrictMatch(data, id) {
+        let findDistrict = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: id });
+        let removeExtraCharacters = findDistrict?.district.replace(/\W/g, "").replace(/\d/g, "");
+        return removeExtraCharacters.toLowerCase() == data.district.toLowerCase();
+    }
+    async FetchDataFromOtherWithID(id) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).findOneBy({ benf_unique_id: id });
+        } catch (e) {
+            Logger.error("otherBenfRepo => FetchDataFromOtherWithID", e)
+            return e;
+        }
+    };
+    async updateOneRecordInOther(data) {
+        try {
+            let otherdata = await AppDataSource.getRepository(other_benf_data);
+            let findData = await otherdata.findOneBy({ benf_unique_id: data.benf_unique_id });
+            let newData = { ...findData, ...data };
+            return await otherdata.save(newData);
+        } catch (e) {
+            Logger.error("otherBenfRepo => updateOneRecordInOther", e)
+            return e;
+        }
+    };
+
+    async eachStatusWise(id) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).createQueryBuilder('child').
+                select(['child.benf_unique_id as benf_unique_id', 'child.address as address', 'child.order_number as order_number', 'child.benf_name as benf_name',
+                    'child.phone_number as phone_number', 'child.initial_image as initial_image']).where("child.benf_unique_id= :id", { id }).getRawOne();
+        } catch (e) {
+            Logger.error("otherBenfRepo => eachStatusWise", e)
+            return e;
+        }
+    };
+    async updateDataWithBenfId(data) {
+        try {
+            let otherdata = await AppDataSource.getRepository(other_benf_data);
+            let findData = await otherdata.findOneBy({ benf_unique_id: data.benf_unique_id });
+            let newData = { ...findData, ...data };
+            return await otherdata.save(newData);
+        } catch (e) {
+            Logger.error("otherBenfRepo => updateDataWithBenfId", e)
+            return e;
+        }
+    };
+    async checkDataWithPhoneNumber(no) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).findOneBy({ phone_number: no });
+        } catch (e) {
+            Logger.error("otherBenfRepo => checkDataWithPhoneNumber", e)
+            return e;
+        }
+    };
+    async checkDataWithPhoneNumberAndId(data) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).findOneBy({ phone_number: data.phone_number, benf_unique_id: data.benf_unique_id });
+        } catch (e) {
+            Logger.error("otherBenfRepo => checkDataWithPhoneNumberAndId", e)
+            return e;
+        }
+    };
+    async updateDataWithPhoneAndId(data) {
+        try {
+            let benfData = await AppDataSource.getRepository(other_benf_data)
+            let result = await benfData.findOneBy({ phone_number: data.phone_number, benf_unique_id: data.benf_unique_id });
+            if (!result) return { code: 422, message: ACCESS_DENIED };
+            let newData = { ...result, ...data };
+            return await benfData.save(newData);
+        } catch (e) {
+            Logger.error("otherBenfRepo => checkDataWithPhoneNumberAndId", e)
             return e;
         }
     };
@@ -143,7 +234,7 @@ export class OtherBenfRepo {
     /* *******************************************  ******************************************** */
     /* *******************************************  ******************************************** */
     /* *******************************************  ******************************************** */
-        // old apis
+    // old apis
     /* *******************************************  ******************************************** */
     /* *******************************************  ******************************************** */
     async addDeatilsFromKutumbaAPI(data: other_benf_data) {
@@ -157,7 +248,7 @@ export class OtherBenfRepo {
     };
     async createRcDataOfEach(data: rc_data) {
         try {
-            data.benf_unique_id = new Date().getTime().toString();
+            data.benf_unique_id = new Date().getFullYear() + "" + new Date().getTime();
             return await AppDataSource.getRepository(rc_data).save(data);
         } catch (e) {
             Logger.error("OtherBenfRepo => addDeatilsFromKutumbaAPI", e)
@@ -321,6 +412,15 @@ export class OtherBenfRepo {
             return e;
         }
     };
+    async createRcDataByEach(data) {
+        try {
+            data.benf_unique_id = new Date().getFullYear() + "" + new Date().getTime();
+            return await AppDataSource.getRepository(rc_data).save(data);
+        } catch (e) {
+            Logger.error("OtherBenfRepo => addDeatilsFromKutumbaAPI", e)
+            return e;
+        }
+    };
 
     async checkLoginUser(data) {
         try {
@@ -374,7 +474,7 @@ export class OtherBenfRepo {
         try {
             let result = await AppDataSource.getRepository(other_benf_data).createQueryBuilder('child')
                 .select(['child.order_number as order_number', 'child.status as status'])
-                .where("education_id = :education_id", { education_id: data.education_id }).getOne();
+                .where("education_id = :education_id", { education_id: data.education_id }).getRawOne();
             return result;
         } catch (e) {
             Logger.error("otherBenfRepo => getDataByRcNoAnadAadharHash", e)
@@ -388,9 +488,9 @@ export class OtherBenfRepo {
             if (!checkUser) {
                 return { code: 422, message: "Data not exits." };
             } else {
-                let pending_count = await AppDataSource.getRepository(other_benf_data).countBy({user_id: data.user_id, status: 'order_pending', applicationStatus: 'Completed'});
-                let ready_count = await AppDataSource.getRepository(other_benf_data).countBy({user_id: data.user_id, status: 'ready_to_deliver', applicationStatus: 'Completed'});
-                let delivered_count = await AppDataSource.getRepository(other_benf_data).countBy({user_id: data.user_id, status: 'delivered', applicationStatus: 'Completed'});                
+                let pending_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: data.user_id, status: 'order_pending', applicationStatus: 'Completed' });
+                let ready_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: data.user_id, status: 'ready_to_deliver', applicationStatus: 'Completed' });
+                let delivered_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: data.user_id, status: 'delivered', applicationStatus: 'Completed' });
                 let order_pending = await this.getBenfOrderPending(data);
                 let ready_to_deliver = await this.getBenfReayToDeliver(data);
                 let delivered = await this.getBenfDevliverd(data);

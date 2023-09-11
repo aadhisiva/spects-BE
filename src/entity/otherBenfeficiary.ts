@@ -6,13 +6,9 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-export enum SchemeEligibility {
-    YES = "Yes",
-    NO = "No",
-}
 
 @Entity()
-export class other_benf_data {
+export class otherBeneficiary {
     constructor(data) {
         Object.assign(this, data);
     }
@@ -46,9 +42,6 @@ export class other_benf_data {
 
     @Column({ default: '' })
     otp: string;
-
-    @Column({ default: '' })
-    deliveredOtp: string;
 
     @Column({ default: '' })
     phone_number: string;

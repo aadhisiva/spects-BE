@@ -132,4 +132,8 @@ export class AdminServices {
         return this.AdminRepo.searchData(data)
     };
 
+    async eachDataIdWise(data) {
+        return this.AdminRepo.eachDataIdWise(data)
+    };
+
 };
