@@ -9,8 +9,6 @@
  */
 
 import nodemailer from "nodemailer";
-import { AppDataSource } from "./mysql";
-import { redirection_data } from "../entity";
 
 // async..await is not allowed in global scope, must use a wrapper
 export async function emailSender(data) {
@@ -20,16 +18,15 @@ export async function emailSender(data) {
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: "aadhisivapanjagala@gmail.com", // generated ethereal user
-      pass: "cmnwtwiwkpwiborw", // generated ethereal password
+      user: "nhm.spectacles.distribution@gmail.com", // generated ethereal user
+      pass: "zeck ptpy biwl jwvn", // generated ethereal password
     },
   });
-  let redirection_url = await AppDataSource.getRepository(redirection_data).find();
   // send mail with defined transport object
   let info = await transporter.sendMail({
-    from: '"Spectacles" <noreply@spectacles.com>', // sender address
-    to: `${data[0].school_mail}`, // list of receivers
-    subject: "Spectacles Information", // Subject line
+    from: 'nhm.spectacles.distribution@gmail.com', // sender address
+    to: `aadhisivapanjagala@gmail.com`, // list of receivers
+    subject: "Spectacles Distribution", // Subject line
     // text: "Hello world?", // plain text body
     html: `
     <html>
@@ -39,10 +36,9 @@ export async function emailSender(data) {
     </head>
     <body>
     <div>To,</div>
-    <div>[School Administration/Principle],</div>
+    <div>${data.school_incharge_name ? data.school_incharge_name: "School Administration/Principle" },</div>
     <div>${data[0].school_mail},</div>
-    <div>${data[0].village}(v)</div>
-    <div>${data[0].district}(D)</div>
+
     
     <div>&nbsp;</div>
     
@@ -62,7 +58,7 @@ export async function emailSender(data) {
     
     <div>&nbsp;</div>
 
-    <a href="${redirection_url[0]?.mail_url}/school/check?s_id=${data.school_id}&id=${data.user_id}&type=${data.type}">check for ready for delivery</a>
+    <a href="${process.env.SCHOOL_REDIRECTION_URL}school/check?s_id=${data.school_id}&id=${data.user_id}&type=${data.type}">click here for student details</a>
     
     <div>&nbsp;</div>
     
@@ -70,7 +66,7 @@ export async function emailSender(data) {
     
     <div>&nbsp;</div>
     
-    <div>As the government aims to enhance the academic performance and overall well-being of students, it recognizes the importance of adequate vision for effective learning. We deeply appreciate your support and cooperation in implementing this program and contributing to the welfare of the students. If you have any further questions or require additional assistance, please do contact us at [Contact Information].</div>
+    <div>As the government aims to enhance the academic performance and overall well-being of students, it recognizes the importance of adequate vision for effective learning. We deeply appreciate your support and cooperation in implementing this program and contributing to the welfare of the students. If you have any further questions or require additional assistance, please do contact us at nhm.spectacles.distribution@gmail.com.</div>
     
     <div>&nbsp;</div>
     
@@ -82,11 +78,9 @@ export async function emailSender(data) {
     
     <div>&nbsp;</div>
     
-    <div>[Your Name]</div>
+    <div>${data[0].school_institute_name}</div>
     
-    <div>[Maker Name]</div>
-    
-    <div>[Contact Information]</div>
+    <div>nhm.spectacles.distribution@gmail.com</div>
     </body>
     </html>
         `, // html body

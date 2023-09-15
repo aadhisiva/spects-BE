@@ -110,9 +110,9 @@ export const PrameterizedQueries = (data) => {
   return slicedData;
 };
 
-export const createUniqueIdBasedOnCodes = async (id) => {
+export const createUniqueIdBasedOnCodes = async (id, type ='') => {
   // formate codes-Wise = district/taluka/village/user_id/order_number
-  let orderNumber = new Date().getFullYear() + "" + new Date().getTime();
+  let orderNumber = new Date().getTime();
   let userData = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: Equal(id) });
   let addString = "";
   for (const key in userData) {
@@ -122,10 +122,23 @@ export const createUniqueIdBasedOnCodes = async (id) => {
       addString += userData[key].replace(/\D/g, "") + "/";
     } else if (key === "health_facility") {
       addString += userData[key].replace(/\D/g, "") + "/";
-    } else if(key === "sub_centre"){
-      addString += userData[key].replace(/\D/g, "") + "/";
     }
   }
-  return addString + id + "/" + orderNumber;
+  return (addString + id + "/" + type == "school"? `S-${orderNumber}` : orderNumber) + "";
 };
+
+export function matchStrings(a,b) {
+  var equivalency = 0;
+  var minLength = (a.length > b.length) ? b.length : a.length;    
+  var maxLength = (a.length < b.length) ? b.length : a.length;    
+  for(var i = 0; i < minLength; i++) {
+      if(a[i] == b[i]) {
+          equivalency++;
+      }
+  }
+  
+
+  var weight = equivalency / maxLength;
+  return (weight * 100);
+}
 

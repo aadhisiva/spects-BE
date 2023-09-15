@@ -89,6 +89,12 @@ export class otherBeneficiary {
     frame_size: string;
 
     @Column({default: ''})
+    concent_check: string;
+
+    @Column({ default: '' })
+    kutumba_phone_number: string;
+
+    @Column({default: ''})
     applicationStatus: string;
 
     @Column({ default: '' })

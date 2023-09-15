@@ -86,11 +86,17 @@ export class other_benf_data {
     @Column({ default: '' })
     details: string;
 
+    @Column({ default: '' })
+    kutumba_phone_number: string;
+
     @Column({default: ''})
     scheme_eligability: string;
 
     @Column({default: ''})
     frame_type: string;
+
+    @Column({default: ''})
+    concent_check: string;
 
     @Column({default: ''})
     frame_size: string;

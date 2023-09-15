@@ -40,8 +40,8 @@ router.post("/addDataAfterEkyc", requestAndResonseTime, async (req: Request, res
         let body = req.body;
         let result: any = await otherBenfServices.addDataAfterEkyc(body);
         let response = (result?.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
+                {code: 422, status: "Failed", message: result.message, errorInfo: "", data: {}} :
+                {code: 200, status: "Success", message: result.message, errorInfo: result.errorInfo, data: encryptData(result.data)};
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -143,9 +143,9 @@ router.post("/ekycCheck", requestAndResonseTime, async (req: Request, res: Respo
     try {
         let body = new other_benf_data(req.body);
         let result: any = await otherBenfServices.ekycResutltCheck(body);
-        let response = (result.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        let response = (result?.code || result instanceof Error) ?
+                {code: 422, status: "Failed", message: result.message, errorInfo: "", data: {}} :
+                {code: 200, status: "Success", message: result.message, errorInfo: result.errorInfo, data: encryptData(result.data)};
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -173,7 +173,7 @@ router.post("/eachStatusWise", requestAndResonseTime, async (req: Request, res: 
         let result = await otherBenfServices.eachStatusWise(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), result);
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -186,7 +186,7 @@ router.post("/readyToDeliverOtp", requestAndResonseTime, async (req: Request, re
         let result = await otherBenfServices.readyToDeliverOtp(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -199,7 +199,7 @@ router.post("/validateReadyToDeliverOtp", requestAndResonseTime, async (req: Req
         let result = await otherBenfServices.validateReadyToDeliverOtp(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -212,7 +212,7 @@ router.post("/delivered", requestAndResonseTime, async (req: Request, res: Respo
         let result = await otherBenfServices.delivered(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -227,7 +227,7 @@ router.post("/otpSentToNewNumber", requestAndResonseTime, async (req: Request, r
         let result = await otherBenfServices.otpSentToNewNumber(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -241,7 +241,7 @@ router.post("/validateWithNewNumber", requestAndResonseTime, async (req: Request
         let result = await otherBenfServices.validateWithNewNumber(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result.data));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);

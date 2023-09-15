@@ -7,7 +7,7 @@ import { RESPONSEMSG } from "../utility/statusCodes";
 import { emailSender } from "../dbConfig/emailConfig";
 import schedule from "node-schedule";
 import { trackExternalLogs } from "../utility/trackerLog";
-import { Tables } from "../utility/constants";
+import { ACCESS_DENIED, COMPLETED, DATA_SAVED, Tables } from "../utility/constants";
 import Logger from "../utility/winstonLogger";
 
 const schoolDataAssignToLocal = (res) => {
@@ -40,14 +40,14 @@ export class SchoolServices {
             if (!data?.school_id || !data.user_id) return { code: 422, message: "school id and user id is mandatory." };
             let req = { sats_code: data.school_id }
             let getSchoolData = await this.KutumbaDetails.getSchoolDataFromExternal(req, "school");
-            if (getSchoolData == 500) return { code: 422, message: "Access Denied." }
+            if (getSchoolData == 500) return { code: 422, message: ACCESS_DENIED }
             let reqObj = schoolDataAssignToLocal(getSchoolData[0])
             reqObj.user_id = data.user_id;
             reqObj.school_id = data?.school_id;
             let DuplicateUser = await this.SchoolRepo.getOnlySchool(reqObj);
             if (DuplicateUser) {
-                if(DuplicateUser.applicationStatus == 'Completed'){
-                    return { message: "Data saved." };
+                if(DuplicateUser.applicationStatus !== COMPLETED){
+                    return { message: DATA_SAVED };
                 } else {
                     return { code: 422, message: "School Already Registered." };
                 }
@@ -57,7 +57,7 @@ export class SchoolServices {
                 // return { message: "Data saved." };
             } else {
                 await this.SchoolRepo.saveSchoolData(reqObj);
-                return { message: "Data saved." };
+                return { message: DATA_SAVED };
             }
         } catch (e) {
             Logger.error("SchoolServices ======= getSchoolDataByOutSource", e);
@@ -66,26 +66,26 @@ export class SchoolServices {
     };
     async getStudentDataByOutSource(data: students_data) {
         try {
-            if (!data?.school_id || !data.user_id || !data?.sats_id) return { code: 422, message: "School id, user id and sats id is mandatory." };
+            if (!data?.school_id || !data.user_id || !data?.sats_id) return { code: 422, message: "School And Sats And User id Field Required." };
             let checkDuplicates = await this.SchoolRepo.checkDuplicatesWithSats(data.sats_id);
             if(checkDuplicates) return {code:422, message: `You Are Already Applied With Beneficiary. This Is Your ${checkDuplicates.order_number}`};
             let req = { satsCode: data.sats_id }
             let getSchoolData = await this.KutumbaDetails.getSchoolDataFromExternal(req, "child");
-            if (getSchoolData == 500) return { code: 422, message: "Access Denied." }
+            if (getSchoolData == 500) return { code: 422, message: ACCESS_DENIED }
             let reqObj = studentDataAssignToLocal(getSchoolData[0])
             reqObj.user_id = data.user_id;
             reqObj.school_id = data.school_id;
             reqObj.sats_id = data.sats_id;
             let duplicateUser = await this.SchoolRepo.getOnlyStudent(reqObj);
             if (duplicateUser) {
-                if(duplicateUser.applicationStatus == 'Completed'){
-                    return { message: "Data saved." };
+                if(duplicateUser.applicationStatus !== COMPLETED){
+                    return { message: DATA_SAVED };
                 } else {
-                    return { code: 422, message: "Student Already Registered." };
+                    return { code: 422, message: `Your Already Registered With ${duplicateUser?.order_number}.` };
                 }
             } else {
                 await this.SchoolRepo.saveStudentData(reqObj);
-                return { message: "Data saved." };
+                return { message: DATA_SAVED };
             }
         } catch (e) {
             Logger.error("SchoolServices ==== getStudentDataByOutSource", e);
@@ -170,16 +170,14 @@ export class SchoolServices {
             // const date: any = new Date(Date.now() + 217800000); 
             //------- adding 6 hours
             const endTime = new Date(date.getTime() + 1000);
-            await trackExternalLogs(Tables.STUDENT, "send_mail", "", data, '', data.user_id);
             await schedule.scheduleJob({ start: date, end: endTime, rule: '*/1 * * * * *' }, async function () {
-                console.log('Time for tea!');
                 await trackExternalLogs(Tables.STUDENT, "sent mail", "", '', '', data.user_id);
                 let mailSend = await emailSender({ ...result, ...data });
                 if (mailSend == 422) return { code: 422, message: RESPONSEMSG.MAIL_FAILED };
                 Logger.info("mail send ", mailSend);
                 return mailSend;
             });
-            return { message: "mail will send after 6 hours." }
+            return { message: "Mail Will Send After 6 Hours." };
         } catch (e) {
             Logger.error("schoolservice ===== sendMailTOSchoolMail", e);
             return e;
@@ -194,12 +192,13 @@ export class SchoolServices {
                 if (result.length == 0) return { code: 422, message: "Data not exists." };
                     if (!result[0].school_mail) return { code: 422, message: "Mail not exists." }
                     // const date: any = new Date(Date.now() + 60000);
-                    const date: any = new Date(Date.now() + 217800000);
+                    const date: any = new Date(Date.now() + 2000);
+                    // const date: any = new Date(Date.now() + 217800000);
                     // ------- adding 6 hours
                     const endTime = new Date(date.getTime() + 1000);
                     await schedule.scheduleJob({ start: date, end: endTime, rule: '*/1 * * * * *' }, async function () {
-                        console.log('Time for tea!');
-                        let mailSend = await emailSender([...result, ...[data]]);
+                        await trackExternalLogs(Tables.STUDENT, "sent mail", "", '', '', data.user_id);
+                        let mailSend = await emailSender({...result, ...data});
                         if (mailSend == 422) return { code: 422, message: RESPONSEMSG.MAIL_FAILED }
                             Logger.info("mail send ", mailSend);
                             return mailSend;

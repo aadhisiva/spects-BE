@@ -278,16 +278,16 @@ export class AdminRepo {
     async addNewDataWithExistsRow(data) {
         try {
             let masterData = await AppDataSource.getRepository(master_data);
-            let result = await masterData.find({ where: { sub_centre_code: data.code }});
-            
-            (result || []).map(async obj => {
-                var temp: master_data = Object.assign({}, obj);
-                temp.user_unique_id = `${temp.user_unique_id}_1`
-                temp.refractionist_name = data?.refractionist_name;
-                temp.refractionist_mobile = data?.refractionist_mobile;
-                delete temp.id;
-                await masterData.save(temp);
-            })
+            let result = await masterData.findOneBy({ sub_centre_code: data.code });
+            let temp = new master_data({});
+            temp.user_unique_id = `${result.user_unique_id}_1`
+            temp.refractionist_name = data?.refractionist_name;
+            temp.refractionist_mobile = data?.refractionist_mobile;
+            temp.ngo_gov = data.ngo_gov
+            temp.multiple = 'Yes';
+            delete result?.id;
+            let findData = {...result, ...temp};
+            await masterData.save(findData);
             return {};
         } catch (e) {
             Logger.error("userRepo => postUser", e)

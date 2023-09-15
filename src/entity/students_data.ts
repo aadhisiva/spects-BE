@@ -64,6 +64,9 @@ export class students_data {
   frame_size: string;
 
   @Column({ default: '' })
+  confirmation: string;
+
+  @Column({ default: '' })
   left_eye_sph_plus: string;
 
   @Column({ default: '' })

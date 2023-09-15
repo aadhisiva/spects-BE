@@ -35,24 +35,40 @@ const spectclesAPiReusetData = async (data, getData, type) => {
 
 
 const mappingNewBenfData = (mapData: ekyc_data, getData) => {
-    let reqBody = new other_benf_data({});
-    reqBody.age = mapData.ekyc_dob ? getAgeFromBirthDateToEkyc(mapData.ekyc_dob) : 0;
-    reqBody.caste = getData?.MBR_CASTE || "";
-    reqBody.category = getData.MBR_CASTE_CATEGORY || "";
-    reqBody.father_name = mapData?.ekyc_co || "";
-    reqBody.education_id = getData?.MBR_EDUCATION_ID || "";
-    reqBody.district = getData?.LGD_DISTRICT_Name || "";
-    reqBody.taluk = getData?.LGD_TALUK_Name || "";
-    reqBody.address = mapData?.ekyc_dist + " " + mapData?.ekyc_vtc + " " + mapData?.ekyc_street + " " + mapData?.ekyc_house + " " + mapData?.ekyc_loc + "," + mapData?.ekyc_pc || "";
-    reqBody.dob = mapData?.ekyc_dob || "";
-    reqBody.lgd_taluka = getData?.LGD_TALUK_CODE || "";
-    reqBody.lgd_district = getData?.LGD_DISTRICT_CODE || "";
-    reqBody.aadhar_no = mapData?.aadhaarHash;
-    reqBody.gender = mapData?.ekyc_gender || "";
-    reqBody.phone_number = getData?.MBR_MOBILE_NO || "";
-    reqBody.benf_name = mapData?.ekyc_name || "";
-    reqBody.benf_unique_id = mapData?.txnNo;
-    return reqBody;
+    let getOneArray = getData[0];
+    if(getData !== 422){
+        let reqBody = new other_benf_data({});
+        reqBody.age = mapData.ekyc_dob ? getAgeFromBirthDateToEkyc(mapData.ekyc_dob) : 0;
+        reqBody.caste = getOneArray?.MBR_CASTE || "";
+        reqBody.category = getOneArray.MBR_CASTE_CATEGORY || "";
+        reqBody.father_name = mapData?.ekyc_co || "";
+        reqBody.education_id = getOneArray?.MBR_EDUCATION_ID || "";
+        reqBody.district = getOneArray?.LGD_DISTRICT_Name || "";
+        reqBody.taluk = getOneArray?.LGD_TALUK_Name || "";
+        reqBody.address = getOneArray?.MBR_ADDRESS || ""
+        reqBody.dob = mapData?.ekyc_dob || "";
+        reqBody.lgd_taluka = getOneArray?.LGD_TALUK_CODE || "";
+        reqBody.lgd_district = getOneArray?.LGD_DISTRICT_CODE || "";
+        reqBody.aadhar_no = mapData?.aadhaarHash;
+        reqBody.gender = mapData?.ekyc_gender || "";
+        reqBody.phone_number = getOneArray?.MBR_MOBILE_NO || "";
+        reqBody.benf_name = mapData?.ekyc_name || "";
+        reqBody.benf_unique_id = mapData?.txnNo;
+        return reqBody;
+    } else {
+        let reqBody = new other_benf_data({});
+        reqBody.age = mapData.ekyc_dob ? getAgeFromBirthDateToEkyc(mapData.ekyc_dob) : 0;
+        reqBody.father_name = mapData?.ekyc_co || "";
+        reqBody.district = mapData?.ekyc_dist || "";
+        reqBody.taluk = mapData?.ekyc_subdist || "";
+        reqBody.dob = mapData?.ekyc_dob || "";
+        reqBody.address = mapData?.ekyc_dist + " " + mapData?.ekyc_vtc + " " + mapData?.ekyc_street + " " + mapData?.ekyc_house + " " + mapData?.ekyc_loc + "," + mapData?.ekyc_pc || "";
+        reqBody.aadhar_no = mapData?.aadhaarHash;
+        reqBody.gender = mapData?.ekyc_gender || "";
+        reqBody.benf_name = mapData?.ekyc_name || "";
+        reqBody.benf_unique_id = mapData?.txnNo;
+        return reqBody;
+    }
 };
 
 
@@ -115,6 +131,7 @@ export class NewOtherBenfServices {
 
             let getData = await this.KutumbaFunction.KutumbaDetailsFrom({ aadhar_no: pullEkycData.aadhaarHash });
             let mapDataOtherBenfWise = mappingNewBenfData(pullEkycData, getData);
+            console.log()
             mapDataOtherBenfWise.user_id = user_id;
 
             await this.NewBenfRepo.savingNewData(mapDataOtherBenfWise);

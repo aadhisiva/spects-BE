@@ -19,7 +19,23 @@ export class ResusableFunctions {
             process.env.TEMPLATE_ID
         );
         return sendSingleSms;
-    }
+    };
+
+    async sendOtpAsReadyForDeliver(mobile_no, otp, order_number) {
+        let text = `${otp} is the OTP for Spectacle Delivery for the order number ${order_number}
+        -National Health mission ,GOK.`;
+        console.log("text",text)
+        let sendSingleSms = await this.ResusableFunctions.sendSingleSMS(
+            process.env.SMS_USERNAME,
+            process.env.SMS_PASSWORD,
+            process.env.SMS_SENDER_ID,
+            text,
+            mobile_no,
+            process.env.SMS_API_SERVICE_KEY,
+            process.env.TEMPLATE_ID_FOR_DELIVER
+        );
+        return sendSingleSms;
+    };
 
     async sendOtpAsSingleUnicode(mobile_no, otp) {
         let text = `ಆತ್ಮೀಯ ${otp} ರವರೇ,

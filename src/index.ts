@@ -19,6 +19,7 @@ import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
 import AdminController from "./apiController/adminController";
+import NewBeneficiary from "./apiController/otherBenfControllerNew";
 import { decrypt } from './utility/resusableFun';
 import sessions from "express-session";
 import { TypeormStore } from "typeorm-store";
@@ -106,6 +107,7 @@ app.use("/school", SchoolController);
 app.use("/other", OtherBenfController);
 app.use("/edcs", EkycController);
 app.use("/admin", AdminController);
+app.use("/beneficiary", NewBeneficiary);
 
 
 // we are adding port connection here

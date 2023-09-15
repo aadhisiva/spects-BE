@@ -73,6 +73,9 @@ import {
     total_secondary_screening_required: string;
 
     @Column({default: null})
+    multiple: string;
+
+    @Column({default: null})
     otp: string;
   
     @CreateDateColumn()

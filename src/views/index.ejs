@@ -21,38 +21,48 @@
             width: 100px;
         }
     </style>
-
+    <script>
+    function show(data){
+        console.log("dcsdfsdf",JSON.stringify(data))
+        }
+    </script>
     <main>
         <div class="jumbotron">
-            <h4>Spectacles</h4>
+            <h4>Spectacles Distribution</h4>
             <% if(data?.data.type == "r") { %>
                  <h5>Ready To deliver Data</h5>
                 <% } else { %>
                 <h5>Delivered Data</h5>
                 <% } %>
-            <p>This studnets are ready for delivery. Can you pelase check and confirm details of students.</p>
+            <p>Spectacles delivered to this students.. Can you please check and confirm details from students.</p>
             <table class="table">
                 <tr>
                     <th>Studnet Id</th>
                     <th>Student Name</th>
+                    <th>Order Number</th>
+                    <!-- <th>Check Box</th> -->
                 </tr>
-                        <% ((data?.data?.type == "r") ? data?.data?.ready_to_deliver : data?.data?.delivered || []).forEach(function(obj){ %>  
+                        <% ((data?.data?.type == "r") ? data?.data?.order_pending : data?.data?.delivered || []).forEach(function(obj){ %>  
                         <tr>
                             <td><%= obj.sats_id %></td>
                             <td><%= obj.student_name %></td>
+                            <td><%= obj.order_number %></td>
+                            <!-- <td>
+                                    <input id="opt1" type="checkbox" name="check1" />
+                            </td> -->
                         </tr>
                         <% }); %>
             </table>
-            <div class="text-center">
+            <!-- <div class="text-center">
                 <% if(data?.data.type == "d"){ %>
-                    <button class="button">confirm</button>
+                    <button onClick = "show('<%= data %>')" class="button">confirm</button>
                 <% } %>  
-            </div>
+            </div> -->
         </div>
     </main>
 
     <footer>
-        <p class="text-center text-muted">&copy; Copyright 2023 Governement of Karnataka</p>
+        <p class="text-center text-muted">&copy; Copyright 2023, Government of Karnataka</p>
     </footer>
 
 </body>

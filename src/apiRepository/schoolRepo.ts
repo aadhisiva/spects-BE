@@ -4,6 +4,7 @@ import { AppDataSource } from "../dbConfig/mysql";
 import { other_benf_data, school_data, students_data } from "../entity";
 import { Between, Equal, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { createUniqueIdBasedOnCodes } from "../utility/resusableFun";
+import { COMPLETED } from "../utility/constants";
 
 @Service()
 export class SchoolRepo {
@@ -120,7 +121,7 @@ export class SchoolRepo {
         try {
             let findCount = await this.findAllStudents();
             data.student_unique_id = (findCount?.length == 0) ? 1 :`${Number(findCount[0].student_unique_id) + 1}`;
-            data.order_number = await createUniqueIdBasedOnCodes(data.user_id);
+            data.order_number = await createUniqueIdBasedOnCodes(data.user_id, 'school');
             return await AppDataSource.getTreeRepository(students_data).save(data);
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
@@ -151,9 +152,9 @@ export class SchoolRepo {
 
     async getAllStudentData(data: students_data) {
         try {
-            let pending_count = await AppDataSource.getRepository(students_data).countBy({ user_id: data.user_id, status: 'order_pending' })
-            let ready_count = await AppDataSource.getRepository(students_data).countBy({ user_id: data.user_id, status: 'ready_to_deliver' })
-            let delivered_count = await AppDataSource.getRepository(students_data).countBy({ user_id: data?.user_id, status: 'delivered' });
+            let pending_count = await AppDataSource.getRepository(students_data).countBy({ user_id: data.user_id, status: 'order_pending', applicationStatus: COMPLETED })
+            let ready_count = await AppDataSource.getRepository(students_data).countBy({ user_id: data.user_id, status: 'ready_to_deliver', applicationStatus: COMPLETED })
+            let delivered_count = await AppDataSource.getRepository(students_data).countBy({ user_id: data?.user_id, status: 'delivered', applicationStatus: COMPLETED });
             let order_pending = await this.getAllOrderPending(data);
             let ready_to_deliver = await this.getAllReadyToDeliver(data);
             let delivered = await this.getAllDelivered(data);
@@ -177,8 +178,8 @@ export class SchoolRepo {
             return await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
                 .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                     'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
-                .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status",
-                    { user_id: data?.user_id, school_id: data?.school_id, status: 'order_pending' }).getRawMany();
+                .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and applicationStatus= :appStatus",
+                    { user_id: data?.user_id, school_id: data?.school_id, status: 'order_pending', appStatus: COMPLETED }).getRawMany();
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;
@@ -199,8 +200,8 @@ export class SchoolRepo {
             return await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
                 .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                     'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
-                .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status",
-                    { user_id: data?.user_id, school_id: data?.school_id, status: 'ready_to_deliver' }).getRawMany();
+                .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and applicationStatus= :appStatus",
+                    { user_id: data?.user_id, school_id: data?.school_id, status: 'ready_to_deliver', appStatus: COMPLETED }).getRawMany();
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;
@@ -212,8 +213,8 @@ export class SchoolRepo {
             return await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
                 .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                     'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
-                .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status",
-                    { user_id: data?.user_id, school_id: data?.school_id, status: 'delivered' }).getRawMany();
+                .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and applicationStatus= :appStatus",
+                    { user_id: data?.user_id, school_id: data?.school_id, status: 'delivered', appStatus: COMPLETED }).getRawMany();
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
             return e;

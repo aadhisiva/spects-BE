@@ -23,9 +23,9 @@ import {
     Session,
     state_data,
     phco_data,
-    apiVersions
+    apiVersions,
+    otherBeneficiary
 } from "../entity";
-import { otherBeneficiary } from "../entity/otherBenfeficiary";
 
 export const entities = () => {
     return [
