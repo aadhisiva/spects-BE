@@ -3,10 +3,10 @@ import { Equal } from "typeorm";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
 import { other_benf_data } from "../entity/other_benf_data";
-import { generateOTP, matchStrings } from "../utility/resusableFun";
-import { ekyc_data, master_data, otherBeneficiary, students_data } from "../entity";
+import { checkEligableCandiadate, generateOTP, matchStrings } from "../utility/resusableFun";
+import { ekyc_data, master_data, newDistricts, otherBeneficiary, students_data } from "../entity";
 import { rc_data } from "../entity/rc_data";
-import { ACCESS_DENIED } from "../utility/constants";
+import { ACCESS_DENIED, COMPLETED, DELIVERED, ORDER_PENDING, READY_TO_DELIVER } from "../utility/constants";
 
 
 const dataDriven = (data = "Yes") => {
@@ -55,7 +55,18 @@ export class OtherBenfRepo {
     async updateAadharData(data) {
         try {
             let aadharData = await AppDataSource.getRepository(otherBeneficiary);
-            let findData = await aadharData.findOneBy({ benf_unique_id: data.benf_unique_id, aadhar_no: data.aadhar_no });
+            let findData = await aadharData.findOneBy({ benf_unique_id: data.benf_unique_id });
+            if (!findData) return { code: 422, message: ACCESS_DENIED };
+            let newData = { ...findData, ...data };
+            return await aadharData.save(newData);
+        } catch (e) {
+            return Logger.error("other repo ####updateAadharData", e);
+        }
+    };
+    async updateAadharDataOriginal(data) {
+        try {
+            let aadharData = await AppDataSource.getRepository(other_benf_data);
+            let findData = await aadharData.findOneBy({ benf_unique_id: data.benf_unique_id });
             if (!findData) return { code: 422, message: ACCESS_DENIED };
             let newData = { ...findData, ...data };
             return await aadharData.save(newData);
@@ -97,7 +108,6 @@ export class OtherBenfRepo {
             delete aadharData.id;
             delete aadharData.created_at;
             delete aadharData.updated_at;
-            console.log("aadharData", aadharData);
             return aadharData;
         } catch (e) {
             return Logger.error("other repo ####updateAadharData", e);
@@ -106,7 +116,6 @@ export class OtherBenfRepo {
 
     async saveOriginalBenf(data) {
         try {
-            console.log("saving", data)
             return await AppDataSource.getRepository(other_benf_data).save(data);
         } catch (e) {
             return Logger.error("other repo ####updateAadharData", e);
@@ -121,14 +130,21 @@ export class OtherBenfRepo {
             return e;
         }
     };
+    async getLatestWithID(id) {
+        try {
+            return await AppDataSource.getRepository(other_benf_data).findOneBy({ benf_unique_id: id });
+        } catch (e) {
+            Logger.error("OtherBenfRepo => findOneMemberInOther", e)
+            return e;
+        }
+    };
 
     async addNewDataFromRC(data: other_benf_data) {
         try {
             let findDistrict = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: data.user_id });
             let removeExtraCharacters = findDistrict?.district.replace(/\W/g, "").replace(/\d/g, "");
-            let matchingPercent = matchStrings(removeExtraCharacters.toLowerCase(), data.district.toLowerCase());
-            data.scheme_eligability = (matchingPercent >= 50) ? "Yes" : "No";
-            // data.scheme_eligability = removeExtraCharacters.toLowerCase() == data.district.toLowerCase() ? "Yes" : "No";
+            let checkEligibaleOrNot = await checkEligableCandiadate(removeExtraCharacters.toLowerCase(), data?.district.toLowerCase());
+            data.scheme_eligability = checkEligibaleOrNot;
             return await AppDataSource.getRepository(otherBeneficiary).save(data);
         } catch (e) {
             Logger.error("OtherBenfRepo => addNewDataFromRC", e)
@@ -140,9 +156,8 @@ export class OtherBenfRepo {
         try {
             let findDistrict = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: data.user_id });
             let removeExtraCharacters = findDistrict?.district.replace(/\W/g, "").replace(/\d/g, "");
-            let matchingPercent = matchStrings(removeExtraCharacters.toLowerCase(), data.district.toLowerCase());
-            data.scheme_eligability = (matchingPercent >= 50) ? "Yes" : "No";
-
+            let checkEligibaleOrNot = await checkEligableCandiadate(removeExtraCharacters.toLowerCase(), data?.district.toLowerCase());
+            data.scheme_eligability = checkEligibaleOrNot
             let other_repo = await AppDataSource.getRepository(otherBeneficiary)
             let result = await other_repo.findOneBy({ aadhar_no: Equal(data.aadhar_no) });
             let finalData = { ...result, ...data };
@@ -164,6 +179,8 @@ export class OtherBenfRepo {
             delete data.created_at;
             delete data.updated_at;
             delete data.user_id;
+            result['kutumba_phone_number'] = result.phone_number;
+            result.phone_number = "";
             return { ...result, ...data };
         } catch (e) {
             Logger.error("otherBenfRepo => mapRcDataTOOtherBenf", e)
@@ -179,6 +196,15 @@ export class OtherBenfRepo {
             return e;
         }
     };
+
+    async fetchDataFromMaster(data) {
+        try {
+            const { user_id } = data;
+            return await AppDataSource.getRepository(master_data).findOneBy({ unique_id: user_id });
+        } catch (e) {
+            Logger.error("otherBenfRepo ### fetchDataFromMaster", e);
+        }
+    }
 
     async fetchRcUserData(data: otherBeneficiary) {
         try {
@@ -200,9 +226,8 @@ export class OtherBenfRepo {
             data.ekyc_check = "Y";
             let findDistrict = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: data.user_id });
             let removeExtraCharacters = findDistrict?.district.replace(/\W/g, "").replace(/\d/g, "");
-            // data.scheme_eligability = removeExtraCharacters.toLowerCase() == data.district.toLowerCase() ? "Yes" : "No";
-            let matchingPercent = matchStrings(removeExtraCharacters.toLowerCase(), data.district.toLowerCase());
-            data.scheme_eligability = (matchingPercent >= 50) ? "Yes" : "No";
+            let checkEligibaleOrNot = await checkEligableCandiadate(removeExtraCharacters.toLowerCase(), data?.district.toLowerCase());
+            data.scheme_eligability = checkEligibaleOrNot;
             return await AppDataSource.getRepository(otherBeneficiary).save(data);
         } catch (e) {
             return Logger.error("other repo ####savingNewData", e);
@@ -262,7 +287,7 @@ export class OtherBenfRepo {
     };
     async checkDataWithPhoneNumberAndId(data) {
         try {
-            return await AppDataSource.getRepository(other_benf_data).find({ where: { phone_number: data.phone_number }});
+            return await AppDataSource.getRepository(other_benf_data).find({ where: { phone_number: data.phone_number } });
         } catch (e) {
             Logger.error("otherBenfRepo => checkDataWithPhoneNumberAndId", e)
             return e;
@@ -369,7 +394,7 @@ export class OtherBenfRepo {
         try {
             data.order_number = generateOTP();
             let getAllCount = await this.findAll();
-            data.status = "order_pending";
+            data.status = ORDER_PENDING;
             let checkUndefined = (getAllCount[0]?.benf_unique_id == undefined) ? 0 : getAllCount[0]?.benf_unique_id;
             data.benf_unique_id = `${Number(checkUndefined) + 1}`;
             let result = await AppDataSource.getRepository(rc_data).findOneBy({ aadhar_no: Equal(data.aadhar_no) });
@@ -554,25 +579,49 @@ export class OtherBenfRepo {
 
     async getBenificaryStatus(data) {
         try {
-            let checkUser = this.checkLoginUser(data);
-            if (!checkUser) {
-                return { code: 422, message: "Data not exits." };
-            } else {
-                let pending_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: data.user_id, status: 'order_pending', applicationStatus: 'Completed' });
-                let ready_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: data.user_id, status: 'ready_to_deliver', applicationStatus: 'Completed' });
-                let delivered_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: data.user_id, status: 'delivered', applicationStatus: 'Completed' });
-                let order_pending = await this.getBenfOrderPending(data);
-                let ready_to_deliver = await this.getBenfReayToDeliver(data);
-                let delivered = await this.getBenfDevliverd(data);
+            const { pagination, skip = 0, take = 10, user_id } = data;
+            if (pagination == 'Yes') {
+                let pending_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: ORDER_PENDING, applicationStatus: COMPLETED });
+                let ready_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: READY_TO_DELIVER, applicationStatus: COMPLETED });
+                let delivered_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: DELIVERED, applicationStatus: COMPLETED });
+                let totalData = await AppDataSource.getRepository(other_benf_data).createQueryBuilder('other').
+                    select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name','other.order_number as order_number',
+                            'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
+                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus", {id: user_id, applicationStatus: COMPLETED})
+                    .orderBy('other.benf_unique_id')
+                    .skip(skip)
+                    .take(take)
+                    .getRawMany();
                 return {
+                    take: take,
+                    skip: skip,
                     total: Number(pending_count) + Number(ready_count) + Number(delivered_count),
                     pending_count: pending_count,
                     ready_count: ready_count,
                     delivered_count: delivered_count,
-                    order_pending,
-                    ready_to_deliver,
-                    delivered
+                    totalData
                 };
+            } else {
+                let checkUser = this.checkLoginUser(data);
+                if (!checkUser) {
+                    return { code: 422, message: "Data not exits." };
+                } else {
+                    let pending_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: ORDER_PENDING, applicationStatus: COMPLETED });
+                    let ready_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: READY_TO_DELIVER, applicationStatus: COMPLETED });
+                    let delivered_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: DELIVERED, applicationStatus: COMPLETED });
+                    let order_pending = await this.getBenfOrderPending(user_id);
+                    let ready_to_deliver = await this.getBenfReayToDeliver(user_id);
+                    let delivered = await this.getBenfDevliverd(user_id);
+                    return {
+                        total: Number(pending_count) + Number(ready_count) + Number(delivered_count),
+                        pending_count: pending_count,
+                        ready_count: ready_count,
+                        delivered_count: delivered_count,
+                        order_pending,
+                        ready_to_deliver,
+                        delivered
+                    };
+                }
             }
         } catch (e) {
             Logger.error("otherBenfRepo => getBenificaryStatus", e)
@@ -601,7 +650,20 @@ export class OtherBenfRepo {
 
     async getBenificaryHistory(data) {
         try {
-            return await this.getBenfDevliverd(data);
+            const { pagination, skip = 0, take = 10, user_id } = data;
+            if (pagination == 'Yes') {
+                return await AppDataSource.getRepository(other_benf_data).createQueryBuilder('other').
+                    select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name','other.order_number as order_number',
+                            'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
+                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus and other.status = :status", 
+                    {id: user_id, applicationStatus: COMPLETED, status: DELIVERED})
+                    .orderBy('other.benf_unique_id')
+                    .skip(skip)
+                    .take(take)
+                    .getRawMany();
+            } else {
+                return await this.getBenfDevliverd(data);
+            }
         } catch (e) {
             Logger.error("otherBenfRepo => getBenificaryHistory", e)
             return e;
@@ -667,7 +729,7 @@ export class OtherBenfRepo {
     async getBenfOrderPending(data) {
         try {
             let orderPending = await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, benf_name, 
-            order_number,address, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='order_pending'
+            order_number,address, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='${ORDER_PENDING}'
             and applicationStatus='Completed'`)
             return (orderPending?.length == 0) ? [] : orderPending;
         } catch (e) {
@@ -711,7 +773,7 @@ export class OtherBenfRepo {
     async getBenfReayToDeliver(data) {
         try {
             let readyToDel = await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, benf_name,address, 
-            order_number, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='ready_to_deliver'
+            order_number, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='${READY_TO_DELIVER}'
             and applicationStatus='Completed'`)
             return (readyToDel?.length == 0) ? [] : readyToDel;;
         } catch (e) {
@@ -723,7 +785,7 @@ export class OtherBenfRepo {
     async getBenfDevliverd(data) {
         try {
             let devlivered = await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, benf_name,address, 
-            order_number, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='delivered'
+            order_number, status, phone_number FROM other_benf_data WHERE user_id='${data}' and status='${DELIVERED}'
             and applicationStatus='Completed'`)
             return (devlivered?.length == 0) ? [] : devlivered;;
         } catch (e) {
@@ -736,7 +798,7 @@ export class OtherBenfRepo {
         try {
             let otherBenfDataBase = AppDataSource.getRepository(other_benf_data);
             let result = await otherBenfDataBase.findOneBy({ aadhar_no: data.aadhar_no });
-            let newData = data?.details ? { ...data, status: "order_pending" } : data;
+            let newData = data?.details ? { ...data, status: ORDER_PENDING } : data;
             let finalData = { ...result, ...newData }
             return await otherBenfDataBase.save(finalData);
         } catch (e) {

@@ -35,6 +35,19 @@ router.post("/add_school", requestAndResonseTime, async (req: Request, res: Resp
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
+router.post("/add_schoolWithVersion", authTokenAndVersion, requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new school_data(req.body);
+        let result = await schoolServices.getSchoolDataByOutSource(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        res.send(response);
+    } catch (e) {
+        Logger.error("SchoolController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
 
 router.get('/check', requestAndResonseTime, async (req: Request, res: Response) => {
     try {
@@ -129,6 +142,20 @@ router.post("/update_school_byid", requestAndResonseTime, async (req: Request, r
 // ************************** student apis **********************
 
 router.post("/add_student", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = new students_data(req.body);
+        let result = await schoolServices.getStudentDataByOutSource(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        res.send(response);
+    } catch (e) {
+        Logger.error("SchoolController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/add_studentWithVersion", authTokenAndVersion, requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new students_data(req.body);
         let result = await schoolServices.getStudentDataByOutSource(data);
@@ -239,17 +266,17 @@ router.post("/update_student", requestAndResonseTime, async (req: Request, res: 
     }
 });
 // filters
-router.post("/filters", requestAndResonseTime, async (req: Request, res: Response) => {
-    try {
-        let data = req.body;
-        let result = await schoolServices.filterByValuesWise(data);
-        let response = (result?.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), result.data);
-        res.send(response);
-    } catch (e) {
-        Logger.error("SchoolController => ", e);
-        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-    }
-});
+// router.post("/filters", requestAndResonseTime, async (req: Request, res: Response) => {
+//     try {
+//         let data = req.body;
+//         let result = await schoolServices.filterByValuesWise(data);
+//         let response = (result?.code || result instanceof Error) ?
+//             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+//             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), result.data);
+//         res.send(response);
+//     } catch (e) {
+//         Logger.error("SchoolController => ", e);
+//         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+//     }
+// });
 export default router;

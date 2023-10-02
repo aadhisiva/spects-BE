@@ -20,7 +20,7 @@ import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
 import AdminController from "./apiController/adminController";
 import NewBeneficiary from "./apiController/otherBenfControllerNew";
-import { decrypt } from './utility/resusableFun';
+import { checkEligableCandiadate, createUniqueIdBasedOnCodes, decrypt } from './utility/resusableFun';
 import sessions from "express-session";
 import { TypeormStore } from "typeorm-store";
 import { Session } from './entity';
@@ -45,6 +45,7 @@ let repository = AppDataSource.getRepository(Session);
 
 // time milliseconds * seconds * minutes * hours
 const twoHour = 1000 * 60 * 60 * 2;
+// const twoHour = 1000 * 10;
 
 // check node is running on production or not
 let secure = process.env.NODE_ENV == "production" ? true : false;
@@ -94,12 +95,12 @@ app.set('view engine', 'ejs');
 app.use(morgan('dev'));
 
 // add masters data
-// app.post("/add", async (req, res) => {
-//   let data = addData();
-//   res.send(data)
-// });
+app.post("/add", async (req, res) => {
+  let data = await checkEligableCandiadate("Bijapur".toLowerCase(), 'Bijapur'.toLowerCase());
+  res.send(data)
+});
 
-// console.log(decrypt("waDo/orhls7BPo9cZUGE8isn5EOApmV/uMhoylZypiWxRdRDDlblGpxmPS6as20/dwPzeL/y2uKOKH8wN0Z1ogy/cbY/NbT1PB9yXc2JEXSkJwm1qc87hc0GhF49V0IpjPK4rH9vFQJIsvN4cFIeIWnVVSziUEt3459KOm8a7dGQ8dS9Z9Vn9QeRzpLUlr/nmMgXQWY7YejSPZZn0kpVos9zm3VINlj4g2GXeZ+temyLT74xURUZ7p4kKQLq1I7FMr0eNP/YJvvFgPSa+ThUgWhi4N6GJBHiCvUJQ1k8Cswufidj4cVhQdnhnvjKEc6tmNC7sR/q3LjbqMUJXpOsCD3FnOLaz5wsz6ldUe7lFU8sEAP29sFCP/a/FtZ4hhU+z2WlfRg8M8wVfXWd+2SIpO800Y/lM3irodLsXyfb+8/PfuPTobo/lhjxdAhQYI4a"))
+// console.log(decrypt("nabiI+7vhT7x/P6ofKw7hOLtAwZAHdpGG+ks4tJzoUTu0WgUdm1C3LUe0IS/ItmBxzNU2Zm93kcVB989aAFeZGiinrk/3Om8xfXstM1xHh4QkbIfL3ux5oG+pCWyQsZiz9H8uk7ZIQcv/+3yk6JkYZn93sx3+Ny+VlYU4w1KGfybCBN2Zpl1f9VUx8I15ZHscqDlBuTQWP1aTVQgAbjIap7FrFKUA0DYd3bMZWL0D4VI1UdNzVxqPlPajjgbN6Jh+h64KN+WnSNNby4uX9dVts4gUINdP3hYh2o8NQ0zs86xRLqfpa/T5UemTXMFslFYvRdMs0k+lPvarlxV9qVi5/LG7cUWofzDip+OBaMUC2f01cD7BB3fV32WJfi5Qx2V"))
 
 // controllers for routes
 app.use("/login", UserController);

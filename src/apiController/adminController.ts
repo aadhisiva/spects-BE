@@ -47,7 +47,7 @@ router.post('/getMe', (req: any, res) => {
     if (req?.session?.user) {
         res.status(200).send({ success: true, userData: req.session?.user });
     } else {
-        res.status(404).send({ success: false });
+        res.status(444).send({ success: false });
     };
 });
 
@@ -338,10 +338,36 @@ router.post("/searchData", authenticateToken, verifyUser, async (req: Request, r
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
+router.post("/searchDataStateAndDistrictWise", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+    try {
+        let data = new master_data(req.body);
+        let result = await adminServices.searchDataStateAndDistrictWise(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
+        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
 router.post("/eachDataIdWise", authenticateToken, verifyUser, async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.eachDataIdWise(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
+        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+router.post("/refractionistReports", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+    try {
+        let data = new master_data(req.body);
+        let result = await adminServices.refractionistReports(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);

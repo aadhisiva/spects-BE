@@ -3,6 +3,7 @@ import cryptoJs from "crypto";
 import { AppDataSource } from "../dbConfig/mysql";
 import { master_data } from "../entity/master_data";
 import { Equal } from "typeorm";
+import { newDistricts } from "../entity";
 
 let method = "aes-256-cbc";
 
@@ -108,10 +109,33 @@ export const PrameterizedQueries = (data) => {
     slicedData.unshift(data[i]?.code);
   }
   return slicedData;
+};;
+
+export const PrameterizedQueriesWithExtraQueries = (data, loginType, dates, today) => {
+  let givenData: number = data?.length;
+  let arrayLength = ['', '', '', '', '', '', '', '', '', ''];
+  let slicedData = arrayLength.slice(givenData);
+  for (var i = 0; i < givenData; i++) {
+    slicedData.unshift(data[i]?.code);
+  };
+  slicedData.push(loginType);
+  if (dates?.length !== 0) {
+    const [year, month, day] = dates[0]?.split("-");
+    slicedData.push(year + month + day);
+
+    const [yearOne, monthOne, dayOne] = dates[1]?.split("-");
+    slicedData.push(yearOne + monthOne + dayOne);
+  } else {
+    slicedData.push("");
+    slicedData.push("");
+  }
+  slicedData.push(today);
+  return slicedData;
 };
 
-export const createUniqueIdBasedOnCodes = async (id, type ='') => {
-  // formate codes-Wise = district/taluka/village/user_id/order_number
+export const createUniqueIdBasedOnCodes = async (id, type = 'school') => {
+  // formate codes-Wise = district/taluka/phc/user_id/order_number
+
   let orderNumber = new Date().getTime();
   let userData = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: Equal(id) });
   let addString = "";
@@ -124,21 +148,34 @@ export const createUniqueIdBasedOnCodes = async (id, type ='') => {
       addString += userData[key].replace(/\D/g, "") + "/";
     }
   }
-  return (addString + id + "/" + type == "school"? `S-${orderNumber}` : orderNumber) + "";
+  let checkType = (type == "school") ? `S-${orderNumber}` : orderNumber;
+  let finalString = addString + id + "/" + checkType;
+  return finalString;
 };
 
-export function matchStrings(a,b) {
+export function matchStrings(a, b) {
   var equivalency = 0;
-  var minLength = (a.length > b.length) ? b.length : a.length;    
-  var maxLength = (a.length < b.length) ? b.length : a.length;    
-  for(var i = 0; i < minLength; i++) {
-      if(a[i] == b[i]) {
-          equivalency++;
-      }
-  }
-  
-
+  var minLength = (a.length > b.length) ? b.length : a.length;
+  var maxLength = (a.length < b.length) ? b.length : a.length;
+  for (var i = 0; i < minLength; i++) {
+    if (a[i] == b[i]) {
+      equivalency++;
+    }
+  };
   var weight = equivalency / maxLength;
   return (weight * 100);
+};
+
+export const checkEligableCandiadate = async (first, second) => {
+  let NewDistrictMatch = await AppDataSource.getRepository(newDistricts).findOneBy({ oldDistrictName: first });
+  if (!NewDistrictMatch) {
+    let macthString = matchStrings(first, second);
+    return (macthString >= 50) ? "Yes" : "No";
+  } else {
+    let newDistricts = NewDistrictMatch.newDistrictName.toLowerCase();
+    let macthStringWithNewDistrict = matchStrings(newDistricts, second);
+    let first = matchStrings(newDistricts, second);
+    return ((macthStringWithNewDistrict >= 50 || first >= 50)) ? "Yes" : "No";
+  }
 }
 

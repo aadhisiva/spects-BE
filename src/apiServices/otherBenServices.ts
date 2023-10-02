@@ -10,7 +10,7 @@ import { RESPONSEMSG } from "../utility/statusCodes";
 import { rc_data } from "../entity/rc_data";
 import Logger from "../utility/winstonLogger";
 import { ekyc_data } from "../entity";
-import { ACCESS_DENIED, COMPLETED, EKYC_ACCESS_DENIED, EKYC_SUCCESS, KUTUMBA_ACCESS_DENIED, PHONE_REGESTERED } from "../utility/constants";
+import { ACCESS_DENIED, COMPLETED, EKYC_ACCESS_DENIED, EKYC_SUCCESS, KUTUMBA_ACCESS_DENIED, ORDER_PENDING, PHONE_REGESTERED } from "../utility/constants";
 
 const spectclesAPiReusetData = async (data, getData, type) => {
     let reqBody = new other_benf_data({});
@@ -28,7 +28,7 @@ const spectclesAPiReusetData = async (data, getData, type) => {
     reqBody.dob = getData?.MBR_DOB ? getData.MBR_DOB : "";
     reqBody.aadhar_no = type == "rc" ? getData?.MBR_HASH_AADHAR : await aadharConvert(data.aadhar_no);
     reqBody.gender = getData?.MBR_GENDER ? getData.MBR_GENDER : "";
-    reqBody.kutumba_phone_number = getData?.MBR_MOBILE_NO ? getData.MBR_MOBILE_NO : "";
+    reqBody.phone_number = getData?.MBR_MOBILE_NO ? getData.MBR_MOBILE_NO : "";
     reqBody.benf_name = getData?.MEMBER_NAME_ENG ? getData.MEMBER_NAME_ENG : "";
     return reqBody;
 };
@@ -65,9 +65,9 @@ const mappingNewBenfData = (mapData: ekyc_data, getData) => {
         reqBody.category = getOneArray.MBR_CASTE_CATEGORY || "";
         reqBody.father_name = mapData?.ekyc_co || "";
         reqBody.education_id = getOneArray?.MBR_EDUCATION_ID || "";
-        reqBody.district = getOneArray?.LGD_DISTRICT_Name || "";
-        reqBody.taluk = getOneArray?.LGD_TALUK_Name || "";
-        reqBody.address = getOneArray?.MBR_ADDRESS || ""
+        reqBody.district = mapData?.ekyc_dist || "";
+        reqBody.taluk = mapData?.ekyc_subdist || "";
+        reqBody.address = mapData?.ekyc_dist + " " + mapData?.ekyc_vtc + ", " + mapData?.ekyc_street + ", " + mapData?.ekyc_house + ", " + mapData?.ekyc_loc + "," + mapData?.ekyc_pc || "" || "";
         reqBody.dob = mapData?.ekyc_dob || "";
         reqBody.lgd_taluka = getOneArray?.LGD_TALUK_CODE || "";
         reqBody.lgd_district = getOneArray?.LGD_DISTRICT_CODE || "";
@@ -84,25 +84,13 @@ const mappingNewBenfData = (mapData: ekyc_data, getData) => {
         reqBody.district = mapData?.ekyc_dist || "";
         reqBody.taluk = mapData?.ekyc_subdist || "";
         reqBody.dob = mapData?.ekyc_dob || "";
-        reqBody.address = mapData?.ekyc_dist + " " + mapData?.ekyc_vtc + " " + mapData?.ekyc_street + " " + mapData?.ekyc_house + " " + mapData?.ekyc_loc + "," + mapData?.ekyc_pc || "";
+        reqBody.address = mapData?.ekyc_dist + " " + mapData?.ekyc_vtc + " ," + mapData?.ekyc_street + ", " + mapData?.ekyc_house + ", " + mapData?.ekyc_loc + "," + mapData?.ekyc_pc || "";
         reqBody.aadhar_no = mapData?.aadhaarHash;
         reqBody.gender = mapData?.ekyc_gender || "";
         reqBody.benf_name = mapData?.ekyc_name || "";
         reqBody.benf_unique_id = mapData?.txnNo;
         return reqBody;
     }
-};
-
-
-const mappingRcDataWiseNewBenfData = (mapData: ekyc_data) => {
-    let reqBody = new other_benf_data({});
-    reqBody.age = mapData.ekyc_dob ? getAgeFromBirthDateToEkyc(mapData.ekyc_dob) : 0;
-    reqBody.father_name = mapData?.ekyc_co || "";
-    reqBody.dob = mapData?.ekyc_dob || "";
-    reqBody.district = mapData?.ekyc_dist || ""
-    reqBody.gender = mapData?.ekyc_gender || "";
-    reqBody.benf_name = mapData?.ekyc_name || "";
-    return reqBody;
 };
 
 
@@ -185,38 +173,45 @@ export class OtherBenfServices {
 
             // checking actual table
             let originBenfData: any = await this.OtherBenfRepo.findDataOfLatestBenfData(pullEkycData?.aadhaarHash);
-            if (originBenfData.applicationStatus == COMPLETED && originBenfData.ekyc_check == "Y")
-            return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
+            if (originBenfData?.applicationStatus == COMPLETED && originBenfData?.ekyc_check == "Y") return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
 
             let getData = await this.KutumbaFunction.KutumbaDetailsFrom({ aadhar_no: pullEkycData.aadhaarHash });
             let mapDataOtherBenfWise = mappingNewBenfData(pullEkycData, getData);
-            console.log()
             mapDataOtherBenfWise.user_id = user_id;
 
             await this.OtherBenfRepo.savingNewData(mapDataOtherBenfWise);
             let fetchData = await this.OtherBenfRepo.fetchRcUserData(mapDataOtherBenfWise);
             let check = fetchData.scheme_eligability == "Yes";
-            return { message: EKYC_SUCCESS, errorInfo: !check ? "District Matching Failed." : "", data: fetchData };
+            let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(mapDataOtherBenfWise);
+            return { message: EKYC_SUCCESS, errorInfo: !check ? 
+                `You Are Not Eligible For ${findMasterDistrict.district}. Application Can Not Be Processed.` : "", data: fetchData };
         } catch (e) {
             return Logger.error("Other service ##addDataAfterEkyc", e);
         }
     };
+
     async updateAadharData(data: other_benf_data) {
         try {
 
             const { benf_unique_id, user_id } = data;
             if (!benf_unique_id && !user_id) return { code: 422, message: "ID And User ID Fields Required" };
-            data.order_number = await createUniqueIdBasedOnCodes(data.user_id);
-            data.type = "otherBenificiary";
-            data.details = "aadhar";
-            data.status = 'order_pending';
-            data.applicationStatus = "Completed";
-            await this.OtherBenfRepo.updateAadharData(data);
-            let findUser: any = await this.OtherBenfRepo.findOneUserWithBenfId(data);
-            let checkEducationId: any = await this.OtherBenfRepo.checkEducationId(findUser.education_id);
-            if (checkEducationId) return { code: 422, message: `Your Already Applied In School With Order Number ${checkEducationId.order_number}.` };
-            await await this.OtherBenfRepo.saveOriginalBenf(findUser);
-            return { message: RESPONSEMSG.UPDATE_SUCCESS };
+            let originBenfData = await this.OtherBenfRepo.getLatestWithID(benf_unique_id);
+            if(!originBenfData){
+                data.order_number = await createUniqueIdBasedOnCodes(data.user_id);
+                data.type = "otherBenificiary";
+                data.details = "aadhar";
+                data.status = ORDER_PENDING;
+                data.applicationStatus = "Completed";
+                await this.OtherBenfRepo.updateAadharData(data);
+                let findUser: any = await this.OtherBenfRepo.findOneUserWithBenfId(data);
+                let checkEducationId: any = await this.OtherBenfRepo.checkEducationId(findUser.education_id);
+                if (checkEducationId) return { code: 422, message: `Your Already Applied In School With Order Number ${checkEducationId.order_number}.` };
+                await await this.OtherBenfRepo.saveOriginalBenf(findUser);
+                return { message: RESPONSEMSG.UPDATE_SUCCESS };
+            } else {
+                await this.OtherBenfRepo.updateAadharDataOriginal(data);
+                return { message: RESPONSEMSG.UPDATE_SUCCESS };
+            }
         } catch (e) {
             return Logger.error("Other service ##updateAadharData", e);
         }
@@ -265,11 +260,10 @@ export class OtherBenfServices {
                 if(checkinRcData) return { code: 422, message: `Already Registered In Schools With Order Number ${originBenfData.order_number}.` };
             }
              // checking actual table
-             if(originBenfData?.education_id)
-             if (originBenfData?.applicationStatus == COMPLETED && originBenfData?.ekyc_check == "Y")
-             return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
+             if (originBenfData?.applicationStatus == COMPLETED && originBenfData?.ekyc_check == "Y") return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
             
             if (findOneMemberOther) {
+                findOneMemberOther.benf_unique_id = benf_unique_id;
                 if (reqBody?.case == "Yes") {
                     let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
                     let bodyData = {
@@ -357,10 +351,12 @@ export class OtherBenfServices {
         try {
             const { benf_unique_id, user_id } = data;
             if (!benf_unique_id && !user_id) return { code: 422, message: "ID And User ID Fields Required" };
+            let originBenfData = await this.OtherBenfRepo.getLatestWithID(benf_unique_id);
+            if(!originBenfData){
             data.order_number = await createUniqueIdBasedOnCodes(data.user_id);
             data.type = "otherBenificiary";
             data.details = "rc";
-            data.status = 'order_pending';
+            data.status = ORDER_PENDING;
             data.applicationStatus = "Completed";
             await this.OtherBenfRepo.updateAadharData(data);
             let findUser: any = await this.OtherBenfRepo.findOneUserWithBenfId(data);
@@ -368,6 +364,10 @@ export class OtherBenfServices {
             if (checkEducationId) return { code: 422, message: `Your Already Applied In School With Order Number ${checkEducationId.order_number}.` };
             await this.OtherBenfRepo.saveOriginalBenf(findUser);
             return { message: RESPONSEMSG.UPDATE_SUCCESS };
+        } else {
+            await this.OtherBenfRepo.updateAadharDataOriginal(data);
+            return { message: RESPONSEMSG.UPDATE_SUCCESS };
+        }
         } catch (e) {
             return Logger.error("Other service ##updateAadharData", e);
         }
@@ -385,12 +385,16 @@ export class OtherBenfServices {
             let checkAadharHas = pullEkycData?.aadhaarHash.toLowerCase() == pullBenfData?.aadhar_no.toLowerCase();
             if (!checkAadharHas) return { code: 422, message: "Hash Matching Failed." };
             pullBenfData.ekyc_check = 'Y';
+            pullBenfData.district = pullEkycData?.ekyc_dist || "";
+            pullBenfData.taluk = pullEkycData?.ekyc_subdist || "";
             // let mapData = mappingRcDataWiseNewBenfData(pullEkycData);
             pullBenfData.benf_unique_id = benf_unique_id;
             await this.OtherBenfRepo.updateOneRecordInOther(pullBenfData);
             let fetchData = await this.OtherBenfRepo.fetchRcUserData(pullBenfData);
             let check = fetchData.scheme_eligability == "Yes";
-            return { message: EKYC_SUCCESS, errorInfo: !check ? "District Matching Failed." : "", data: fetchData };
+            let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(pullBenfData);
+            return { message: EKYC_SUCCESS, errorInfo: !check ? 
+                `You Are Not Eligible For ${findMasterDistrict.district}. Application Can Not Be Processed.` : "", data: fetchData };
         } catch (e) {
             return Logger.error("Other service ##updateAadharData", e);
         }
@@ -440,7 +444,7 @@ export class OtherBenfServices {
             const { benf_unique_id } = data;
             if (!benf_unique_id) return { code: 422, message: "Id Field Required." };
             let getData = await this.OtherBenfRepo.findWithBenfData(benf_unique_id);
-            let checkOtp = getData.otp == data.deliveredOtp;
+            let checkOtp = getData?.deliveredOtp == data.otp;
             if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
             return {message: RESPONSEMSG.VALIDATE, data: {}}
         } catch (e) {
@@ -455,7 +459,7 @@ export class OtherBenfServices {
             if (!benf_unique_id) return { code: 422, message: "Id Field Required." };
             data.status = 'delivered';
             await this.OtherBenfRepo.updateDataWithBenfId(data);
-            return {message: RESPONSEMSG.OTP, data: {} }
+            return {message: RESPONSEMSG.UPDATE_SUCCESS, data: {} }
         } catch (e) {
             Logger.error("OtherBenfServices === statusDataByIdWith", e);
             return e;
@@ -696,7 +700,7 @@ export class OtherBenfServices {
             if (!data?.user_id) return { code: 422, message: "User id are mandatory." };
             let checkUser = await this.OtherBenfRepo.checkLoginUser(data.user_id);
             if (!checkUser) return { code: 422, message: "Data not exists" };
-            return await this.OtherBenfRepo.getBenificaryStatus(data.user_id);
+            return await this.OtherBenfRepo.getBenificaryStatus(data);
         } catch (e) {
             Logger.error("OtherBenfServices === getBenificaryStatus", e);
             return e;

@@ -25,4 +25,14 @@ export const EKYC_SUCCESS = "You Are Completed Ekyc SuccessFully."
 export const ACCESS_DENIED = "Access Denied." 
 export const DATA_SAVED = "Data Saved." 
 export const COMPLETED = "Completed" 
-export const PHONE_REGESTERED = "Phone Number Already Registered With Four Members." 
+export const PHONE_REGESTERED = "Phone Number Already Registered With Four Members." ;
+
+
+
+export const DISTRICT_OFFICER_LOGIN = 'district_officer';
+export const TALUKA_OFFICER_LOGIN = 'taluka';
+export const PHCO_OFFICER_LOGIN = 'phco';
+
+export const DELIVERED = 'delivered';
+export const READY_TO_DELIVER = 'ready_to_deliver';
+export const ORDER_PENDING = 'order_pending';

@@ -68,7 +68,7 @@ export class SchoolServices {
         try {
             if (!data?.school_id || !data.user_id || !data?.sats_id) return { code: 422, message: "School And Sats And User id Field Required." };
             let checkDuplicates = await this.SchoolRepo.checkDuplicatesWithSats(data.sats_id);
-            if(checkDuplicates) return {code:422, message: `You Are Already Applied With Beneficiary. This Is Your ${checkDuplicates.order_number}`};
+            if(checkDuplicates) return {code:422, message: `You Are Already Applied With Beneficiary. This Is Your Order Number ${checkDuplicates.order_number}`};
             let req = { satsCode: data.sats_id }
             let getSchoolData = await this.KutumbaDetails.getSchoolDataFromExternal(req, "child");
             if (getSchoolData == 500) return { code: 422, message: ACCESS_DENIED }
@@ -81,7 +81,7 @@ export class SchoolServices {
                 if(duplicateUser.applicationStatus !== COMPLETED){
                     return { message: DATA_SAVED };
                 } else {
-                    return { code: 422, message: `Your Already Registered With ${duplicateUser?.order_number}.` };
+                    return { code: 422, message: `Your Already Registered With Order Number ${duplicateUser?.order_number}.` };
                 }
             } else {
                 await this.SchoolRepo.saveStudentData(reqObj);
@@ -223,7 +223,6 @@ export class SchoolServices {
     async getImageStudentWise(data: students_data) {
         try {
                 let result = await this.SchoolRepo.getImageStudentWise(data);
-                console.log("result", result)
                 return result;
         } catch (e) {
             Logger.error("schoolservice ===== getAllStudentData", e);
@@ -250,15 +249,6 @@ export class SchoolServices {
                 return (result == 422) ? { code: 422, message: "Update Failed" } : { message: RESPONSEMSG.UPDATE_SUCCESS }
         } catch (e) {
             Logger.error("schoolservice ===== updateStudentData", e);
-            return e;
-        }
-    }
-
-    async filterByValuesWise(data) {
-        try {
-            return await this.SchoolRepo.filterByValuesWise(data);
-        } catch (e) {
-            Logger.error("schoolservice ===== filterByValuesWise", e);
             return e;
         }
     }

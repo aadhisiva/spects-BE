@@ -12,6 +12,7 @@ import express, { Request, Response } from 'express';
 import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { EkycServices } from '../apiServices/ekycServices';
 import { requestAndResonseTime } from '../utility/middlewares';
+import path from 'path';
 
 const router = express.Router();
 
@@ -20,7 +21,6 @@ const ekycServices = Container.get(EkycServices);
 router.post("/edcs_service", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = req.body;
-        console.log("data")
         let result = await ekycServices.saveEkycData(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
@@ -34,7 +34,7 @@ router.post("/edcs_service", requestAndResonseTime, async (req: Request, res: Re
 
 router.get("/edcs_service_application", async (req: Request, res: Response) => {
     try {
-        res.send('');
+        res.sendFile(path.join(__dirname+ "../../views", "ekycApplication.html"));
     } catch (e) {
         console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);

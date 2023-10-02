@@ -69,15 +69,15 @@ export async function authTokenAndVersion(req, res, next) {
   let getVersion = await AppDataSource.getRepository(apiVersions).find();
   let checkVersion = authVersion == getVersion[0].version;
   if(!checkVersion) return res.status(422).send({code: 422, message: "Api Version Not Matching"});
-  const token = authHeader && authHeader.split(" ")[1];
-  if (token == null) return res.status(401).send({code: 401, message: "UnAuthorized User"}); // Return 401 if no token
+  // const token = authHeader && authHeader.split(" ")[1];
+  // if (token == null) return res.status(401).send({code: 401, message: "UnAuthorized User"}); // Return 401 if no token
 
   // Verify the token using the Userfront public key
-  jwt.verify(token, process.env.USERFRONT_PUBLIC_KEY, (err, auth) => {
-    if (err) return res.status(403).send({ code: 403, message: "Forbidden"}); // Return 403 if there is an error verifying
-    req.auth = auth;
+  // jwt.verify(token, process.env.USERFRONT_PUBLIC_KEY, (err, auth) => {
+  //   if (err) return res.status(403).send({ code: 403, message: "Forbidden"}); // Return 403 if there is an error verifying
+    // req.auth = auth;
     next();
-  });
+  // });
 };
 
 export function verifyUser(req, res, next) {

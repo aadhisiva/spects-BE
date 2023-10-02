@@ -132,8 +132,16 @@ export class AdminServices {
         return this.AdminRepo.searchData(data)
     };
 
+    async searchDataStateAndDistrictWise(data) {
+        return this.AdminRepo.searchDataStateAndDistrictWise(data)
+    };
+
     async eachDataIdWise(data) {
         return this.AdminRepo.eachDataIdWise(data)
+    };
+
+    async refractionistReports(data) {
+        return this.AdminRepo.refractionistReports(data)
     };
 
 };

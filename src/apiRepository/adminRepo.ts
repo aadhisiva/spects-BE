@@ -3,8 +3,9 @@ import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
 import { district_data, master_data, other_benf_data, phco_data, sub_centre_data, taluka_data } from "../entity";
 import { state_data } from "../entity/state_data";
-import { PrameterizedQueries } from "../utility/resusableFun";
+import { PrameterizedQueries, PrameterizedQueriesWithExtraQueries } from "../utility/resusableFun";
 import { Equal } from "typeorm";
+import { DISTRICT_OFFICER_LOGIN, PHCO_OFFICER_LOGIN, TALUKA_OFFICER_LOGIN } from "../utility/constants";
 
 @Service()
 export class AdminRepo {
@@ -125,40 +126,40 @@ export class AdminRepo {
         }
     };
     async getAllOrders(data) {
-            const { codes, type } = data;
-            try {
-                if (type == "district_officer") {
-                    if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
-                    let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
-                    if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
-    
-                    let query = 'exec districtLogin_all_count @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
-                    let getParamsData = PrameterizedQueries(codes);
-                    let result = await AppDataSource.query(query, getParamsData);
-                    return result;
-                } else if (type == "taluka") {
-                    if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
-                    let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
-                    if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
-    
-                    let query = 'exec talukaLogin_allCount @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
-                    let getParamsData = PrameterizedQueries(codes);
-                    let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
-                    return result;
-                } else if (type == 'phco') {
-                    if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
-                    let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
-                    if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
-    
-                    let query = 'exec phcoLogin_allCount @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
-                    let getParamsData = PrameterizedQueries(codes);
-                    let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
-                    return result;
-                } else {
-                    let query = `exec get_all_count`;
-                    let result = await AppDataSource.getRepository(master_data).query(query);
-                    return result;
-                }
+        const { codes, type } = data;
+        try {
+            if (type == "district_officer") {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec districtLogin_all_count @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.query(query, getParamsData);
+                return result;
+            } else if (type == "taluka") {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec talukaLogin_allCount @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else if (type == 'phco') {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+
+                let query = 'exec phcoLogin_allCount @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
+                let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else {
+                let query = `exec get_all_count`;
+                let result = await AppDataSource.getRepository(master_data).query(query);
+                return result;
+            }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -248,7 +249,7 @@ export class AdminRepo {
     async getUpdatedData(data) {
         try {
             let masterData = await AppDataSource.getRepository(master_data);
-            let result = await masterData.find({ where: { sub_centre_code: data.code }});
+            let result = await masterData.find({ where: { sub_centre_code: data.code } });
             (result || []).map(async obj => {
                 var temp: master_data = Object.assign({}, obj);
                 temp.refractionist_name = data?.refractionist_name;
@@ -286,7 +287,7 @@ export class AdminRepo {
             temp.ngo_gov = data.ngo_gov
             temp.multiple = 'Yes';
             delete result?.id;
-            let findData = {...result, ...temp};
+            let findData = { ...result, ...temp };
             await masterData.save(findData);
             return {};
         } catch (e) {
@@ -377,9 +378,9 @@ export class AdminRepo {
                 return result;
             } else {
                 let query = `exec stateLogin_OtherReports @0,@1`;
-                const length = await AppDataSource.getRepository(other_benf_data).count({where : {applicationStatus: 'Completed'}});
+                const length = await AppDataSource.getRepository(other_benf_data).count({ where: { applicationStatus: 'Completed' } });
                 let result = await AppDataSource.getRepository(other_benf_data).query(query, [skip, limit]);
-                return {total : length, result};
+                return { total: length, result };
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
@@ -452,7 +453,7 @@ export class AdminRepo {
         const { code, row } = data;
         try {
             let masterData = await AppDataSource.getRepository(master_data);
-            let uniqueData = await masterData.find({where: {sub_centre_code: code}});
+            let uniqueData = await masterData.find({ where: { sub_centre_code: code } });
             uniqueData?.map(async (obj) => {
                 let findData = await masterData.findOneBy({ user_unique_id: obj.user_unique_id });
                 let finalData = {
@@ -613,23 +614,23 @@ export class AdminRepo {
 
 
     async uniqueDistricts(data) {
-        const {district, taluka, phc} = data;
+        const { district, taluka, phc } = data;
         try {
-            if(district){
+            if (district) {
                 return await AppDataSource.getRepository(master_data).
-                query(`select distinct taluka from master_data where district='${district}'`);
-            } else if(taluka){
+                    query(`select distinct taluka from master_data where district='${district}'`);
+            } else if (taluka) {
                 return await AppDataSource.getRepository(master_data).
-                query(`select distinct health_facility from master_data where taluka='${taluka}'`);
-                
-            } else if(phc){
+                    query(`select distinct health_facility from master_data where taluka='${taluka}'`);
+
+            } else if (phc) {
                 return await AppDataSource.getRepository(master_data).
-                query(`select distinct sub_centre from master_data where health_facility='${phc}'`);
-                
+                    query(`select distinct sub_centre from master_data where health_facility='${phc}'`);
+
             } else {
                 return await AppDataSource.getRepository(master_data).
-                  createQueryBuilder('entity').select('DISTINCT ("district")')
-                  .getRawMany();
+                    createQueryBuilder('entity').select('DISTINCT ("district")')
+                    .getRawMany();
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
@@ -638,11 +639,33 @@ export class AdminRepo {
     }
 
     async searchData(data) {
-        const {district, taluka, phco, sub_centre, date, status, type} = data;
-        if(!district && !taluka && !phco && !sub_centre && !date && !status) return {code: 422, message: "Give Mandatory Fields."}
+        const { loginType, district, taluka, phco, sub_centre, date, status, type } = data;
         try {
+            if (loginType == TALUKA_OFFICER_LOGIN) {
+                let query = `exec talukaLogin_SecondaryReportsFilterWise @0,@1,@2,@3,@4,@5,@6`;
+                return await AppDataSource.query(query, [taluka, phco, sub_centre, date[0], date[1], status, type]);
+            } else if (loginType == PHCO_OFFICER_LOGIN) {
+                let query = `exec phcoLogin_OtherReportsFilterWise @0,@1,@2,@3,@4,@5`;
+                return await AppDataSource.query(query, [phco, sub_centre, date[0], date[1], status, type]);
+            }
             let query = `exec stateLogin_OtherReportsFilterWise @0,@1,@2,@3,@4,@5,@6,@7`;
-            return await AppDataSource.getRepository(phco_data).query(query, [district, taluka, phco, sub_centre, date[0], date[1], status, type]);
+            return await AppDataSource.query(query, [district, taluka, phco, sub_centre, date[0], date[1], status, type]);
+        } catch (e) {
+            Logger.error("userRepo => postUser", e)
+            return e;
+        }
+    };
+
+    async searchDataStateAndDistrictWise(data) {
+        const { loginType, type, district, taluka } = data;
+        try {
+            if (loginType == DISTRICT_OFFICER_LOGIN) {
+                let query = `exec districtLogin_DistrictAndTalukaWiseReports @0,@1,@2`;
+                return await AppDataSource.query(query, [type, district, taluka]);
+            } else {
+                let query = `exec StateAndDistrictWiseReports @0,@1`;
+                return await AppDataSource.query(query, [district, type]);
+            }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
@@ -650,14 +673,27 @@ export class AdminRepo {
     }
 
     async eachDataIdWise(data) {
-        const {type, id} = data;
-        if(!type && !id) return {code: 422, message: "Give Mandatory Fields."}
+        const { type, id } = data;
+        if (!type && !id) return { code: 422, message: "Give Mandatory Fields." }
         try {
             let query = `exec reportsFilterIdWise @0,@1`;
             return await AppDataSource.getRepository(phco_data).query(query, [type, id]);
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
-        }
-    }
+        };
+    };
+
+    async refractionistReports(data) {
+        const { loginType, codes, dates, isToday } = data;
+        if (!loginType && !codes) return { code: 422, message: "Give Mandatory Fields." }
+        try {
+            let query = `exec loginWise_refractionistReports @0,@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12,@13`;
+            let queryParams = PrameterizedQueriesWithExtraQueries(codes, loginType, dates, isToday);
+            return await AppDataSource.query(query, queryParams);
+        } catch (e) {
+            Logger.error("userRepo => refractionistReports", e)
+            return e;
+        };
+    };
 };

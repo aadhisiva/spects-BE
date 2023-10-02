@@ -76,6 +76,9 @@ import {
     multiple: string;
 
     @Column({default: null})
+    token: string;
+
+    @Column({default: null})
     otp: string;
   
     @CreateDateColumn()

@@ -1,0 +1,107 @@
+
+* {
+  background-color: #e5a002;
+}
+.msg-icn {
+    display: inline-block;
+    position: relative;
+    padding:  10px 20px;
+    color: black;
+    box-sizing: border-box;
+    max-width: 300px;
+    min-width: 80px;
+    min-height: 38px;
+  }
+  .msg-icn:before {
+    content: "";
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    border: 1px solid #e5a002;
+    border-radius: 2px;
+    box-sizing: border-box;
+    clip-path: polygon(0% 105%, 0% 0%, 105% 0%, 105% 105%, 43px 105%, 43px 80%, 21px 80%, 21px 105%);
+  }
+  .msg-icn:after {
+    content: "";
+    position: absolute;
+    display: block;
+    width: 25px;
+    height: 20px;
+    background: #e5a002;
+    top: calc(100% - 1px);
+    left: 20px;
+    box-sizing: border-box;
+    clip-path: polygon(0 0, 0% 100%, 100% 0%, calc(100% - 2px) 0, 1px calc(100% - 2px), 1px 0);
+  }
+  .arrow {
+      margin:0;
+      padding:0;
+      display:flex;
+      height: 100vh;
+      justify-content:center;
+      align-items:center;
+      font-family:sans-serif;
+      .indicator{
+        position:relative;
+        width:50px;
+        height:50px;
+  
+        transform:rotate(45deg);
+        span{
+          position:absolute;
+          left:0;
+          top:0;
+          width:100%;
+          height:100%;
+          box-sizing:border-box;
+          border:none;
+          border-bottom:3px solid #fff;
+          border-right:3px solid #fff;
+          animation:animate 1s linear infinite;
+          &:nth-child(1){
+            top:-30px;
+            left:-30px;
+            animation-delay:0s;
+          }
+          &:nth-child(2){
+            top:-15px;
+            left:-15px;
+            animation-delay:0.2s;
+          }
+          &:nth-child(3){
+            top:0;
+            left:0;
+            animation-delay:0.4s;
+          }
+          &:nth-child(4){
+            top:15px;
+            left:15px;
+            animation-delay:0.6s;
+          }
+          &:nth-child(5){
+            top:30px;
+            left:30px;
+            animation-delay:0.8s;
+          }
+        }
+      }
+    }
+    @keyframes animate{
+      0%{
+        border-color:#fff;
+        transform:translate(0,0);
+      }
+       20%{
+        border-color:#fff;
+         transform:translate(15px,15px);
+      }
+       20.1%,100%{
+        border-color:#ffd64a;
+      }
+    }
+  
+   
