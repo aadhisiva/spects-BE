@@ -233,4 +233,28 @@ export class KutumbaDetails {
             return e;
         }
     }
+    async demoAuthEkycProcess(data) {
+        let dateTime = new Date().getFullYear() + "" + new Date().getTime();
+        try {
+            let bodyData = {
+                deptCode: process.env.DEMO_DEP_CODE,
+                integrationKey: process.env.DEMO_INTEGRATION_KEY,
+                integrationPassword: process.env.DEMO_INTEGRATION_PASS,
+                txnNo: dateTime,
+                txnDateTime: dateTime,
+                serviceCode: process.env.DEMO_SERVICE_CODE,
+                responseRedirectURL: process.env.EKYC_REDIRECTION_URL
+            };
+            let res = await ekyc_post_axis(process.env.DEMO_EKYC_URL, bodyData);
+            await trackExternalLogs(Tables.EKYC, 'DEMO AUTH', "after", "", res.data, data?.user_id);
+            if (!res?.data?.Token) {
+                return 422;
+            } else {
+                return `${process.env.DEMO_EKYC_TOKEN_URL}?key=${process.env.DEMO_INTEGRATION_KEY}&token=${res?.data?.Token}`
+            }
+        } catch (e) {
+            return e;
+        }
+    }
+
 };

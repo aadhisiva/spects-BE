@@ -32,7 +32,12 @@ export const PHONE_REGESTERED = "Phone Number Already Registered With Four Membe
 export const DISTRICT_OFFICER_LOGIN = 'district_officer';
 export const TALUKA_OFFICER_LOGIN = 'taluka';
 export const PHCO_OFFICER_LOGIN = 'phco';
+export const REFRACTIONIST_LOGIN = 'refractionist';
 
 export const DELIVERED = 'delivered';
 export const READY_TO_DELIVER = 'ready_to_deliver';
 export const ORDER_PENDING = 'order_pending';
+
+
+export const API_VERSION_ISSUE = 'New Update Available. Please Contact Technical Team.';
+

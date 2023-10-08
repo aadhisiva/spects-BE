@@ -21,6 +21,21 @@ export class ResusableFunctions {
         return sendSingleSms;
     };
 
+    async sendOtpAsSingleSmsInKannada(mobile_no, otp) {
+        let text = `ಕನ್ನಡಕ ವಿತರಣಾ ತಂತ್ರಾಂಶಕ್ಕೆ ಲಾಗಿನ್ ಆಗಲು ${otp} ಒಟಿಪಿ ಅನ್ನು ಬಳಸಿ .
+        -MOBKAR`;
+        let sendSingleSms = await this.ResusableFunctions.sendSingleSMS(
+            process.env.SMS_USERNAME,
+            process.env.SMS_PASSWORD,
+            process.env.SMS_SENDER_ID,
+            text,
+            mobile_no,
+            process.env.SMS_API_SERVICE_KEY,
+            process.env.TEMPLATE_ID_KANNADA
+        );
+        return sendSingleSms;
+    };
+
     async sendOtpAsReadyForDeliver(mobile_no, otp, order_number) {
         let text = `${otp} is the OTP for Spectacle Delivery for the order number ${order_number}
         -National Health mission ,GOK.`;

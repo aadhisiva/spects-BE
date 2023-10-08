@@ -106,7 +106,7 @@ export class OtherBenfServices {
         public ResusableFunctions: ResusableFunctions,
         public KutumbaFunction: KutumbaDetails
     ) { }
-
+/* Demo Auth Apis */
     async directEkycForAadhar(data) {
         try {
             const { user_id } = data;
@@ -119,6 +119,52 @@ export class OtherBenfServices {
                 txnDateTime
             }
             let urlResult = await this.KutumbaFunction.ekycVerification(bodyData);
+            if (urlResult == 422) return { code: 422, message: EKYC_ACCESS_DENIED };
+            return { uniqueId: txnDateTime, Token: urlResult };
+        } catch (e) {
+            return Logger.error("Other service ##directEkycForAadhar", e);
+        }
+    };
+    async addDataAfterEkyc(data) {  
+        try {
+            const { uniqueId, user_id } = data;
+            if (!uniqueId && !user_id) return { code: 422, message: "UniqueId And UserID Field Required" };
+            let pullEkycData: any = await this.OtherBenfRepo.FetchDataFromEkyc(uniqueId);
+            if (!pullEkycData) return { code: 422, message: EKYC_ACCESS_DENIED };
+            if (pullEkycData?.finalStatus == 'F') return { code: 422, message: pullEkycData.errorMessage, data: {} };
+            if(pullEkycData?.ekyc_state !== 'Karnataka') return {code: 422, message: "You Are The Out Of Karnataka."};
+
+            // checking actual table
+            let originBenfData: any = await this.OtherBenfRepo.findDataOfLatestBenfData(pullEkycData?.aadhaarHash);
+            if (originBenfData?.applicationStatus == COMPLETED && originBenfData?.ekyc_check == "Y") return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
+
+            let getData = await this.KutumbaFunction.KutumbaDetailsFrom({ aadhar_no: pullEkycData.aadhaarHash });
+            let mapDataOtherBenfWise = mappingNewBenfData(pullEkycData, getData);
+            mapDataOtherBenfWise.user_id = user_id;
+
+            await this.OtherBenfRepo.savingNewData(mapDataOtherBenfWise);
+            let fetchData = await this.OtherBenfRepo.fetchRcUserData(mapDataOtherBenfWise);
+            let check = fetchData.scheme_eligability == "Yes";
+            let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(mapDataOtherBenfWise);
+            return { message: EKYC_SUCCESS, errorInfo: !check ? 
+                `You Are Not Eligible For ${findMasterDistrict.district}. Application Can Not Be Processed.` : "", data: fetchData };
+        } catch (e) {
+            return Logger.error("Other service ##addDataAfterEkyc", e);
+        }
+    };
+
+    /* Demo Auth Apis Ended*/
+
+    async addDemoAuthWithVersion() {
+        try {
+            let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
+            let uniqueId = new Date().getTime();
+            let bodyData = {
+                name: "EDCS",
+                uniqueId,
+                txnDateTime
+            }
+            let urlResult = await this.KutumbaFunction.demoAuthEkycProcess(bodyData);
             if (urlResult == 422) return { code: 422, message: EKYC_ACCESS_DENIED };
             return { uniqueId: txnDateTime, Token: urlResult };
         } catch (e) {
@@ -162,7 +208,7 @@ export class OtherBenfServices {
     //         return Logger.error("Other service ##addDataAfterEkyc", e);
     //     }
     // };
-    async addDataAfterEkyc(data) {  
+    async saveDemoAuthResponse(data) {  
         try {
             const { uniqueId, user_id } = data;
             if (!uniqueId && !user_id) return { code: 422, message: "UniqueId And UserID Field Required" };
@@ -197,7 +243,7 @@ export class OtherBenfServices {
             if (!benf_unique_id && !user_id) return { code: 422, message: "ID And User ID Fields Required" };
             let originBenfData = await this.OtherBenfRepo.getLatestWithID(benf_unique_id);
             if(!originBenfData){
-                data.order_number = await createUniqueIdBasedOnCodes(data.user_id);
+                data.order_number = await createUniqueIdBasedOnCodes(data.user_id, 'other');
                 data.type = "otherBenificiary";
                 data.details = "aadhar";
                 data.status = ORDER_PENDING;
@@ -353,7 +399,7 @@ export class OtherBenfServices {
             if (!benf_unique_id && !user_id) return { code: 422, message: "ID And User ID Fields Required" };
             let originBenfData = await this.OtherBenfRepo.getLatestWithID(benf_unique_id);
             if(!originBenfData){
-            data.order_number = await createUniqueIdBasedOnCodes(data.user_id);
+            data.order_number = await createUniqueIdBasedOnCodes(data.user_id, 'other');
             data.type = "otherBenificiary";
             data.details = "rc";
             data.status = ORDER_PENDING;

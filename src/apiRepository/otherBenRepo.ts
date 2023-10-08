@@ -589,8 +589,8 @@ export class OtherBenfRepo {
                             'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
                     .where("other.user_id = :id and other.applicationStatus = :applicationStatus", {id: user_id, applicationStatus: COMPLETED})
                     .orderBy('other.benf_unique_id')
-                    .skip(skip)
-                    .take(take)
+                    .skip(+skip)
+                    .take(+take)
                     .getRawMany();
                 return {
                     take: take,

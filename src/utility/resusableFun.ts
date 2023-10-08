@@ -109,6 +109,16 @@ export const PrameterizedQueries = (data) => {
     slicedData.unshift(data[i]?.code);
   }
   return slicedData;
+};
+
+export const PrameterizedQueriesForRefractionist = (data) => {
+  let givenData: number = data?.length;
+  let arrayLength = ['', '', '', '', '', '', '', '', '', '','', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
+  let slicedData = arrayLength.slice(givenData);
+  for (var i = 0; i < givenData; i++) {
+    slicedData.unshift(data[i]?.code);
+  }
+  return slicedData;
 };;
 
 export const PrameterizedQueriesWithExtraQueries = (data, loginType, dates, today) => {
@@ -173,9 +183,10 @@ export const checkEligableCandiadate = async (first, second) => {
     return (macthString >= 50) ? "Yes" : "No";
   } else {
     let newDistricts = NewDistrictMatch.newDistrictName.toLowerCase();
+    let oldDistricts = NewDistrictMatch.newDistrictName.toLowerCase();
     let macthStringWithNewDistrict = matchStrings(newDistricts, second);
-    let first = matchStrings(newDistricts, second);
-    return ((macthStringWithNewDistrict >= 50 || first >= 50)) ? "Yes" : "No";
+    let macthStringWithOldDistrict = matchStrings(oldDistricts, second);
+    return ((macthStringWithNewDistrict >= 50 || macthStringWithOldDistrict >= 50)) ? "Yes" : "No";
   }
 }
 

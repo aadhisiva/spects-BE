@@ -234,7 +234,6 @@ export class SchoolServices {
         try {
             if (!data?.school_id || !data?.user_id) return { code: 422, message: "school id, user id and is is mandatory." };
                 let result = await this.SchoolRepo.getAllDelivered(data);
-                console.log("Res",result)
                 return (result?.length == 0) ? { code: 422, message: "Data not exists." } : result;
         } catch (e) {
             Logger.error("schoolservice ===== getAllDelivered", e);

@@ -96,11 +96,12 @@ app.use(morgan('dev'));
 
 // add masters data
 app.post("/add", async (req, res) => {
-  let data = await checkEligableCandiadate("Bijapur".toLowerCase(), 'Bijapur'.toLowerCase());
+  // let data = await checkEligableCandiadate("Kalaburgi".toLowerCase(), 'Kalaburgi'.toLowerCase());
+  let data = await createUniqueIdBasedOnCodes('2023_8395', 'school')
   res.send(data)
 });
 
-// console.log(decrypt("nabiI+7vhT7x/P6ofKw7hOLtAwZAHdpGG+ks4tJzoUTu0WgUdm1C3LUe0IS/ItmBxzNU2Zm93kcVB989aAFeZGiinrk/3Om8xfXstM1xHh4QkbIfL3ux5oG+pCWyQsZiz9H8uk7ZIQcv/+3yk6JkYZn93sx3+Ny+VlYU4w1KGfybCBN2Zpl1f9VUx8I15ZHscqDlBuTQWP1aTVQgAbjIap7FrFKUA0DYd3bMZWL0D4VI1UdNzVxqPlPajjgbN6Jh+h64KN+WnSNNby4uX9dVts4gUINdP3hYh2o8NQ0zs86xRLqfpa/T5UemTXMFslFYvRdMs0k+lPvarlxV9qVi5/LG7cUWofzDip+OBaMUC2f01cD7BB3fV32WJfi5Qx2V"))
+console.log(decrypt("8EWwZqahNyH3OowTjCvsL8g06HLN8EcVqdvPS2WtMit7aLpzW9C/I4PraT1QacNSZTJvCaa/ld4xyHwLdHsMRXCoeGL9H+e0cWD75IkIzii/7+FW9+IDrMj0EeEjHr8aMxe2QYbaCuvcvpulVGHJaZ3Y83JR4yY+gcv7tonWBhI7T60rFjQue3AvuemLaDRDnqd9yQ3MpUlx0D2vJIZ8bc3JcSZNsSaISu7MyU0i1HsKowR8EuuFvu1PIJcgGJL9op8XoAowLze6FseijU1ZKboCfx3gxI5Kz5y10otCMno="))
 
 // controllers for routes
 app.use("/login", UserController);

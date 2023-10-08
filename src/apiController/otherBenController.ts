@@ -16,19 +16,50 @@ import { other_benf_data } from '../entity/other_benf_data';
 import { encryptData } from '../utility/resusableFun';
 import { rc_data } from '../entity/rc_data';
 import { authTokenAndVersion, requestAndResonseTime } from '../utility/middlewares';
+import { API_VERSION_ISSUE } from '../utility/constants';
 
 const router = express.Router();
 
 const otherBenfServices = Container.get(OtherBenfServices);
 /* new version apis for other beneficiary */
 
-router.post("/addAadharData", requestAndResonseTime, async (req: Request, res: Response) => {
+/* New demo Auth Apis */
+router.post("/addDemoAuthWithVersion", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
-        let body = req.body;
-        let result: any = await otherBenfServices.directEkycForAadhar(body);
+        let result: any = await otherBenfServices.addDemoAuthWithVersion();
         let response = (result.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/saveDemoAuthResponse", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = req.body;
+        let result: any = await otherBenfServices.saveDemoAuthResponse(body);
+        let response = (result?.code || result instanceof Error) ?
+            { code: 422, status: "Failed", message: result.message, errorInfo: "", data: {} } :
+            { code: 200, status: "Success", message: result.message, errorInfo: result.errorInfo, data: encryptData(result.data) };
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+/* New demo Auth Apis Ended*/
+
+router.post("/addAadharData", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = req.body;
+        // let result: any = await otherBenfServices.directEkycForAadhar(body);
+        // let response = (result.code || result instanceof Error) ?
+        //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+        //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        let response = { code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({}) }
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -53,8 +84,8 @@ router.post("/addDataAfterEkyc", requestAndResonseTime, async (req: Request, res
         let body = req.body;
         let result: any = await otherBenfServices.addDataAfterEkyc(body);
         let response = (result?.code || result instanceof Error) ?
-                {code: 422, status: "Failed", message: result.message, errorInfo: "", data: {}} :
-                {code: 200, status: "Success", message: result.message, errorInfo: result.errorInfo, data: encryptData(result.data)};
+            { code: 422, status: "Failed", message: result.message, errorInfo: "", data: {} } :
+            { code: 200, status: "Success", message: result.message, errorInfo: result.errorInfo, data: encryptData(result.data) };
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -77,17 +108,18 @@ router.post("/updateAadharData", requestAndResonseTime, async (req: Request, res
 router.post("/addRcData", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let body = new rc_data(req.body);
-        let result: any = await otherBenfServices.addRcDataAndGet(body);
-        let response = (result?.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        // let result: any = await otherBenfServices.addRcDataAndGet(body);
+        // let response = (result?.code || result instanceof Error) ?
+        //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+        //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        let response = { code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({}) }
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-router.post("/addRcDataWithVersion",authTokenAndVersion , requestAndResonseTime, async (req: Request, res: Response) => {
+router.post("/addRcDataWithVersion", authTokenAndVersion, requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let body = new rc_data(req.body);
         let result: any = await otherBenfServices.addRcDataAndGet(body);
@@ -158,8 +190,8 @@ router.post("/ekycCheck", requestAndResonseTime, async (req: Request, res: Respo
         let body = new other_benf_data(req.body);
         let result: any = await otherBenfServices.ekycResutltCheck(body);
         let response = (result?.code || result instanceof Error) ?
-                {code: 422, status: "Failed", message: result.message, errorInfo: "", data: {}} :
-                {code: 200, status: "Success", message: result.message, errorInfo: result.errorInfo, data: encryptData(result.data)};
+            { code: 422, status: "Failed", message: result.message, errorInfo: "", data: {} } :
+            { code: 200, status: "Success", message: result.message, errorInfo: result.errorInfo, data: encryptData(result.data) };
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -270,10 +302,11 @@ router.post("/validateWithNewNumber", requestAndResonseTime, async (req: Request
 router.post("/add_datails_adr", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
-        let result = await otherBenfServices.addKutumbaAaadharDetails(data);
-        let response = (result?.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        // let result = await otherBenfServices.addKutumbaAaadharDetails(data);
+        // let response = (result?.code || result instanceof Error) ?
+        //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+        //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        let response = { code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({}) }
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -312,10 +345,11 @@ router.post("/get_rc_data", requestAndResonseTime, async (req: Request, res: Res
 router.post("/add_details_rc", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
-        let result = await otherBenfServices.addKutumbaRcDetails(data);
-        let response = (result?.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        // let result = await otherBenfServices.addKutumbaRcDetails(data);
+        // let response = (result?.code || result instanceof Error) ?
+        //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+        //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        let response = { code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({}) }
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -385,7 +419,7 @@ router.post("/get_bef_status", requestAndResonseTime, async (req: Request, res: 
         let result = await otherBenfServices.getBenificaryStatus(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), result);
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -517,8 +551,8 @@ async function checkData(data, res) {
 router.post("/ekyc_response", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
-        setTimeout( async () => {
-                let result  = await otherBenfServices.getEkycDataFromEkyc(data);
+        setTimeout(async () => {
+            let result = await otherBenfServices.getEkycDataFromEkyc(data);
             res.send(result)
         }, 10000)
     } catch (e) {

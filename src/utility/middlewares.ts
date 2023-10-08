@@ -4,6 +4,7 @@ import { state_data } from "../entity/state_data";
 import { trackExternalLogs } from "./trackerLog";
 import jwt from "jsonwebtoken";
 import Logger from "./winstonLogger";
+import { API_VERSION_ISSUE } from "./constants";
 
 const sessionUserData = async (data) => {
   try {
@@ -68,7 +69,7 @@ export async function authTokenAndVersion(req, res, next) {
   if(!authVersion) return  res.status(422).send({code: 422, message: "Api Version Header Missing."})
   let getVersion = await AppDataSource.getRepository(apiVersions).find();
   let checkVersion = authVersion == getVersion[0].version;
-  if(!checkVersion) return res.status(422).send({code: 422, message: "Api Version Not Matching"});
+  if(!checkVersion) return res.status(422).send({code: 422, message: API_VERSION_ISSUE});
   // const token = authHeader && authHeader.split(" ")[1];
   // if (token == null) return res.status(401).send({code: 401, message: "UnAuthorized User"}); // Return 401 if no token
 

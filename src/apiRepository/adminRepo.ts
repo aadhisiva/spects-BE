@@ -3,9 +3,9 @@ import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
 import { district_data, master_data, other_benf_data, phco_data, sub_centre_data, taluka_data } from "../entity";
 import { state_data } from "../entity/state_data";
-import { PrameterizedQueries, PrameterizedQueriesWithExtraQueries } from "../utility/resusableFun";
+import { PrameterizedQueries, PrameterizedQueriesForRefractionist, PrameterizedQueriesWithExtraQueries } from "../utility/resusableFun";
 import { Equal } from "typeorm";
-import { DISTRICT_OFFICER_LOGIN, PHCO_OFFICER_LOGIN, TALUKA_OFFICER_LOGIN } from "../utility/constants";
+import { DISTRICT_OFFICER_LOGIN, PHCO_OFFICER_LOGIN, REFRACTIONIST_LOGIN, TALUKA_OFFICER_LOGIN } from "../utility/constants";
 
 @Service()
 export class AdminRepo {
@@ -31,12 +31,12 @@ export class AdminRepo {
                 let result = await sub_centre.findOneBy({ mobile_number: data.mobile_number });
                 let finalData = { ...result, ...{ otp: data.otp } };
                 return await sub_centre.save(finalData);
-            } else if (data.type == "subcenter") {
-                let sub_centre = AppDataSource.getRepository(sub_centre_data);
-                let result = await sub_centre.findOneBy({ mobile_number: data.mobile_number });
+            } else if (data.type == REFRACTIONIST_LOGIN) {
+                let sub_centre = AppDataSource.getRepository(master_data);
+                let result = await sub_centre.findOneBy({ refractionist_mobile: data.mobile_number });
                 let finalData = { ...result, ...{ otp: data.otp } };
                 return await sub_centre.save(finalData);
-            }
+            } 
             return AppDataSource.getRepository(district_data)
         } catch (e) {
             Logger.error("adminRepo => addDistrictsData", e)
@@ -64,6 +64,11 @@ export class AdminRepo {
                 let result = await AppDataSource.getRepository(phco_data).findOneBy({ mobile_number: data.mobile_number });
                 if (!result) return 422;
                 let distinct = await AppDataSource.query(`select distinct code, is_initial_login, unique_name from phco_data where mobile_number='${data.mobile_number}'`);
+                return { ...result, ...{ codes: distinct } };
+            } else if (data.type == REFRACTIONIST_LOGIN) {
+                let result = await AppDataSource.getRepository(master_data).findOneBy({ refractionist_mobile: data.mobile_number });
+                if (!result) return 422;
+                let distinct = await AppDataSource.query(`select distinct unique_id as code, sub_centre as unique_name from master_data where refractionist_mobile='${data.mobile_number}'`);
                 return { ...result, ...{ codes: distinct } };
             }
             return AppDataSource.getRepository(district_data)
@@ -153,6 +158,15 @@ export class AdminRepo {
 
                 let query = 'exec phcoLogin_allCount @0,@1,@2,@3,@4,@5,@6,@7,@8,@9';
                 let getParamsData = PrameterizedQueries(codes);
+                let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
+                return result;
+            } else if (type == REFRACTIONIST_LOGIN) {
+                if (!Array.isArray(codes)) return { code: 422, message: "Give valid inputs." };
+                let matchArray = (codes).find(obj => /^[0-9_]*$/.test(obj?.code) === false);
+                if (matchArray !== undefined) return { code: 422, message: "Give valid inputs." }
+                let query = `exec refractionistLogin_counts @0,@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12,@13,
+                            @14,@15,@16,@17,@18,@19,@20,@21,@22,@23,@24`;
+                let getParamsData = PrameterizedQueriesForRefractionist(codes);
                 let result = await AppDataSource.getRepository(master_data).query(query, getParamsData);
                 return result;
             } else {
@@ -635,8 +649,8 @@ export class AdminRepo {
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
-        }
-    }
+        };
+    };
 
     async searchData(data) {
         const { loginType, district, taluka, phco, sub_centre, date, status, type } = data;
@@ -647,13 +661,16 @@ export class AdminRepo {
             } else if (loginType == PHCO_OFFICER_LOGIN) {
                 let query = `exec phcoLogin_OtherReportsFilterWise @0,@1,@2,@3,@4,@5`;
                 return await AppDataSource.query(query, [phco, sub_centre, date[0], date[1], status, type]);
+            } else if(loginType == REFRACTIONIST_LOGIN){
+                let query = `exec refractionistLogin_SecondaryReportsFilterWise @0,@1,@2`;
+                return await AppDataSource.query(query, [sub_centre, status, type]);
             }
             let query = `exec stateLogin_OtherReportsFilterWise @0,@1,@2,@3,@4,@5,@6,@7`;
             return await AppDataSource.query(query, [district, taluka, phco, sub_centre, date[0], date[1], status, type]);
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
-        }
+        };
     };
 
     async searchDataStateAndDistrictWise(data) {
@@ -669,7 +686,7 @@ export class AdminRepo {
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
-        }
+        };
     }
 
     async eachDataIdWise(data) {

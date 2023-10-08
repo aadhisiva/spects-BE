@@ -16,6 +16,7 @@ import { school_data, students_data } from '../entity';
 import { encryptData } from '../utility/resusableFun';
 import path from 'path';
 import { authTokenAndVersion, requestAndResonseTime } from '../utility/middlewares';
+import { API_VERSION_ISSUE } from '../utility/constants';
 
 const router = express.Router();
 
@@ -25,10 +26,11 @@ const schoolServices = Container.get(SchoolServices);
 router.post("/add_school", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new school_data(req.body);
-        let result = await schoolServices.getSchoolDataByOutSource(data);
-        let response = (result?.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        // let result = await schoolServices.getSchoolDataByOutSource(data);
+        // let response = (result?.code || result instanceof Error) ?
+        //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+        //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        let response = {code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({})}
         res.send(response);
     } catch (e) {
         Logger.error("SchoolController => ", e);
@@ -144,10 +146,11 @@ router.post("/update_school_byid", requestAndResonseTime, async (req: Request, r
 router.post("/add_student", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new students_data(req.body);
-        let result = await schoolServices.getStudentDataByOutSource(data);
-        let response = (result?.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+        // let result = await schoolServices.getStudentDataByOutSource(data);
+        // let response = (result?.code || result instanceof Error) ?
+        //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+        //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
+            let response = {code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({})}
         res.send(response);
     } catch (e) {
         Logger.error("SchoolController => ", e);
