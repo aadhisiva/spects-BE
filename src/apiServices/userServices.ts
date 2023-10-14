@@ -21,7 +21,7 @@ export class UserServices {
             let checkMobile = await this.UserRepo.getUserByMobile(mobile_no);
             if (checkMobile?.length == 0) return { code: 422, message: "Data not exists." };
             let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(checkMobile[0]?.user_mobile_number, data.otp);
-            await this.ResusableFunctions.sendOtpAsSingleSmsInKannada(checkMobile[0]?.user_mobile_number, data.otp);
+            await this.ResusableFunctions.sendSmsInKannadaUnicode(checkMobile[0]?.user_mobile_number, data.otp);
             await this.UserRepo.updateOtp(data);
             if (sendSingleSms !== 200) return { code: 422, message: RESPONSEMSG.OTP_FAILED };
             return { message: RESPONSEMSG.OTP, data: checkMobile };
@@ -53,7 +53,7 @@ export class UserServices {
             let updatedData = await this.UserRepo.getUserByMobileObj(data.user_mobile_number);
             if(!updatedData) return {code : 422, message: "Data not exists."};
             let sendSingleSms = await this.ResusableFunctions.sendOtpAsSingleSms(updatedData.refractionist_mobile, data.otp)
-            await this.ResusableFunctions.sendOtpAsSingleSmsInKannada(updatedData.refractionist_mobile, data.otp);
+            await this.ResusableFunctions.sendSmsInKannadaUnicode(updatedData.refractionist_mobile, data.otp);
             await this.UserRepo.updateOtp(data);
             if (sendSingleSms !== 200) return { code: 422, message: RESPONSEMSG.OTP_FAILED };
             return { message: RESPONSEMSG.OTP };

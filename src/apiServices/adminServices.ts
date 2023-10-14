@@ -144,4 +144,8 @@ export class AdminServices {
         return this.AdminRepo.refractionistReports(data)
     };
 
+    async makeNullToValues(data) {
+        return this.AdminRepo.makeNullToValues(data)
+    };
+
 };

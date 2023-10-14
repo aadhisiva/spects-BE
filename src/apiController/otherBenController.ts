@@ -10,13 +10,13 @@
 import { Container } from 'typedi';
 import express, { Request, Response } from 'express';
 import Logger from '../utility/winstonLogger';
-import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
+import { HttpStatusMessages, RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from '../utility/statusCodes';
 import { OtherBenfServices } from '../apiServices/otherBenServices';
 import { other_benf_data } from '../entity/other_benf_data';
 import { encryptData } from '../utility/resusableFun';
 import { rc_data } from '../entity/rc_data';
 import { authTokenAndVersion, requestAndResonseTime } from '../utility/middlewares';
-import { API_VERSION_ISSUE } from '../utility/constants';
+import { API_VERSION_ISSUE, NO } from '../utility/constants';
 
 const router = express.Router();
 
@@ -26,10 +26,11 @@ const otherBenfServices = Container.get(OtherBenfServices);
 /* New demo Auth Apis */
 router.post("/addDemoAuthWithVersion", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
-        let result: any = await otherBenfServices.addDemoAuthWithVersion();
-        let response = (result.code || result instanceof Error) ?
-            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+        let data = req.body;
+        let result: any = await otherBenfServices.addDemoAuthWithVersion(data);
+        let response = (result?.code || result instanceof Error) ?
+        { code: 422, status: HttpStatusMessages.FAILED, message: result.message || RESPONSEMSG.UNPROCESS, errorInfo: "Error", ekycRequired: NO, data: {} } :
+        { code: 200, status: HttpStatusMessages.SUCCESS, message: RESPONSEMSG.RETRIVE_SUCCESS,  errorInfo : result.errorInfo || "", ekycRequired: result.ekycRequired, data: result?.data };
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -50,15 +51,24 @@ router.post("/saveDemoAuthResponse", requestAndResonseTime, async (req: Request,
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
+
+router.post("/ekycProcessWithKutumba", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let body = req.body;
+        let result: any = await otherBenfServices.ekycProcessWithKutumba(body);
+        let response = (result?.code || result instanceof Error) ?
+        { code: 422, status: HttpStatusMessages.FAILED, message: result.message || RESPONSEMSG.UNPROCESS, errorInfo: "Error", ekycRequired: NO, data: {} } :
+        { code: 200, status: HttpStatusMessages.SUCCESS, message: RESPONSEMSG.RETRIVE_SUCCESS, errorInfo: result.errorInfo, ekycRequired: result.ekycRequired, data: encryptData(result.data) };
+        res.send(response);
+    } catch (e) {
+        Logger.error("OtherBenficiary => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
 /* New demo Auth Apis Ended*/
 
 router.post("/addAadharData", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
-        let body = req.body;
-        // let result: any = await otherBenfServices.directEkycForAadhar(body);
-        // let response = (result.code || result instanceof Error) ?
-        //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-        //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         let response = { code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({}) }
         res.send(response);
     } catch (e) {
@@ -107,11 +117,6 @@ router.post("/updateAadharData", requestAndResonseTime, async (req: Request, res
 });
 router.post("/addRcData", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
-        let body = new rc_data(req.body);
-        // let result: any = await otherBenfServices.addRcDataAndGet(body);
-        // let response = (result?.code || result instanceof Error) ?
-        //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-        //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         let response = { code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({}) }
         res.send(response);
     } catch (e) {

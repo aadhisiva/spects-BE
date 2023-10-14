@@ -206,6 +206,21 @@ export class OtherBenfRepo {
         }
     }
 
+    async fetchRcUserDataWIthBenfId(data: otherBeneficiary) {
+        try {
+            const { user_id, benf_unique_id } = data;
+            let checkDistrict = await AppDataSource.getRepository(otherBeneficiary).createQueryBuilder('child')
+                .select(['child.benf_name as benf_name','child.benf_unique_id as benf_unique_id', 'child.dob as dob', 'child.age as age', 'child.taluk as taluk',
+                    'child.district as district', 'child.phone_number as phone_number', 'child.category as category',
+                    'child.caste as caste', 'child.address as address', 'child.scheme_eligability as scheme_eligability'])
+                .where("child.user_id= :user and child.benf_unique_id= :id", { user: user_id, id: benf_unique_id }).getRawOne();
+            return checkDistrict;
+        } catch (e) {
+            Logger.error("otherBenfRepo => fetchRcUserData", e)
+            return e;
+        }
+    };
+
     async fetchRcUserData(data: otherBeneficiary) {
         try {
             const { user_id, benf_unique_id } = data;

@@ -1,7 +1,7 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
-import { other_benf_data, school_data, students_data } from "../entity";
+import { master_data, other_benf_data, school_data, students_data } from "../entity";
 import { Between, Equal, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { createUniqueIdBasedOnCodes } from "../utility/resusableFun";
 import { COMPLETED, DELIVERED, ORDER_PENDING, READY_TO_DELIVER } from "../utility/constants";
@@ -116,7 +116,7 @@ export class SchoolRepo {
                     .select(['child.school_unique_id as school_unique_id', 'child.school_id as school_id', 'child.school_institute_name as school_institute_name',
                         'child.school_incharge_contact_no as school_incharge_contact_no', 'child.taluk as taluk', 'child.district as district'])
                     .where("child.user_id= :user_id", { user_id: data?.user_id })
-                    .orderBy('other.student_unique_id')
+                    .orderBy('child.school_unique_id')
                     .skip(skip)
                     .take(take)
                     .getRawMany();
@@ -180,7 +180,7 @@ export class SchoolRepo {
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
                     .where("child.user_id= :user_id and child.school_id= :school_id and applicationStatus= :appStatus",
                         { user_id: user_id, school_id: school_id, appStatus: COMPLETED })
-                    .orderBy('other.student_unique_id')
+                    .orderBy('child.student_unique_id')
                     .skip(skip)
                     .take(take)
                     .getRawMany();
@@ -263,7 +263,7 @@ export class SchoolRepo {
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
                     .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and applicationStatus= :appStatus",
                         { user_id: data?.user_id, school_id: data?.school_id, status: DELIVERED, appStatus: COMPLETED })
-                    .orderBy('other.student_unique_id')
+                    .orderBy('child.student_unique_id')
                     .skip(skip)
                     .take(take)
                     .getRawMany();
@@ -309,14 +309,18 @@ export class SchoolRepo {
 
     async updateStudentData(data: students_data) {
         try {
-            let studentDataBase = AppDataSource.getRepository(students_data);
+            const { user_id } = data;
+            let studentDataBase = await AppDataSource.getRepository(students_data);
+            let refractionistData = await AppDataSource.getRepository(master_data).findOneBy({unique_id: user_id});
             let result = await studentDataBase.findOneBy({ school_id: data.school_id, user_id: data.user_id, sats_id: data.sats_id });
             if (!result) {
                 return 422;
             } else {
                 data.status = ORDER_PENDING;
                 data.type = "school";
-                data.applicationStatus = "Completed"
+                data.applicationStatus = "Completed";
+                data.refractionist_name = refractionistData.refractionist_name;
+                data.refractionist_mobile = refractionistData.refractionist_mobile
                 let finalData = { ...result, ...data }
                 return await studentDataBase.save(finalData);
             }

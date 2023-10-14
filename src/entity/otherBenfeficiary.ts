@@ -160,6 +160,12 @@ export class otherBeneficiary {
     @Column({ default: "N" })
     ekyc_check: string;
 
+    @Column({ default: "" })
+    refractionist_name: string;
+
+    @Column({ default: "" })
+    refractionist_mobile: string;
+
     @CreateDateColumn()
     created_at: Date;
 

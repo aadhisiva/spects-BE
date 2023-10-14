@@ -132,6 +132,12 @@ export class students_data {
   @Column({ default: '' })
   near_vision_va: string;
 
+  @Column({ default: "" })
+  refractionist_name: string;
+
+  @Column({ default: "" })
+  refractionist_mobile: string;
+
   @CreateDateColumn()
   created_at: Date;
 

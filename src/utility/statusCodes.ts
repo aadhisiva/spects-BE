@@ -16,7 +16,8 @@ export const HttpStatusCodes = {
 export const ResponseCode = {
   SUCCESS: "SUCCESS",
   UNPROCESS: "UNPROCESS",
-  EXCEPTION: "EXCEPTION"
+  EXCEPTION: "EXCEPTION",
+  FAILED: "FAILED"
 };
 
 export const HttpStatusMessages = {

@@ -5,7 +5,7 @@ import { district_data, master_data, other_benf_data, phco_data, sub_centre_data
 import { state_data } from "../entity/state_data";
 import { PrameterizedQueries, PrameterizedQueriesForRefractionist, PrameterizedQueriesWithExtraQueries } from "../utility/resusableFun";
 import { Equal } from "typeorm";
-import { DISTRICT_OFFICER_LOGIN, PHCO_OFFICER_LOGIN, REFRACTIONIST_LOGIN, TALUKA_OFFICER_LOGIN } from "../utility/constants";
+import { DISTRICT_OFFICER_LOGIN, PHCO_OFFICER_LOGIN, REFRACTIONIST_LOGIN, TALUKA_OFFICER_LOGIN, YES } from "../utility/constants";
 
 @Service()
 export class AdminRepo {
@@ -36,7 +36,7 @@ export class AdminRepo {
                 let result = await sub_centre.findOneBy({ refractionist_mobile: data.mobile_number });
                 let finalData = { ...result, ...{ otp: data.otp } };
                 return await sub_centre.save(finalData);
-            } 
+            }
             return AppDataSource.getRepository(district_data)
         } catch (e) {
             Logger.error("adminRepo => addDistrictsData", e)
@@ -661,7 +661,7 @@ export class AdminRepo {
             } else if (loginType == PHCO_OFFICER_LOGIN) {
                 let query = `exec phcoLogin_OtherReportsFilterWise @0,@1,@2,@3,@4,@5`;
                 return await AppDataSource.query(query, [phco, sub_centre, date[0], date[1], status, type]);
-            } else if(loginType == REFRACTIONIST_LOGIN){
+            } else if (loginType == REFRACTIONIST_LOGIN) {
                 let query = `exec refractionistLogin_SecondaryReportsFilterWise @0,@1,@2`;
                 return await AppDataSource.query(query, [sub_centre, status, type]);
             }
@@ -708,6 +708,73 @@ export class AdminRepo {
             let query = `exec loginWise_refractionistReports @0,@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12,@13`;
             let queryParams = PrameterizedQueriesWithExtraQueries(codes, loginType, dates, isToday);
             return await AppDataSource.query(query, queryParams);
+        } catch (e) {
+            Logger.error("userRepo => refractionistReports", e)
+            return e;
+        };
+    };
+
+    async makeNullToValues(data) {
+        const { type, district, taluka, phc, refractionist, code } = data;
+        if (!type && !code) return { code: 422, message: "Give Mandatory Fields." }
+        try {
+            if (type == DISTRICT_OFFICER_LOGIN) {
+                if (taluka == YES) {
+                    return await AppDataSource.getRepository(taluka_data).delete({ code });
+                } else if (phc == YES) {
+                    return await AppDataSource.getRepository(phco_data).delete({ code });
+                } else if (refractionist == YES) {
+                    let refUpdate = await AppDataSource.getRepository(master_data);
+                    let find = await refUpdate.find({ where: { sub_centre_code: code } });
+                    (find || []).map(async (obj) => {
+                        let newData = { ...obj, ...{ refractionist_name: '', refractionist_mobile: '' } };
+                        await refUpdate.save(newData);
+                    })
+                    return {};
+                }
+                return { code: 422, status: "Failed", message: "Give Valid Values." };
+            } else if (type == TALUKA_OFFICER_LOGIN) {
+                if (phc == YES) {
+                    return await AppDataSource.getRepository(phco_data).delete({ code });
+                } else if (refractionist == YES) {
+                    let refUpdate = await AppDataSource.getRepository(master_data);
+                    let find = await refUpdate.find({ where: { sub_centre_code: code } });
+                    (find || []).map(async (obj) => {
+                        let newData = { ...obj, ...{ refractionist_name: '', refractionist_mobile: '' } };
+                        await refUpdate.save(newData);
+                    })
+                    return {};
+                }
+                return { code: 422, status: "Failed", message: "Give Valid Values." };
+            } else if (type == PHCO_OFFICER_LOGIN) {
+                if (refractionist == YES) {
+                    let refUpdate = await AppDataSource.getRepository(master_data);
+                    let find = await refUpdate.find({ where: { sub_centre_code: code } });
+                    (find || []).map(async (obj) => {
+                        let newData = { ...obj, ...{ refractionist_name: '', refractionist_mobile: '' } };
+                        await refUpdate.save(newData);
+                    })
+                    return {};
+                }
+                return { code: 422, status: "Failed", message: "Give Valid Values." };
+            } else {
+                if (district == YES) {
+                    return await AppDataSource.getRepository(district_data).delete({ code });
+                } else if (taluka == YES) {
+                    return await AppDataSource.getRepository(taluka_data).delete({ code });
+                } else if (phc == YES) {
+                    return await AppDataSource.getRepository(phco_data).delete({ code });
+                } else if (refractionist == YES) {
+                    let refUpdate = await AppDataSource.getRepository(master_data);
+                    let find = await refUpdate.find({ where: { sub_centre_code: code } });
+                    (find || []).map(async (obj) => {
+                        let newData = { ...obj, ...{ refractionist_name: '', refractionist_mobile: '' } };
+                        await refUpdate.save(newData);
+                    })
+                    return {};
+                }
+                return { code: 422, status: "Failed", message: "Give Valid Values." };
+            };
         } catch (e) {
             Logger.error("userRepo => refractionistReports", e)
             return e;

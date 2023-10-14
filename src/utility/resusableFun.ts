@@ -3,7 +3,8 @@ import cryptoJs from "crypto";
 import { AppDataSource } from "../dbConfig/mysql";
 import { master_data } from "../entity/master_data";
 import { Equal } from "typeorm";
-import { newDistricts } from "../entity";
+import { newDistricts, other_benf_data } from "../entity";
+import { convertAadharToSha256Hex } from "./kutumbaDetails";
 
 let method = "aes-256-cbc";
 
@@ -183,10 +184,36 @@ export const checkEligableCandiadate = async (first, second) => {
     return (macthString >= 50) ? "Yes" : "No";
   } else {
     let newDistricts = NewDistrictMatch.newDistrictName.toLowerCase();
-    let oldDistricts = NewDistrictMatch.newDistrictName.toLowerCase();
+    let oldDistricts = NewDistrictMatch.oldDistrictName.toLowerCase();
     let macthStringWithNewDistrict = matchStrings(newDistricts, second);
     let macthStringWithOldDistrict = matchStrings(oldDistricts, second);
     return ((macthStringWithNewDistrict >= 50 || macthStringWithOldDistrict >= 50)) ? "Yes" : "No";
   }
+};
+
+export const aadharToHash = async (no) => {
+  return await convertAadharToSha256Hex(no);
 }
 
+
+export const mappingKutmbaDetails = async (kutumbaData, type, data) => {
+  let reqBody = new other_benf_data({});
+    reqBody.age = kutumbaData?.MBR_DOB ? getAgeFromBirthDate(kutumbaData.MBR_DOB) : 0;
+    reqBody.caste = kutumbaData.MBR_CASTE || "";
+    reqBody.rc_no = type == "rc" ? data?.rc_no : "";
+    reqBody.category = kutumbaData.MBR_CASTE_CATEGORY || "";
+    reqBody.father_name = kutumbaData.MBR_NPR_FATHER_NAME || "";
+    reqBody.education_id = kutumbaData.MBR_EDUCATION_ID || "";
+    reqBody.district = kutumbaData?.LGD_DISTRICT_Name || "";
+    reqBody.taluk = kutumbaData?.LGD_TALUK_Name || "";
+    reqBody.lgd_taluka = kutumbaData?.LGD_TALUK_CODE || "";
+    reqBody.lgd_district = kutumbaData?.LGD_DISTRICT_CODE || "";
+    reqBody.address = kutumbaData.MBR_ADDRESS || "";
+    reqBody.dob = kutumbaData.MBR_DOB || "";
+    reqBody.aadhar_no = kutumbaData?.MBR_HASH_AADHAR;
+    reqBody.gender = kutumbaData.MBR_GENDER || "";
+    reqBody.kutumba_phone_number = kutumbaData.MBR_MOBILE_NO || "";
+    reqBody.phone_number = kutumbaData.MBR_MOBILE_NO || "";
+    reqBody.benf_name =  kutumbaData.MEMBER_NAME_ENG || "";
+    return reqBody;
+};

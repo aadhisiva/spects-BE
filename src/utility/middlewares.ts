@@ -64,7 +64,7 @@ export function authenticateToken(req, res, next) {
 export async function authTokenAndVersion(req, res, next) {
 
   // Read the JWT access token from the request header
-  const authHeader = req.headers["authorization"];
+  // const authHeader = req.headers["authorization"];
   const authVersion = req.headers["apiversion"];
   if(!authVersion) return  res.status(422).send({code: 422, message: "Api Version Header Missing."})
   let getVersion = await AppDataSource.getRepository(apiVersions).find();

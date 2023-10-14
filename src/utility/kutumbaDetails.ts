@@ -234,15 +234,15 @@ export class KutumbaDetails {
         }
     }
     async demoAuthEkycProcess(data) {
-        let dateTime = new Date().getFullYear() + "" + new Date().getTime();
+        const {name, uniqueId, txnDateTime} = data;
         try {
             let bodyData = {
+                BeneficiaryName: name,
                 deptCode: process.env.DEMO_DEP_CODE,
                 integrationKey: process.env.DEMO_INTEGRATION_KEY,
                 integrationPassword: process.env.DEMO_INTEGRATION_PASS,
-                txnNo: dateTime,
-                txnDateTime: dateTime,
-                serviceCode: process.env.DEMO_SERVICE_CODE,
+                txnNo: txnDateTime,
+                txnDateTime: txnDateTime,
                 responseRedirectURL: process.env.EKYC_REDIRECTION_URL
             };
             let res = await ekyc_post_axis(process.env.DEMO_EKYC_URL, bodyData);

@@ -21,20 +21,20 @@ export class ResusableFunctions {
         return sendSingleSms;
     };
 
-    async sendOtpAsSingleSmsInKannada(mobile_no, otp) {
-        let text = `ಕನ್ನಡಕ ವಿತರಣಾ ತಂತ್ರಾಂಶಕ್ಕೆ ಲಾಗಿನ್ ಆಗಲು ${otp} ಒಟಿಪಿ ಅನ್ನು ಬಳಸಿ .
-        -MOBKAR`;
-        let sendSingleSms = await this.ResusableFunctions.sendSingleSMS(
+    async sendSmsInKannadaUnicode(mobile_no, otp) {
+        let text = `ಅಪ್ಲಿಕೇಶನ್ ಲಾಗಿನ್ ಒಟಿಪಿ ${otp}.
+        -NHM, Gok`;
+        let sendSingleSms = await this.ResusableFunctions.sendSingleUnicode(
             process.env.SMS_USERNAME,
             process.env.SMS_PASSWORD,
-            process.env.SMS_SENDER_ID,
+            process.env.SMS_SENDER_ID,  
             text,
             mobile_no,
             process.env.SMS_API_SERVICE_KEY,
             process.env.TEMPLATE_ID_KANNADA
         );
         return sendSingleSms;
-    };
+    }
 
     async sendOtpAsReadyForDeliver(mobile_no, otp, order_number) {
         let text = `${otp} is the OTP for Spectacle Delivery for the order number ${order_number}
@@ -51,22 +51,4 @@ export class ResusableFunctions {
         );
         return sendSingleSms;
     };
-
-    async sendOtpAsSingleUnicode(mobile_no, otp) {
-        let text = `ಆತ್ಮೀಯ ${otp} ರವರೇ,
-        ಅರ್ಜಿಸಂಖ್ಯೆ ನಿಮಗೆ ಪಂಪ್ ಮತ್ತು ಮೋಟಾರ್‌ನ ಪೂರೈಕೆ ಮತ್ತು ಸ್ಥಾಪನೆಗಾಗಿ ವಿನಂತಿಯನ್ನು ಕಳುಹಿಸಿದ್ದಾರೆ.
-        ಇಂದ,
-        ಗಂಗಾ ಕಲ್ಯಾಣ
-        ಕರ್ನಾಟಕ ಸರ್ಕಾರ  MOBKAR`;
-        let sendSingleSms = await this.ResusableFunctions.sendSingleUnicode(
-            process.env.SMS_USERNAME,
-            process.env.SMS_PASSWORD,
-            process.env.SMS_SENDER_ID,  
-            text,
-            mobile_no,
-            process.env.SMS_API_SERVICE_KEY,
-            process.env.TEMPLATE_ID_UNICODE
-        );
-        return sendSingleSms;
-    }
 }

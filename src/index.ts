@@ -19,8 +19,7 @@ import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
 import AdminController from "./apiController/adminController";
-import NewBeneficiary from "./apiController/otherBenfControllerNew";
-import { checkEligableCandiadate, createUniqueIdBasedOnCodes, decrypt } from './utility/resusableFun';
+import { aadharToHash, checkEligableCandiadate, createUniqueIdBasedOnCodes, decrypt } from './utility/resusableFun';
 import sessions from "express-session";
 import { TypeormStore } from "typeorm-store";
 import { Session } from './entity';
@@ -96,12 +95,14 @@ app.use(morgan('dev'));
 
 // add masters data
 app.post("/add", async (req, res) => {
+  let {no} = req.body;
   // let data = await checkEligableCandiadate("Kalaburgi".toLowerCase(), 'Kalaburgi'.toLowerCase());
-  let data = await createUniqueIdBasedOnCodes('2023_8395', 'school')
-  res.send(data)
+  // let data = await createUniqueIdBasedOnCodes('2023_8395', 'school')
+  let aadhar = await aadharToHash(no)
+  res.send(aadhar)
 });
 
-console.log(decrypt("8EWwZqahNyH3OowTjCvsL8g06HLN8EcVqdvPS2WtMit7aLpzW9C/I4PraT1QacNSZTJvCaa/ld4xyHwLdHsMRXCoeGL9H+e0cWD75IkIzii/7+FW9+IDrMj0EeEjHr8aMxe2QYbaCuvcvpulVGHJaZ3Y83JR4yY+gcv7tonWBhI7T60rFjQue3AvuemLaDRDnqd9yQ3MpUlx0D2vJIZ8bc3JcSZNsSaISu7MyU0i1HsKowR8EuuFvu1PIJcgGJL9op8XoAowLze6FseijU1ZKboCfx3gxI5Kz5y10otCMno="))
+// console.log(decrypt("8EWwZqahNyH3OowTjCvsL60ykP/Z2eQIiL4+CRWakmdaZ+WHXh0HNyFb0VnUeYHt/ul+MbQZC0WeW0qP5q1XpVTvSJXNgE7tUj1SQIXH5whnE31sO/iTAL39hHxCNlLIZAuraBb9G7qjKGoRrfp+Rvkp83pAxXxvRblr6gcuRmvtzeLpbfwgTGb3e9ARzuYj5bvG3apTby7jmuuAlrwVZSwz/8eBSfLuplt8maAvkVRyrc6mmySpqZg5HKA6Kjd07Vj2RG6Zmkh5/amlEbPztWDgNoka0vNVej43yFkGnp0="));
 
 // controllers for routes
 app.use("/login", UserController);
@@ -109,7 +110,6 @@ app.use("/school", SchoolController);
 app.use("/other", OtherBenfController);
 app.use("/edcs", EkycController);
 app.use("/admin", AdminController);
-app.use("/beneficiary", NewBeneficiary);
 
 
 // we are adding port connection here
