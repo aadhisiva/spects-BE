@@ -255,27 +255,15 @@ export class SchoolRepo {
         try {
             const { pagination, take, skip, user_id, school_id } = data;
             if (pagination == 'Yes') {
-                let pending_count = await AppDataSource.getRepository(students_data).countBy({ user_id: user_id, school_id: school_id, status: ORDER_PENDING, applicationStatus: COMPLETED });
-                let ready_count = await AppDataSource.getRepository(students_data).countBy({ user_id: user_id, school_id: school_id, status: READY_TO_DELIVER, applicationStatus: COMPLETED });
-                let delivered_count = await AppDataSource.getRepository(students_data).countBy({ user_id: user_id, school_id: school_id, status: DELIVERED, applicationStatus: COMPLETED });
-                let totalData = await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
+                return await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
                     .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
                     .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and applicationStatus= :appStatus",
-                        { user_id: data?.user_id, school_id: data?.school_id, status: DELIVERED, appStatus: COMPLETED })
+                        { user_id: user_id, school_id: school_id, status: DELIVERED, appStatus: COMPLETED })
                     .orderBy('child.student_unique_id')
                     .skip(skip)
                     .take(take)
                     .getRawMany();
-                return {
-                    take: take,
-                    skip: skip,
-                    total: Number(pending_count) + Number(ready_count) + Number(delivered_count),
-                    pending_count: pending_count,
-                    ready_count: ready_count,
-                    delivered_count: delivered_count,
-                    totalData
-                };
             } else {
                 return await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
                     .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',

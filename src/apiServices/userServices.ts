@@ -14,7 +14,7 @@ export class UserServices {
     async postUser(data) {
         try {
             let sixDigitsOtp = generateOTP();
-            if (!data?.user_mobile_number) return { code: 422, message: "mobilenumber is mandatory." };
+            if (!data?.user_mobile_number) return { code: 422, message: "Mobile Number Not Provided." };
             if (data.user_mobile_number.length !== 10) return { code: 422, message: "Enter valid number." };
             data.otp = sixDigitsOtp;
             let mobile_no = data?.user_mobile_number;
@@ -32,9 +32,23 @@ export class UserServices {
 
     async validateUser(data) {
         try {
-            if (!data?.user_mobile_number || !data?.otp) return { code: 422, message: "mobilenumber and otp is mandatory." };
+            if (!data?.user_mobile_number || !data?.otp) return { code: 422, message: "Mobile Number And Otp Not Provided." };
             if (data?.user_mobile_number.length !== 10) return { code: 422, message: "Enter valid number." };
             let result = await this.UserRepo.getUserByMobileObj(data.user_mobile_number);
+            let checkOtp = data?.otp == result.otp;
+            if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
+            return { message: RESPONSEMSG.VALIDATE, data: result?.res };
+        } catch (e) {
+            Logger.error("UserServices ====== validateUser", e);
+            return e;
+        }
+    };
+
+    async validateUserSec(data) {
+        try {
+            if (!data?.user_mobile_number || !data?.otp) return { code: 422, message: "Mobile Number And Otp Not Provided." };
+            if (data?.user_mobile_number.length !== 10) return { code: 422, message: "Enter valid number." };
+            let result = await this.UserRepo.getUserByMobileObjSec(data.user_mobile_number);
             let checkOtp = data?.otp == result.otp;
             if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
             return { message: RESPONSEMSG.VALIDATE, data: result?.res };

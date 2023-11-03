@@ -269,17 +269,14 @@ router.post("/update_student", requestAndResonseTime, async (req: Request, res: 
     }
 });
 // filters
-// router.post("/filters", requestAndResonseTime, async (req: Request, res: Response) => {
-//     try {
-//         let data = req.body;
-//         let result = await schoolServices.filterByValuesWise(data);
-//         let response = (result?.code || result instanceof Error) ?
-//             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-//             ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), result.data);
-//         res.send(response);
-//     } catch (e) {
-//         Logger.error("SchoolController => ", e);
-//         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
-//     }
-// });
+router.post("/allExternalApis", requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let data = req.body;
+        let result = await schoolServices.allExternalApis(data);
+        res.send(result);
+    } catch (e) {
+        Logger.error("SchoolController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
 export default router;

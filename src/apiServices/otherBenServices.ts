@@ -10,7 +10,7 @@ import { RESPONSEMSG } from "../utility/statusCodes";
 import { rc_data } from "../entity/rc_data";
 import Logger from "../utility/winstonLogger";
 import { ekyc_data } from "../entity";
-import { ACCESS_DENIED, COMPLETED, EKYC_ACCESS_DENIED, EKYC_SUCCESS, KUTUMBA_ACCESS_DENIED, NO, ORDER_PENDING, PHONE_REGESTERED, YES } from "../utility/constants";
+import { AADHAR_PROCESS, ACCESS_DENIED, COMPLETED, EKYC_ACCESS_DENIED, EKYC_SUCCESS, KUTUMBA_ACCESS_DENIED, NO, ORDER_PENDING, OTHER_BENEFICIARY, PHONE_REGESTERED, YES } from "../utility/constants";
 
 const spectclesAPiReusetData = async (data, getData, type) => {
     let reqBody = new other_benf_data({});
@@ -33,28 +33,6 @@ const spectclesAPiReusetData = async (data, getData, type) => {
     return reqBody;
 };
 
-
-
-// const mappingNewBenfData = (mapData: ekyc_data, getData) => {
-//     let reqBody = new other_benf_data({});
-//     reqBody.age = mapData.ekyc_dob ? getAgeFromBirthDateToEkyc(mapData.ekyc_dob) : 0;
-//     reqBody.caste = getData?.MBR_CASTE || "";
-//     reqBody.category = getData.MBR_CASTE_CATEGORY || "";
-//     reqBody.father_name = mapData?.ekyc_co || "";
-//     reqBody.education_id = getData?.MBR_EDUCATION_ID || "";
-//     reqBody.district = getData?.LGD_DISTRICT_Name || "";
-//     reqBody.taluk = getData?.LGD_TALUK_Name || "";
-//     reqBody.address = mapData?.ekyc_dist + " " + mapData?.ekyc_vtc + " " + mapData?.ekyc_street + " " + mapData?.ekyc_house + " " + mapData?.ekyc_loc + "," + mapData?.ekyc_pc || "";
-//     reqBody.dob = mapData?.ekyc_dob || "";
-//     reqBody.lgd_taluka = getData?.LGD_TALUK_CODE || "";
-//     reqBody.lgd_district = getData?.LGD_DISTRICT_CODE || "";
-//     reqBody.aadhar_no = mapData?.aadhaarHash;
-//     reqBody.gender = mapData?.ekyc_gender || "";
-//     reqBody.phone_number = getData?.MBR_MOBILE_NO || "";
-//     reqBody.benf_name = mapData?.ekyc_name || "";
-//     reqBody.benf_unique_id = mapData?.txnNo;
-//     return reqBody;
-// };
 
 const mappingNewBenfData = (mapData: ekyc_data, getData) => {
     let getOneArray = getData[0];
@@ -116,9 +94,7 @@ export class OtherBenfServices {
             if (!benfName) return { code: 422, message: "BenfName Not Provided." };
             let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
             let originBenfData: any = await this.OtherBenfRepo.findDataOfLatestBenfData(aadharHash);
-            if (originBenfData?.applicationStatus == COMPLETED
-                && originBenfData?.ekyc_check == "Y"
-            ) return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
+            if (originBenfData?.applicationStatus == COMPLETED) return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
             let body = { aadhar_no: aadharHash };
             let getKutumbaData = await this.KutumbaFunction.KutumbaDetailsFrom(body);
             if (getKutumbaData !== 422) {
@@ -127,14 +103,22 @@ export class OtherBenfServices {
                 if (checkEducationId) return { code: 422, message: `Your Already Applied In School With Order Number ${checkEducationId.order_number}.` };
                 kutumbaData.benf_unique_id = txnDateTime // creating uninque id
                 kutumbaData.user_id = user_id; // adding user id
-                await this.OtherBenfRepo.savingNewData(kutumbaData); // saving dummy table -> other_beneficiary
-                let fetchData = await this.OtherBenfRepo.fetchRcUserDataWIthBenfId(kutumbaData);
-                let check = fetchData.scheme_eligability == "Yes";
-                let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(kutumbaData);
-                return {
-                    ekycRequired: NO, errorInfo: !check ?
-                        `You Are Not Eligible For ${findMasterDistrict.district}. Application Can Not Be Processed.` : "", data: fetchData
-                };
+                let newData = { ...kutumbaData, ...data };
+                newData.benf_name = data.benfName;
+                newData.aadhar_no = data.aadharHash;
+                newData.type = OTHER_BENEFICIARY;
+                newData.details = AADHAR_PROCESS;
+                newData.status = ORDER_PENDING;
+                newData.applicationStatus = COMPLETED;
+                newData.order_number = await createUniqueIdBasedOnCodes(newData?.user_id, 'other');
+                newData.ekyc_check = 'Kutumba';
+                let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(newData);
+                newData.refractionist_name = findMasterDistrict.refractionist_name;
+                newData.refractionist_mobile = findMasterDistrict.refractionist_mobile;
+                let dummyBenfRes = await this.OtherBenfRepo.savingNewData(newData); // saving dummy table -> other_beneficiary
+                if(dummyBenfRes?.scheme_eligability !== "Yes") return { code: 422, message:  `You Are Not Eligible For ${findMasterDistrict.district}. Application Can Not Be Processed.`};
+                await this.OtherBenfRepo.saveOriginalBenf(newData);
+                return { message: "Data Saved SuccessFully", ekycRequired: NO,  data: {} };
             } else {
                 let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
                 let uniqueId = new Date().getTime();
@@ -151,6 +135,48 @@ export class OtherBenfServices {
             return Logger.error("Other service ##directEkycForAadhar", e);
         }
     };
+    async saveDemoAuthResponse(data) {
+        try {
+            const { uniqueId, user_id, district } = data;
+            if (!uniqueId && !user_id) return { code: 422, message: "UniqueId And UserID Not Provided." };
+            if (!district) return { code: 422, message: "District Not Provided." };
+            let pullDemoAuthData: any = await this.OtherBenfRepo.fetchDemoAuthEkyc(uniqueId);
+            if (!pullDemoAuthData) return { code: 422, message: EKYC_ACCESS_DENIED };
+            if (pullDemoAuthData?.finalStatus == 'F') return { code: 422, message: pullDemoAuthData.aadhaarDemoAuthError, data: {} };
+
+            // checking actual table
+            let originBenfData: any = await this.OtherBenfRepo.findDataOfLatestBenfData(pullDemoAuthData?.aadhaarHash);
+            if (originBenfData?.applicationStatus == COMPLETED && originBenfData?.ekyc_check == "Y") return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
+            let checkaAdharHash = pullDemoAuthData?.aadhaarHash?.toLowerCase() ==  data?.aadharHash?.toLowerCase();
+            if(!checkaAdharHash) return {code: 422, message: "AadharHash Matching Failed."};
+            if(!(pullDemoAuthData?.nameMatchStatus == "S") || !(pullDemoAuthData?.nameMatchScore > 50)){
+                return {code: 422, message: "As Per Aadhar, Your Name Has Not Matched."};
+            };
+            data.benf_name = data.benfName;
+            data.aadhar_no = data.aadharHash;
+            data.benf_unique_id = new Date().getFullYear() + "" + new Date().getTime();
+            data.type = OTHER_BENEFICIARY;
+            data.details = AADHAR_PROCESS;
+            data.status = ORDER_PENDING;
+            data.applicationStatus = COMPLETED;
+            data.order_number = await createUniqueIdBasedOnCodes(data?.user_id, 'other');
+            data.ekyc_check = 'DEMO';
+            let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(data);
+            data.refractionist_name = findMasterDistrict.refractionist_name;
+            data.refractionist_mobile = findMasterDistrict.refractionist_mobile;
+            let dummyBenfRes = await this.OtherBenfRepo.savingNewData(data); // saving dummy table -> other_beneficiary
+            if(dummyBenfRes?.scheme_eligability !== "Yes") {
+                return { code: 422, message:  `You Are Not Eligible For ${findMasterDistrict.district}. Application Can Not Be Processed.`};
+            };
+            await this.OtherBenfRepo.saveOriginalBenf(data);
+            return { message: "Data Saved SuccessFully.",  data: {} };
+        } catch (e) {
+            return Logger.error("Other service ##addDataAfterEkyc", e);
+        }
+    };
+    
+    
+    /* Demo Auth Apis Ended*/
     async ekycProcessWithKutumba(data) {
         const { aadharHash, user_id } = data;
         try {
@@ -158,21 +184,25 @@ export class OtherBenfServices {
             if (!aadharHash) return { code: 422, message: "AadharHash Not Provided." }
             let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
             let originBenfData: any = await this.OtherBenfRepo.findDataOfLatestBenfData(aadharHash);
-            if (originBenfData?.applicationStatus == COMPLETED
-                && originBenfData?.ekyc_check == "Y"
-            ) return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
+            if (originBenfData?.applicationStatus == COMPLETED) return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
             let body = { aadhar_no: aadharHash };
             let getKutumbaData = await this.KutumbaFunction.KutumbaDetailsFrom(body);
             if (getKutumbaData !== 422) {
                 let kutumbaData = await mappingKutmbaDetails(getKutumbaData[0], '', '');
                 let checkEducationId: any = await this.OtherBenfRepo.checkEducationId(kutumbaData.education_id);
                 if (checkEducationId) return { code: 422, message: `Your Already Applied In School With Order Number ${checkEducationId.order_number}.` };
+                
                 kutumbaData.benf_unique_id = txnDateTime // creating uninque id
                 kutumbaData.user_id = user_id; // adding user id
+                kutumbaData.ekyc_check = 'Kutumba'; // adding ekyc check
+
+                let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(kutumbaData);
+                kutumbaData.refractionist_name = findMasterDistrict.refractionist_name;
+                kutumbaData.refractionist_mobile = findMasterDistrict.refractionist_mobile;
                 await this.OtherBenfRepo.savingNewData(kutumbaData); // saving dummy table -> other_beneficiary
                 let fetchData = await this.OtherBenfRepo.fetchRcUserDataWIthBenfId(kutumbaData);
+                fetchData.phone_number= '';
                 let check = fetchData.scheme_eligability == "Yes";
-                let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(kutumbaData);
                 return {
                     ekycRequired: NO, errorInfo: !check ?
                         `You Are Not Eligible For ${findMasterDistrict.district}. Application Can Not Be Processed.` : "", data: fetchData
@@ -192,38 +222,6 @@ export class OtherBenfServices {
             return Logger.error("Other service ##directEkycForAadhar", e);
         }
     };
-
-    async saveDemoAuthResponse(data) {
-        try {
-            const { uniqueId, user_id } = data;
-            if (!uniqueId && !user_id) return { code: 422, message: "UniqueId And UserID Field Required" };
-            let pullEkycData: any = await this.OtherBenfRepo.FetchDataFromEkyc(uniqueId);
-            if (!pullEkycData) return { code: 422, message: EKYC_ACCESS_DENIED };
-            if (pullEkycData?.finalStatus == 'F') return { code: 422, message: pullEkycData.errorMessage, data: {} };
-            if (pullEkycData?.ekyc_state !== 'Karnataka') return { code: 422, message: "You Are The Out Of Karnataka." };
-
-            // checking actual table
-            let originBenfData: any = await this.OtherBenfRepo.findDataOfLatestBenfData(pullEkycData?.aadhaarHash);
-            if (originBenfData?.applicationStatus == COMPLETED && originBenfData?.ekyc_check == "Y") return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
-
-            let getData = await this.KutumbaFunction.KutumbaDetailsFrom({ aadhar_no: pullEkycData.aadhaarHash });
-            let mapDataOtherBenfWise = mappingNewBenfData(pullEkycData, getData);
-            mapDataOtherBenfWise.user_id = user_id;
-
-            await this.OtherBenfRepo.savingNewData(mapDataOtherBenfWise);
-            let fetchData = await this.OtherBenfRepo.fetchRcUserData(mapDataOtherBenfWise);
-            let check = fetchData.scheme_eligability == "Yes";
-            let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(mapDataOtherBenfWise);
-            return {
-                message: EKYC_SUCCESS, errorInfo: !check ?
-                    `You Are Not Eligible For ${findMasterDistrict.district}. Application Can Not Be Processed.` : "", data: fetchData
-            };
-        } catch (e) {
-            return Logger.error("Other service ##addDataAfterEkyc", e);
-        }
-    };
-
-    /* Demo Auth Apis Ended*/
     async directEkycForAadhar(data) {
         try {
             const { user_id } = data;
@@ -258,6 +256,7 @@ export class OtherBenfServices {
             let getData = await this.KutumbaFunction.KutumbaDetailsFrom({ aadhar_no: pullEkycData.aadhaarHash });
             let mapDataOtherBenfWise = mappingNewBenfData(pullEkycData, getData);
             mapDataOtherBenfWise.user_id = user_id;
+            mapDataOtherBenfWise.ekyc_check = 'Y';
             let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(mapDataOtherBenfWise);
             mapDataOtherBenfWise.refractionist_name = findMasterDistrict.refractionist_name;
             mapDataOtherBenfWise.refractionist_mobile = findMasterDistrict.refractionist_mobile;

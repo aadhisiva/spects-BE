@@ -38,6 +38,9 @@ export const DELIVERED = 'delivered';
 export const READY_TO_DELIVER = 'ready_to_deliver';
 export const ORDER_PENDING = 'order_pending';
 
+export const OTHER_BENEFICIARY = 'otherBenificiary';
+export const AADHAR_PROCESS = 'aadhar';
+
 export const YES = 'Yes';
 export const NO = 'No';
 

@@ -16,3 +16,4 @@ export * from "./phco_data";
 export * from "./apiVersion";
 export * from "./otherBenfeficiary";
 export * from "./newDistricts";
+export * from "./demoAuth";

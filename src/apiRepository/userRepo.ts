@@ -20,13 +20,21 @@ export class UserRepo {
     async getUserByMobileObj(no) {
         try {
             let result = await AppDataSource.getRepository(master_data).findOneBy({ refractionist_mobile: no });
-            let data = await AppDataSource.getRepository(master_data).
-                createQueryBuilder('child').select('distinct child.health_facility', 'health_facility')
-                .where("child.refractionist_mobile =:id", {id: no})
-                .getRawMany();
             let version = await AppDataSource.getRepository(apiVersions).find();
             const token = jwt.sign({ user_id: result.refractionist_mobile }, process.env.USERFRONT_PUBLIC_KEY, { expiresIn: "12h", });
-            return {...result, ...{ res : { token: token, version: version[0].version }}};
+            return {...result, ...{ res : { token: token, version: version[0].version, loginDate: result?.updated_at }}};
+        } catch (e) {
+            Logger.error("userRepo => getUserByMobile", e)
+            return e;
+        }
+    };
+
+    async getUserByMobileObjSec(no) {
+        try {
+            let result = await AppDataSource.getRepository(master_data).findOneBy({ refractionist_mobile: no });
+            let version = await AppDataSource.getRepository(apiVersions).find();
+            const token = jwt.sign({ user_id: result.refractionist_mobile }, process.env.USERFRONT_PUBLIC_KEY, { expiresIn: "12h", });
+            return {...result, ...{ res : { token: token, version: version[0].version, loginDate: result?.updated_at }}};
         } catch (e) {
             Logger.error("userRepo => getUserByMobile", e)
             return e;

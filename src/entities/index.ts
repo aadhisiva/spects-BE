@@ -25,7 +25,8 @@ import {
     phco_data,
     apiVersions,
     otherBeneficiary,
-    newDistricts
+    newDistricts,
+    demoAuthResponse
 } from "../entity";
 
 export const entities = () => {
@@ -45,6 +46,7 @@ export const entities = () => {
         phco_data,
         apiVersions,
         otherBeneficiary,
-        newDistricts
+        newDistricts,
+        demoAuthResponse
     ]
 }

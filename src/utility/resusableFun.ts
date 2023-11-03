@@ -42,6 +42,37 @@ export const getAgeFromBirthDate = (dob) => {
   let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
   return age;
 };
+export const getAgeFromBirthDateMultipleScenario = (dob) => {
+  let currentDate: any = new Date();
+  let [dayM, monM, yearM] = dob.split("/");
+  if(dayM){
+    if(dayM.length > 2){
+      let [year, mon, day] = dob.split("/");
+      let originDate: any = new Date(`"${mon + "/" + day + "/" + year}"`);
+      var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
+      let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
+      return age;
+    }
+    let originDate: any = new Date(`"${monM + "/" + dayM + "/" + yearM}"`);
+    var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
+    let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
+    return age;
+  } else {
+    let [dayS, monS, yearS] = dob.split("-");
+    if(dayS.length > 2){
+      let [year, mon, day] = dob.split("-");
+      let originDate: any = new Date(`"${mon + "/" + day + "/" + year}"`);
+      var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
+      let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
+      return age;
+    } else{
+      let originDate: any = new Date(`"${monS + "/" + dayS + "/" + yearS}"`);
+      var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
+      let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
+      return age;
+    }
+  }
+};
 export const getAgeFromBirthDateToEkyc = (dob) => {
   let currentDate: any = new Date();
   let [day, mon, year] = dob.split("-");
@@ -198,7 +229,7 @@ export const aadharToHash = async (no) => {
 
 export const mappingKutmbaDetails = async (kutumbaData, type, data) => {
   let reqBody = new other_benf_data({});
-    reqBody.age = kutumbaData?.MBR_DOB ? getAgeFromBirthDate(kutumbaData.MBR_DOB) : 0;
+    reqBody.age = kutumbaData?.MBR_DOB ? getAgeFromBirthDateMultipleScenario(kutumbaData.MBR_DOB) : 0;
     reqBody.caste = kutumbaData.MBR_CASTE || "";
     reqBody.rc_no = type == "rc" ? data?.rc_no : "";
     reqBody.category = kutumbaData.MBR_CASTE_CATEGORY || "";

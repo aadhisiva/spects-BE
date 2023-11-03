@@ -251,4 +251,22 @@ export class SchoolServices {
             return e;
         }
     }
+
+    async allExternalApis(data: students_data) {
+        const {type, id } = data;
+        try {
+           if(type == 'school'){
+            let req = { sats_code: id }
+            return await this.KutumbaDetails.getSchoolDataFromExternal(req, "school");
+           } else if(type == 'child') {
+            let req = { satsCode: id }
+            return await this.KutumbaDetails.getSchoolDataFromExternal(req, "child");
+           } else if(type == "kutumba"){
+            return await this.KutumbaDetails.KutumbDetailsForPersonChecking(data);
+           }
+        } catch (e) {
+            Logger.error("schoolservice ===== allExternalApis", e);
+            return e;
+        }
+    }
 }

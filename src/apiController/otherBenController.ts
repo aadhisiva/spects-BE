@@ -29,8 +29,8 @@ router.post("/addDemoAuthWithVersion", requestAndResonseTime, async (req: Reques
         let data = req.body;
         let result: any = await otherBenfServices.addDemoAuthWithVersion(data);
         let response = (result?.code || result instanceof Error) ?
-        { code: 422, status: HttpStatusMessages.FAILED, message: result.message || RESPONSEMSG.UNPROCESS, errorInfo: "Error", ekycRequired: NO, data: {} } :
-        { code: 200, status: HttpStatusMessages.SUCCESS, message: RESPONSEMSG.RETRIVE_SUCCESS,  errorInfo : result.errorInfo || "", ekycRequired: result.ekycRequired, data: result?.data };
+        { code: 422, status: HttpStatusMessages.FAILED, message: result.message || RESPONSEMSG.UNPROCESS, ekycRequired: NO, data: {} } :
+        { code: 200, status: HttpStatusMessages.SUCCESS, message: result?.message || RESPONSEMSG.RETRIVE_SUCCESS, ekycRequired: result.ekycRequired, data: encryptData(result?.data) };
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -43,8 +43,8 @@ router.post("/saveDemoAuthResponse", requestAndResonseTime, async (req: Request,
         let body = req.body;
         let result: any = await otherBenfServices.saveDemoAuthResponse(body);
         let response = (result?.code || result instanceof Error) ?
-            { code: 422, status: "Failed", message: result.message, errorInfo: "", data: {} } :
-            { code: 200, status: "Success", message: result.message, errorInfo: result.errorInfo, data: encryptData(result.data) };
+            { code: 422, status: HttpStatusMessages.FAILED, message: result.message, data: {} } :
+            { code: 200, status: HttpStatusMessages.SUCCESS, message: result.message || RESPONSEMSG.INSERT_SUCCESS, data: encryptData(result.data) };
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -58,7 +58,7 @@ router.post("/ekycProcessWithKutumba", requestAndResonseTime, async (req: Reques
         let result: any = await otherBenfServices.ekycProcessWithKutumba(body);
         let response = (result?.code || result instanceof Error) ?
         { code: 422, status: HttpStatusMessages.FAILED, message: result.message || RESPONSEMSG.UNPROCESS, errorInfo: "Error", ekycRequired: NO, data: {} } :
-        { code: 200, status: HttpStatusMessages.SUCCESS, message: RESPONSEMSG.RETRIVE_SUCCESS, errorInfo: result.errorInfo, ekycRequired: result.ekycRequired, data: encryptData(result.data) };
+        { code: 200, status: HttpStatusMessages.SUCCESS, message: result?.message || RESPONSEMSG.RETRIVE_SUCCESS, errorInfo: result.errorInfo, ekycRequired: result.ekycRequired, data: encryptData(result.data) };
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);

@@ -7,6 +7,7 @@ import { checkEligableCandiadate, generateOTP, matchStrings } from "../utility/r
 import { ekyc_data, master_data, newDistricts, otherBeneficiary, students_data } from "../entity";
 import { rc_data } from "../entity/rc_data";
 import { ACCESS_DENIED, COMPLETED, DELIVERED, ORDER_PENDING, READY_TO_DELIVER } from "../utility/constants";
+import { demoAuthResponse } from "../entity/demoAuth";
 
 
 const dataDriven = (data = "Yes") => {
@@ -24,6 +25,14 @@ export class OtherBenfRepo {
     async FetchDataFromEkyc(id) {
         try {
             return await AppDataSource.getRepository(ekyc_data).findOneBy({ txnNo: id });
+        } catch (e) {
+            return Logger.error("other repo ####FetchDataFromEkyc", e);
+        }
+    };
+
+    async fetchDemoAuthEkyc(id) {
+        try {
+            return await AppDataSource.getRepository(demoAuthResponse).findOneBy({ txnNo: id });
         } catch (e) {
             return Logger.error("other repo ####FetchDataFromEkyc", e);
         }
@@ -210,7 +219,7 @@ export class OtherBenfRepo {
         try {
             const { user_id, benf_unique_id } = data;
             let checkDistrict = await AppDataSource.getRepository(otherBeneficiary).createQueryBuilder('child')
-                .select(['child.benf_name as benf_name','child.benf_unique_id as benf_unique_id', 'child.dob as dob', 'child.age as age', 'child.taluk as taluk',
+                .select(['child.benf_name as benf_name', 'child.benf_unique_id as benf_unique_id', 'child.dob as dob', 'child.age as age', 'child.taluk as taluk',
                     'child.district as district', 'child.phone_number as phone_number', 'child.category as category',
                     'child.caste as caste', 'child.address as address', 'child.scheme_eligability as scheme_eligability'])
                 .where("child.user_id= :user and child.benf_unique_id= :id", { user: user_id, id: benf_unique_id }).getRawOne();
@@ -238,10 +247,10 @@ export class OtherBenfRepo {
 
     async savingNewData(data) {
         try {
-            data.ekyc_check = "Y";
+            data.ekyc_check = data?.ekyc_check ? data?.ekyc_check : "Y";
             let findDistrict = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: data.user_id });
             let removeExtraCharacters = findDistrict?.district.replace(/\W/g, "").replace(/\d/g, "");
-            let checkEligibaleOrNot = await checkEligableCandiadate(removeExtraCharacters.toLowerCase(), data?.district.toLowerCase());
+            let checkEligibaleOrNot = await checkEligableCandiadate(removeExtraCharacters.toLowerCase(), data?.district?.replace(/\W/g, "").replace(/\d/g, "").toLowerCase());
             data.scheme_eligability = checkEligibaleOrNot;
             return await AppDataSource.getRepository(otherBeneficiary).save(data);
         } catch (e) {
@@ -275,7 +284,8 @@ export class OtherBenfRepo {
         try {
             return await AppDataSource.getRepository(other_benf_data).createQueryBuilder('child').
                 select(['child.benf_unique_id as benf_unique_id', 'child.address as address', 'child.order_number as order_number', 'child.benf_name as benf_name',
-                    'child.phone_number as phone_number', 'child.initial_image as initial_image']).where("child.benf_unique_id= :id", { id }).getRawOne();
+                    'child.phone_number as phone_number']).where("child.benf_unique_id= :id", { id }).getRawOne();
+
         } catch (e) {
             Logger.error("otherBenfRepo => eachStatusWise", e)
             return e;
@@ -600,9 +610,9 @@ export class OtherBenfRepo {
                 let ready_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: READY_TO_DELIVER, applicationStatus: COMPLETED });
                 let delivered_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: DELIVERED, applicationStatus: COMPLETED });
                 let totalData = await AppDataSource.getRepository(other_benf_data).createQueryBuilder('other').
-                    select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name','other.order_number as order_number',
-                            'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
-                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus", {id: user_id, applicationStatus: COMPLETED})
+                    select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name', 'other.order_number as order_number',
+                        'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
+                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus", { id: user_id, applicationStatus: COMPLETED })
                     .orderBy('other.benf_unique_id')
                     .skip(+skip)
                     .take(+take)
@@ -668,10 +678,10 @@ export class OtherBenfRepo {
             const { pagination, skip = 0, take = 10, user_id } = data;
             if (pagination == 'Yes') {
                 return await AppDataSource.getRepository(other_benf_data).createQueryBuilder('other').
-                    select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name','other.order_number as order_number',
-                            'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
-                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus and other.status = :status", 
-                    {id: user_id, applicationStatus: COMPLETED, status: DELIVERED})
+                    select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name', 'other.order_number as order_number',
+                        'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
+                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus and other.status = :status",
+                        { id: user_id, applicationStatus: COMPLETED, status: DELIVERED })
                     .orderBy('other.benf_unique_id')
                     .skip(skip)
                     .take(take)

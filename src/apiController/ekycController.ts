@@ -31,15 +31,15 @@ router.post("/edcs_service", requestAndResonseTime, async (req: Request, res: Re
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-router.post("/demoAuthResponse", requestAndResonseTime, async (req: Request, res: Response) => {
+
+router.post("/authDemoCallBackUrl", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = req.body;
-        console.log("data", data)
-        // let result = await ekycServices.demoAuthResponse(data);
-        // let response = (result?.code || result instanceof Error) ?
-        //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-        //     ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
-        res.send(data);
+        let result = await ekycServices.saveDemoAuthData(data);
+        let response = (result?.code || result instanceof Error) ?
+        ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+        ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.INSERT_SUCCESS, result);
+        res.send(response);
     } catch (e) {
         console.log("error", e);
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);

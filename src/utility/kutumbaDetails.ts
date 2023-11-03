@@ -126,6 +126,30 @@ export class KutumbaDetails {
             return e.message;
         };
     };
+    async KutumbDetailsForPersonChecking(data) {
+        try {
+            let inputValue = "";
+            inputValue = (data?.aadhar_no) ?
+                `${process.env.KUTUMA_CLIENT_CODE}___${data.aadhar_no}_` :
+                `${process.env.KUTUMA_CLIENT_CODE}__${data.rc_no}__`;
+            let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY, inputValue);
+            let response = await axios.post(process.env.KUTUMBA_API, await bodyForEkycNew(data, creteHMAC), {
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+            if (response.status == 200 && response.data?.StatusCode == 0) {
+                let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
+                let pasingDecryptData = JSON.parse(decryptString);
+                return {body: await bodyForEkycNew(data, creteHMAC), result: pasingDecryptData}
+            } else {
+                return 422;
+            }
+        } catch (e) {
+            Logger.error("getFamilyAdDataFromKutumba", e);
+            return e.message;
+        };
+    };
     async getFamilyAdDataFromKutumba(data) {
         try {
             let inputValue = "";
@@ -165,6 +189,7 @@ export class KutumbaDetails {
         if (type == "school") {
             await trackExternalLogs(Tables.SCHOOL, type, "after", "", getData, data?.user_id);
             if (getData?.return_message == "Success" && getData.status == '1') {
+                console.log("29110600503",getData)
                 return getData.instlist;
             } else {
                 return 500;
@@ -196,6 +221,7 @@ export class KutumbaDetails {
                 responseRedirectURL: process.env.EKYC_REDIRECTION_URL
             };
             let res = await ekyc_post_axis(process.env.EKYC_URL, bodyData);
+            console.log("Ress",res)
             await trackExternalLogs(Tables.EKYC, Methods.EKYC, "after", "", res.data, data?.user_id);
             if (!res?.data?.Token) {
                 return 422;
