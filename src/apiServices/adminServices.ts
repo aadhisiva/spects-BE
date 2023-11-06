@@ -148,4 +148,8 @@ export class AdminServices {
         return this.AdminRepo.makeNullToValues(data)
     };
 
+    async getPrimaryCount(data) {
+        return this.AdminRepo.getPrimaryCount(data)
+    };
+
 };

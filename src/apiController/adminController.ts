@@ -390,4 +390,19 @@ router.post("/makeNullToValues", authenticateToken, verifyUser, async (req: Requ
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
+
+// get primary count
+router.post("/getPrimaryCount", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+    try {
+        let data = new master_data(req.body);
+        let result = await adminServices.getPrimaryCount(data);
+        let response = (result?.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, RESPONSEMSG.RETRIVE_SUCCESS, result);
+        return reUsableResSendFunction(res, response);
+    } catch (e) {
+        console.log("error", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
 export default router;

@@ -780,4 +780,17 @@ export class AdminRepo {
             return e;
         };
     };
+
+    async getPrimaryCount(data) {
+        const { type, codes, district } = data;
+        if (!type && !codes) return { code: 422, message: "Give Mandatory Fields." }
+        try {
+            let query = `exec StateAndDistrictLoginPrimaryCount @0,@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11,@12,@13`;
+            let queryParams = PrameterizedQueriesWithExtraQueries(codes, type, '', district); 
+            return await AppDataSource.query(query, queryParams);
+        } catch (e) {
+            Logger.error("userRepo => getPrimaryCount", e)
+            return e;
+        };
+    };
 };
