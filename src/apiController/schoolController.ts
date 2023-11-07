@@ -269,7 +269,7 @@ router.post("/update_student", requestAndResonseTime, async (req: Request, res: 
     }
 });
 // filters
-router.post("/allExternalApis", requestAndResonseTime, async (req: Request, res: Response) => {
+router.post("/allExternalApis", async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await schoolServices.allExternalApis(data);

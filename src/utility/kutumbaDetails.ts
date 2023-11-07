@@ -130,10 +130,10 @@ export class KutumbaDetails {
         try {
             let inputValue = "";
             inputValue = (data?.aadhar_no) ?
-                `${process.env.KUTUMA_CLIENT_CODE}___${data.aadhar_no}_` :
+                `${process.env.KUTUMA_CLIENT_CODE}___${await convertAadharToSha256Hex(data.aadhar_no)}_` :
                 `${process.env.KUTUMA_CLIENT_CODE}__${data.rc_no}__`;
             let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY, inputValue);
-            let response = await axios.post(process.env.KUTUMBA_API, await bodyForEkycNew(data, creteHMAC), {
+            let response = await axios.post(process.env.KUTUMBA_API, await getReqBody(data, creteHMAC), {
                 headers: {
                     "Accept": "application/json"
                 }
