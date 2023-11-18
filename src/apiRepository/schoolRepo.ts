@@ -29,8 +29,7 @@ export class SchoolRepo {
 
     async saveSchoolData(data: any) {
         try {
-            let findLength = await this.findDescOrderWise();
-            data.school_unique_id = (findLength?.length == 0) ? 1 : `${Number(findLength[0].school_unique_id) + 1}`;
+            data.school_unique_id =  'SC' + String(new Date().getTime()).slice(7,14) + new Date().getMilliseconds();
             return await AppDataSource.getTreeRepository(school_data).save(data);
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
@@ -137,8 +136,7 @@ export class SchoolRepo {
 
     async saveStudentData(data: any) {
         try {
-            let findCount = await this.findAllStudents();
-            data.student_unique_id = (findCount?.length == 0) ? 1 : `${Number(findCount[0].student_unique_id) + 1}`;
+            data.student_unique_id =  'ST' + String(new Date().getTime()).slice(7,14) + new Date().getMilliseconds();
             data.order_number = await createUniqueIdBasedOnCodes(data.user_id, 'school');
             return await AppDataSource.getTreeRepository(students_data).save(data);
         } catch (e) {

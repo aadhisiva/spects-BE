@@ -17,6 +17,8 @@ import { encryptData } from '../utility/resusableFun';
 import path from 'path';
 import { authTokenAndVersion, requestAndResonseTime } from '../utility/middlewares';
 import { API_VERSION_ISSUE } from '../utility/constants';
+import axios from 'axios';
+import {data} from "../../bulk";
 
 const router = express.Router();
 
@@ -30,7 +32,7 @@ router.post("/add_school", requestAndResonseTime, async (req: Request, res: Resp
         // let response = (result?.code || result instanceof Error) ?
         //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
         //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
-        let response = {code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({})}
+        let response = { code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({}) }
         res.send(response);
     } catch (e) {
         Logger.error("SchoolController => ", e);
@@ -150,7 +152,7 @@ router.post("/add_student", requestAndResonseTime, async (req: Request, res: Res
         // let response = (result?.code || result instanceof Error) ?
         //     ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
         //     ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), encryptData(result.data));
-            let response = {code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({})}
+        let response = { code: 422, status: 'Failed', message: API_VERSION_ISSUE, data: encryptData({}) }
         res.send(response);
     } catch (e) {
         Logger.error("SchoolController => ", e);
@@ -279,4 +281,35 @@ router.post("/allExternalApis", async (req: Request, res: Response) => {
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
+
+router.post("/bulkUploadStudentsData", async (req: Request, res: Response) => {
+    try {
+        let data = req.body;
+        let result = await schoolServices.bulkUploadStudentsData(data);
+        res.send(result);
+    } catch (e) {
+        Logger.error("SchoolController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
+router.post("/uploading", async (req: Request, res: Response) => {
+    try {
+        let lengthOfBulk = (data || []).length;
+        let newArray = [];
+        for (let i = 0; i < lengthOfBulk; i++) {
+            let eachRow = data[i];
+            // let response = await axios.post('http://localhost:8889/school/bulkUploadStudentsData', eachRow);
+            let response = await axios.post('https://spectacles.karnataka.gov.in/school/bulkUploadStudentsData', eachRow);
+            if (response['Error']) {
+                newArray.push(response.data);
+            };
+        }
+        let newData = newArray.length == 0 ? "SuccessFully Uploaded." : newArray;
+        res.send(newData);
+    } catch (e) {
+        return e;
+    }
+});
+//https://spectacles.karnataka.gov.in/school/bulkUploadStudentsData
 export default router;
