@@ -189,7 +189,6 @@ export class KutumbaDetails {
         if (type == "school") {
             await trackExternalLogs(Tables.SCHOOL, type, "after", "", getData, data?.user_id);
             if (getData?.return_message == "Success" && getData.status == '1') {
-                console.log("29110600503",getData)
                 return getData.instlist;
             } else {
                 return 500;
@@ -201,6 +200,15 @@ export class KutumbaDetails {
             } else {
                 return 500;
             }
+        }
+    }
+    async getSatsChecking(data, type) {
+        let urlType = (type == "school") ? process.env.SCHOOL_API : process.env.CHILD_API;
+        let getData = (await post_axios(urlType, data)).data;
+        if (type == "school") {
+                return getData;
+        } else {
+            return getData;
         }
     }
 

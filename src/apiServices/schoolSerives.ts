@@ -26,10 +26,10 @@ const schoolDataAssignToLocal = (res) => {
 
 const studentDataAssignToLocal = (res) => {
     let reqObj: any = {};
-    reqObj['student_name'] = res.childName;
-    reqObj['father_name'] = res.fatherName;
-    reqObj['parent_phone_number'] = res.contactNo;
-    reqObj['mother_name'] = res.motherName;
+    reqObj['student_name'] = res?.childName || "";
+    reqObj['father_name'] = res?.fatherName || "";
+    reqObj['parent_phone_number'] = res?.contactNo || "";
+    reqObj['mother_name'] = res?.motherName || "";
     return reqObj;
 };
 
@@ -259,10 +259,10 @@ export class SchoolServices {
         try {
             if (type == 'school') {
                 let req = { sats_code: id }
-                return await this.KutumbaDetails.getSchoolDataFromExternal(req, "school");
+                return await this.KutumbaDetails.getSatsChecking(req, "school");
             } else if (type == 'child') {
                 let req = { satsCode: id }
-                return await this.KutumbaDetails.getSchoolDataFromExternal(req, "child");
+                return await this.KutumbaDetails.getSatsChecking(req, "child");
             } else if (type == "kutumba") {
                 return await this.KutumbaDetails.KutumbDetailsForPersonChecking(data);
             }

@@ -674,14 +674,14 @@ export class AdminRepo {
     };
 
     async searchDataStateAndDistrictWise(data) {
-        const { loginType, type, district, taluka } = data;
+        const { loginType, type, district, taluka, dates } = data;
         try {
             if (loginType == DISTRICT_OFFICER_LOGIN) {
-                let query = `exec districtLogin_DistrictAndTalukaWiseReports @0,@1,@2`;
-                return await AppDataSource.query(query, [type, district, taluka]);
+                let query = `exec districtLogin_DistrictAndTalukaWiseReports @0,@1,@2,@3,@4`;
+                return await AppDataSource.query(query, [type, district, taluka, dates[0], dates[1]]);
             } else {
-                let query = `exec StateAndDistrictWiseReports @0,@1`;
-                return await AppDataSource.query(query, [district, type]);
+                let query = `exec StateAndDistrictWiseReports @0,@1,@2,@3`;
+                return await AppDataSource.query(query, [district, type, dates[0], dates[1]]);
             }
         } catch (e) {
             Logger.error("userRepo => postUser", e)
