@@ -168,6 +168,9 @@ export class other_benf_data {
     ekyc_check: string;
 
     @Column({ default: "" })
+    remarks: string;
+
+    @Column({ default: "" })
     refractionist_name: string;
 
     @Column({ default: "" })

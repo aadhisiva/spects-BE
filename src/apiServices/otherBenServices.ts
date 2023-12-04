@@ -97,7 +97,7 @@ export class OtherBenfServices {
             if (originBenfData?.applicationStatus == COMPLETED) return { code: 422, message: `Already Registered With Order Number ${originBenfData.order_number}.` };
             let body = { aadhar_no: aadharHash };
             let getKutumbaData = await this.KutumbaFunction.KutumbaDetailsFrom(body);
-            if (getKutumbaData !== 422) {
+            if (getKutumbaData !== 422 && getKutumbaData[0]?.LGD_DISTRICT_Name) {
                 let kutumbaData = await mappingKutmbaDetails(getKutumbaData[0], '', '');
                 let checkEducationId: any = await this.OtherBenfRepo.checkEducationId(kutumbaData.education_id);
                 if (checkEducationId) return { code: 422, message: `Your Already Applied In School With Order Number ${checkEducationId.order_number}.` };

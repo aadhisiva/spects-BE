@@ -18,7 +18,7 @@ import path from 'path';
 import { authTokenAndVersion, requestAndResonseTime } from '../utility/middlewares';
 import { API_VERSION_ISSUE } from '../utility/constants';
 import axios from 'axios';
-// import {data} from "../../bulk";
+import {data} from "../../bulk";
 
 const router = express.Router();
 
@@ -299,10 +299,14 @@ router.post("/bulkUploadStudentsData", async (req: Request, res: Response) => {
 //         let newArray = [];
 //         for (let i = 0; i < lengthOfBulk; i++) {
 //             let eachRow = data[i];
-//             // let response = await axios.post('http://localhost:8889/school/bulkUploadStudentsData', eachRow);
 //             let response = await axios.post('https://spectacles.karnataka.gov.in/school/bulkUploadStudentsData', eachRow);
-//             if (response['Error']) {
-//                 newArray.push(response.data);
+//             if (response.data['Error']) {
+//                 let newobject = {
+//                     Error: response.data?.Error,
+//                     sats_id: response.data?.sats_id,
+//                     school_id: response.data?.school_id
+//                 }
+//                 newArray.push(newobject);
 //             };
 //         }
 //         let newData = newArray.length == 0 ? "SuccessFully Uploaded." : newArray;

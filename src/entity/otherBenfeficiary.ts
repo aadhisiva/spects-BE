@@ -161,6 +161,9 @@ export class otherBeneficiary {
     ekyc_check: string;
 
     @Column({ default: "" })
+    remarks: string;
+
+    @Column({ default: "" })
     refractionist_name: string;
 
     @Column({ default: "" })

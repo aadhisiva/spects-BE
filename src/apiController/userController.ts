@@ -34,6 +34,21 @@ router.post('/login', requestAndResonseTime, async (req: Request, res: Response)
     }
 });
 
+
+router.post('/loginWithoutEncryption', requestAndResonseTime, async (req: Request, res: Response) => {
+    try {
+        let tableData = req.body;
+        const result = await userServices.postUser(tableData);
+        let response = (result.code || result instanceof Error) ?
+            ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.INSERT_SUCCESS), result.data);
+        res.send(response);
+    } catch (e) {
+        Logger.error("UserController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
 router.post("/validate_otp", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = req.body;

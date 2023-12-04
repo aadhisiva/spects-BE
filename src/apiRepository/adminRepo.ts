@@ -479,50 +479,13 @@ export class AdminRepo {
                 };
                 await masterData.save(finalData);
                 return {};
-            });
-            // screenings?.map(async (obj) => {
-            //     let findData = await masterData.findOneBy({ user_unique_id: obj?.user_unique_id });
-            //     let finalData = {
-            //         ...findData,
-            //         ...{
-            //             total_primary_screening_completed: obj?.total_primary_screening_completed,
-            //             total_secondary_screening_required: obj?.total_secondary_screening_required
-            //         }
-            //     };
-            //     codes.map(async obj => {
-            //         let checkData = await phcoData.findOneBy({ code: Equal(obj?.code) });
-            //         let updatedData = { ...checkData, ...{ is_initial_login: "N" } }
-            //         await phcoData.save(updatedData);
-            //     })
-            //     await masterData.save(finalData);
-            //     return {};
-            // });
+            })
             return {};
         } catch (e) {
             Logger.error("userRepo => postUser", e)
             return e;
         }
     };
-
-    // async getPhcoWiseData(data) {
-    //     const { codes } = data;
-    //     let res = await AppDataSource.getRepository(master_data).find({
-    //         where:
-    //             [
-    //                 { health_facility_code: Equal(codes[0]?.code) },
-    //                 { health_facility_code: Equal(codes[1]?.code) },
-    //                 { health_facility_code: Equal(codes[2]?.code) },
-    //                 { health_facility_code: Equal(codes[3]?.code) },
-    //                 { health_facility_code: Equal(codes[4]?.code) },
-    //                 { health_facility_code: Equal(codes[5]?.code) },
-    //                 { health_facility_code: Equal(codes[6]?.code) },
-    //                 { health_facility_code: Equal(codes[7]?.code) },
-    //                 { health_facility_code: Equal(codes[8]?.code) },
-    //                 { health_facility_code: Equal(codes[9]?.code) },
-    //             ]
-    //     });
-    //     return res
-    // };
 
     async getPhcoWiseData(data) {
         const { codes, type } = data;
