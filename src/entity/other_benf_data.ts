@@ -176,6 +176,15 @@ export class other_benf_data {
     @Column({ default: "" })
     refractionist_mobile: string;
 
+    @Column({ default: "" })
+    class: string;
+
+    @Column({ default: "" })
+    section: string;
+
+    @Column({ default: "" })
+    schoolName: string;
+
     @CreateDateColumn()
     created_at: Date;
 

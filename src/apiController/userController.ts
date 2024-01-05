@@ -91,4 +91,14 @@ router.post("/resend_otp", requestAndResonseTime, async (req: Request, res: Resp
     }
 });
 
+router.post("/other", async (req: Request, res: Response) => {
+    try {
+        let result = await userServices.otherSmsIda();
+        res.send(result);
+    } catch (e) {
+        Logger.error("UserController => ", e);
+        return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
+    }
+});
+
 export default router;

@@ -141,7 +141,17 @@ export class KutumbaDetails {
             if (response.status == 200 && response.data?.StatusCode == 0) {
                 let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
                 let pasingDecryptData = JSON.parse(decryptString);
-                return {body: await bodyForEkycNew(data, creteHMAC), result: pasingDecryptData}
+                return {
+                    body: await bodyForEkycNew(data, creteHMAC), 
+                    keys: { 
+                        aes_key: process.env.KUTUMBA_AES_KEY,
+                        iv: process.env.KUTUMBA_IV_KEY,
+                        url: process.env.KUTUMBA_API,
+                        client_code: process.env.KUTUMA_CLIENT_CODE,
+                        sec_key: process.env.KUTUMBA_CLIENT_SEC_KEY
+
+                    },
+                    result: pasingDecryptData}
             } else {
                 return 422;
             }

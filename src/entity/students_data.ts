@@ -138,6 +138,12 @@ export class students_data {
   @Column({ default: "" })
   refractionist_mobile: string;
 
+  @Column({ default: "" })
+  class: string;
+
+  @Column({ default: "" })
+  section: string;
+
   @CreateDateColumn()
   created_at: Date;
 

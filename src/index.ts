@@ -111,7 +111,6 @@ app.use("/other", OtherBenfController);
 app.use("/edcs", EkycController);
 app.use("/admin", AdminController);
 
-
 // we are adding port connection here
 app.listen(port, async () => {
   let connection = await AppDataSource.initialize();

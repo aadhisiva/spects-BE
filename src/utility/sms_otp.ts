@@ -82,6 +82,7 @@ export class SMSServices {
     async sendSingleUnicode(userName, password, senderId, messageUnicode, mobileno, secureKey, templateId) {
         try {
             let finalmessage = stringToFinalmessage(messageUnicode.trim());
+            // console.log("finalmessage",finalmessage)
             let key = hashGenerator(userName, senderId, finalmessage, secureKey);
             let data = {
                 username: userName.trim(),
@@ -89,11 +90,12 @@ export class SMSServices {
                 senderid: senderId.trim(),
                 content: finalmessage.trim(),
                 smsservicetype: "unicodemsg",
-                mobileno: mobileno.trim(),
+                bulkmobno: mobileno.trim(),
                 key: key.trim(),
                 templateid: templateId.trim()
             };
             let resposne = await post_url(process.env.SMS_API, data); // calling post_url to send single unicode sms
+            console.log("res",resposne.data)
             return resposne.status;
         } catch (e) {
             console.log("error", e);

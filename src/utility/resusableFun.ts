@@ -11,17 +11,6 @@ let method = "aes-256-cbc";
 const KEY = "MTY2NzM5MDQwNCU3RTE2NjczOTA0MDQlN0UxNjY3MzkwNDA0";
 const IV = "1306199325031987";
 
-// const key = cryptoJs
-//     .createHash('sha512')
-//     .update(secKey)
-//     .digest('hex')
-//     .substring(0, 32)
-// const encryptionIV = cryptoJs
-//     .createHash('sha512')
-//     .update(iv)
-//     .digest('hex')
-//     .substring(0, 16)
-
 export function generateOTP() {
 
   // Declare a digits variable 
@@ -82,21 +71,6 @@ export const getAgeFromBirthDateToEkyc = (dob) => {
   return age;
 };
 
-// export function encryptData(data={}) {
-//     const cipher = cryptoJs.createCipheriv(method, key, encryptionIV)
-//     return Buffer.from(
-//         cipher.update(JSON.stringify(data), 'utf8', 'base64') + cipher.final('base64')
-//     ).toString('base64') // Encrypts data and converts to hex and base64
-// }
-
-// export function decryptData(encryptedData) {
-//     const buff = Buffer.from(encryptedData, 'base64')
-//     const decipher = cryptoJs.createDecipheriv(method, key, encryptionIV)
-//     return (
-//         decipher.update(buff.toString('utf8'), 'base64', 'utf8') +
-//         decipher.final('utf8')
-//     ) // Decrypts data and converts to utf8
-// };
 
 export function encryptData(plaintext = {}) {
   const key = cryptoJs.createHash("sha256").update(KEY, "utf8").digest();
@@ -116,14 +90,6 @@ export function decrypt(ivHashCiphertext) {
   return decValue;
 };
 
-
-// export const addData = async () => {
-//   for (let i = 0; i < data.length; i++) {
-//     let saveData = new master_data(data[i]);
-//     await AppDataSource.getRepository(master_data).save(saveData);
-//   }
-//   return "completed";
-// };
 
 export const reUsableResSendFunction = (res, response) => {
   if (response.code !== 200) {
