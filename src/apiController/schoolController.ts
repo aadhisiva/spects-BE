@@ -19,6 +19,7 @@ import { authTokenAndVersion, requestAndResonseTime } from '../utility/middlewar
 import { API_VERSION_ISSUE } from '../utility/constants';
 import axios from 'axios';
 import {data} from "../../bulk";
+import { Console } from 'console';
 
 const router = express.Router();
 
@@ -293,27 +294,28 @@ router.post("/bulkUploadStudentsData", async (req: Request, res: Response) => {
     }
 });
 
-// router.post("/uploading", async (req: Request, res: Response) => {
-//     try {
-//         let lengthOfBulk = (data || []).length;
-//         let newArray = [];
-//         for (let i = 0; i < lengthOfBulk; i++) {
-//             let eachRow = data[i];
-//             let response = await axios.post('https://spectacles.karnataka.gov.in/school/bulkUploadStudentsData', eachRow);
-//             if (response.data['Error']) {
-//                 let newobject = {
-//                     Error: response.data?.Error,
-//                     sats_id: response.data?.sats_id,
-//                     school_id: response.data?.school_id
-//                 }
-//                 newArray.push(newobject);
-//             };
-//         }
-//         let newData = newArray.length == 0 ? "SuccessFully Uploaded." : newArray;
-//         res.send(newData);
-//     } catch (e) {
-//         return e;
-//     }
-// });
+router.post("/uploading", async (req: Request, res: Response) => {
+    try {
+        let lengthOfBulk = (data || []).length;
+        let newArray = [];
+        for (let i = 0; i < lengthOfBulk; i++) {
+            console.log(i)
+            let eachRow = data[i];
+            let response = await axios.post('https://spectacles.karnataka.gov.in/school/bulkUploadStudentsData', eachRow);
+            if (response.data['Error']) {
+                let newobject = {
+                    Error: response.data?.Error,
+                    sats_id: response.data?.sats_id,
+                    school_id: response.data?.school_id
+                }
+                newArray.push(newobject);
+            };
+        }
+        let newData = newArray.length == 0 ? "SuccessFully Uploaded." : newArray;
+        res.send(newData);
+    } catch (e) {
+        return e;
+    }
+});
 //https://spectacles.karnataka.gov.in/school/bulkUploadStudentsData
 export default router;

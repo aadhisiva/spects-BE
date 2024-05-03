@@ -208,8 +208,11 @@ export class OtherBenfRepo {
 
     async fetchDataFromMaster(data) {
         try {
-            const { user_id } = data;
-            return await AppDataSource.getRepository(master_data).findOneBy({ unique_id: user_id });
+            const { user_id, user_mobile_number } = data;
+            if(!user_mobile_number){
+                return await AppDataSource.getRepository(master_data).findOneBy({ unique_id: user_id });
+            }
+            return await AppDataSource.getRepository(master_data).findOneBy({ refractionist_mobile: user_mobile_number });
         } catch (e) {
             Logger.error("otherBenfRepo ### fetchDataFromMaster", e);
         }
@@ -604,7 +607,7 @@ export class OtherBenfRepo {
 
     async getBenificaryStatus(data) {
         try {
-            const { pagination, skip = 0, take = 10, user_id } = data;
+            const { pagination, skip = 0, take = 10, user_id, searchTerm } = data;
             if (pagination == 'Yes') {
                 let pending_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: ORDER_PENDING, applicationStatus: COMPLETED });
                 let ready_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: READY_TO_DELIVER, applicationStatus: COMPLETED });
@@ -613,6 +616,7 @@ export class OtherBenfRepo {
                     select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name', 'other.order_number as order_number',
                         'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
                     .where("other.user_id = :id and other.applicationStatus = :applicationStatus", { id: user_id, applicationStatus: COMPLETED })
+                    .orWhere("other.order_number like :term1 or other.benf_name like :term2 or other.phone_number like :term3", {term1: `%${searchTerm}%`, term2: `%${searchTerm}%`, term3: `%${searchTerm}%` })
                     .orderBy('other.benf_unique_id')
                     .skip(+skip)
                     .take(+take)
@@ -673,15 +677,37 @@ export class OtherBenfRepo {
         }
     };
 
+    // async getBenificaryHistory(data) {
+    //     try {
+    //         const { pagination, skip = 0, take = 10, user_id } = data;
+    //         if (pagination == 'Yes') {
+    //             return await AppDataSource.getRepository(other_benf_data).createQueryBuilder('other').
+    //                 select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name', 'other.order_number as order_number',
+    //                     'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
+    //                 .where("other.user_id = :id and other.applicationStatus = :applicationStatus and other.status = :status ",
+    //                     { id: user_id, applicationStatus: COMPLETED, status: DELIVERED })
+    //                 .orderBy('other.benf_unique_id')
+    //                 .skip(skip)
+    //                 .take(take)
+    //                 .getRawMany();
+    //         } else {
+    //             return await this.getBenfDevliverd(data);
+    //         }
+    //     } catch (e) {
+    //         Logger.error("otherBenfRepo => getBenificaryHistory", e)
+    //         return e;
+    //     }
+    // };
     async getBenificaryHistory(data) {
         try {
-            const { pagination, skip = 0, take = 10, user_id } = data;
+            const { pagination, skip = 0, take = 10, user_id, searchTerm } = data;
             if (pagination == 'Yes') {
                 return await AppDataSource.getRepository(other_benf_data).createQueryBuilder('other').
                     select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name', 'other.order_number as order_number',
                         'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
-                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus and other.status = :status",
+                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus and other.status = :status ",
                         { id: user_id, applicationStatus: COMPLETED, status: DELIVERED })
+                    .orWhere("other.order_number like :term1 or other.benf_name like :term2 or other.phone_number like :term3", {term1: `%${searchTerm}%`, term2: `%${searchTerm}%`, term3: `%${searchTerm}%` })
                     .orderBy('other.benf_unique_id')
                     .skip(skip)
                     .take(take)

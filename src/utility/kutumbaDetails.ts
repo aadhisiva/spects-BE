@@ -60,6 +60,7 @@ const getReqBody = async (data, creteHMAC) => {
     };
 };
 
+
 const bodyForEkycNew = async (data, creteHMAC) => {
     const { aadhar_no, rc_no } = data;
     return {
@@ -130,14 +131,15 @@ export class KutumbaDetails {
         try {
             let inputValue = "";
             inputValue = (data?.aadhar_no) ?
-                `${process.env.KUTUMA_CLIENT_CODE}___${await convertAadharToSha256Hex(data.aadhar_no)}_` :
-                `${process.env.KUTUMA_CLIENT_CODE}__${data.rc_no}__`;
+            `${process.env.KUTUMA_CLIENT_CODE}___${await convertAadharToSha256Hex(data.aadhar_no)}_` :
+            `${process.env.KUTUMA_CLIENT_CODE}__${data.rc_no}__`;
             let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY, inputValue);
             let response = await axios.post(process.env.KUTUMBA_API, await getReqBody(data, creteHMAC), {
                 headers: {
                     "Accept": "application/json"
                 }
             });
+            console.log("response",response)
             if (response.status == 200 && response.data?.StatusCode == 0) {
                 let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
                 let pasingDecryptData = JSON.parse(decryptString);

@@ -76,13 +76,4 @@ export class UserServices {
             return e;
         }
     };
-    async otherSmsIda() {
-        try {
-            await this.ResusableFunctions.sendSmsInKannadaUnicode("7780379609,9591543697", "123456");
-            // await this.ResusableFunctions.sendOtpAsSingleSms("7780379609", "123456");
-            return "Send";
-        } catch (e) {
-            console.log("Error", e);
-        }
-    };
 }

@@ -123,3 +123,12 @@ app.listen(port, async () => {
   Logger.info(`⚡️[server]: Server is running at ${port}`);
 });
 
+
+AppDataSource.initialize().then(async (connection) => {
+  app.listen(port, () => {
+    Logger.info(`⚡️[Database]: Database connected....+++++++ ${port}`);
+  });
+}).catch(error => {
+  Logger.error("connection error :::::::", error);
+  throw new Error("new Connection ERROR " + JSON.stringify(error));
+})

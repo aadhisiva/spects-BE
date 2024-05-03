@@ -112,7 +112,7 @@ export class OtherBenfServices {
                 newData.applicationStatus = COMPLETED;
                 newData.order_number = await createUniqueIdBasedOnCodes(newData?.user_id, 'other');
                 newData.ekyc_check = 'Kutumba';
-                let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(newData);
+                let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster({...data, ...newData});
                 newData.refractionist_name = findMasterDistrict.refractionist_name;
                 newData.refractionist_mobile = findMasterDistrict.refractionist_mobile;
                 let dummyBenfRes = await this.OtherBenfRepo.savingNewData(newData); // saving dummy table -> other_beneficiary
@@ -195,8 +195,7 @@ export class OtherBenfServices {
                 kutumbaData.benf_unique_id = txnDateTime // creating uninque id
                 kutumbaData.user_id = user_id; // adding user id
                 kutumbaData.ekyc_check = 'Kutumba'; // adding ekyc check
-
-                let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(kutumbaData);
+                let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster({...data, ...kutumbaData});
                 kutumbaData.refractionist_name = findMasterDistrict.refractionist_name;
                 kutumbaData.refractionist_mobile = findMasterDistrict.refractionist_mobile;
                 await this.OtherBenfRepo.savingNewData(kutumbaData); // saving dummy table -> other_beneficiary
@@ -257,7 +256,8 @@ export class OtherBenfServices {
             let mapDataOtherBenfWise = mappingNewBenfData(pullEkycData, getData);
             mapDataOtherBenfWise.user_id = user_id;
             mapDataOtherBenfWise.ekyc_check = 'Y';
-            let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(mapDataOtherBenfWise);
+            
+            let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster({...data, ...mapDataOtherBenfWise});
             mapDataOtherBenfWise.refractionist_name = findMasterDistrict.refractionist_name;
             mapDataOtherBenfWise.refractionist_mobile = findMasterDistrict.refractionist_mobile;
             await this.OtherBenfRepo.savingNewData(mapDataOtherBenfWise);
@@ -473,7 +473,8 @@ export class OtherBenfServices {
             pullBenfData.taluk = pullEkycData?.ekyc_subdist || "";
             // let mapData = mappingRcDataWiseNewBenfData(pullEkycData);
             pullBenfData.benf_unique_id = benf_unique_id;
-            let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster(pullBenfData); // get master data by user
+
+            let findMasterDistrict = await this.OtherBenfRepo.fetchDataFromMaster({...data, ...pullBenfData}); // get master data by user
             pullBenfData.refractionist_name = findMasterDistrict.refractionist_name; // updating refractionist name
             pullBenfData.refractionist_mobile = findMasterDistrict.refractionist_mobile; // updating refractionist mobile number
 

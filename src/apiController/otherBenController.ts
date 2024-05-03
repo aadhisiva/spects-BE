@@ -24,7 +24,7 @@ const otherBenfServices = Container.get(OtherBenfServices);
 /* new version apis for other beneficiary */
 
 /* New demo Auth Apis */
-router.post("/addDemoAuthWithVersion", requestAndResonseTime, async (req: Request, res: Response) => {
+router.post("/addDemoAuthWithVersion", authTokenAndVersion, requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result: any = await otherBenfServices.addDemoAuthWithVersion(data);
@@ -52,7 +52,7 @@ router.post("/saveDemoAuthResponse", requestAndResonseTime, async (req: Request,
     }
 });
 
-router.post("/ekycProcessWithKutumba", requestAndResonseTime, async (req: Request, res: Response) => {
+router.post("/ekycProcessWithKutumba", authTokenAndVersion, requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let body = req.body;
         let result: any = await otherBenfServices.ekycProcessWithKutumba(body);
@@ -424,7 +424,8 @@ router.post("/get_bef_status", requestAndResonseTime, async (req: Request, res: 
         let result = await otherBenfServices.getBenificaryStatus(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            // ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), result);
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -572,7 +573,8 @@ router.post("/get_bef_history", requestAndResonseTime, async (req: Request, res:
         let result = await otherBenfServices.getBenificaryHistory(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            // ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), result);
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);

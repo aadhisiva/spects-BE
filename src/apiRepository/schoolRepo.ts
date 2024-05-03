@@ -168,7 +168,7 @@ export class SchoolRepo {
 
     async getAllStudentData(data) {
         try {
-            const { pagination, take, skip, user_id, school_id } = data;
+            const { pagination, take, skip, user_id, school_id, searchTerm } = data;
             if (pagination == 'Yes') {
                 let pending_count = await AppDataSource.getRepository(students_data).countBy({ user_id: user_id, school_id: school_id, status: ORDER_PENDING, applicationStatus: COMPLETED });
                 let ready_count = await AppDataSource.getRepository(students_data).countBy({ user_id: user_id, school_id: school_id, status: READY_TO_DELIVER, applicationStatus: COMPLETED });
@@ -178,6 +178,7 @@ export class SchoolRepo {
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
                     .where("child.user_id= :user_id and child.school_id= :school_id and applicationStatus= :appStatus",
                         { user_id: user_id, school_id: school_id, appStatus: COMPLETED })
+                    .orWhere("other.order_number like :term1 or other.student_name like :term2 or other.sats_id like :term3", {term1: `%${searchTerm}%`, term2: `%${searchTerm}%`, term3: `%${searchTerm}%` })
                     .orderBy('child.student_unique_id')
                     .skip(skip)
                     .take(take)
@@ -251,13 +252,14 @@ export class SchoolRepo {
 
     async getAllDelivered(data) {
         try {
-            const { pagination, take, skip, user_id, school_id } = data;
+            const { pagination, take, skip, user_id, school_id, searchTerm } = data;
             if (pagination == 'Yes') {
                 return await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
                     .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
                     .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and applicationStatus= :appStatus",
                         { user_id: user_id, school_id: school_id, status: DELIVERED, appStatus: COMPLETED })
+                    .orWhere("other.order_number like :term1 or other.student_name like :term2 or other.sats_id like :term3", {term1: `%${searchTerm}%`, term2: `%${searchTerm}%`, term3: `%${searchTerm}%` })
                     .orderBy('child.student_unique_id')
                     .skip(skip)
                     .take(take)

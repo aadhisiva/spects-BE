@@ -90,12 +90,12 @@ export class SMSServices {
                 senderid: senderId.trim(),
                 content: finalmessage.trim(),
                 smsservicetype: "unicodemsg",
-                bulkmobno: mobileno.trim(),
+                mobileno: mobileno.trim(),
                 key: key.trim(),
                 templateid: templateId.trim()
             };
             let resposne = await post_url(process.env.SMS_API, data); // calling post_url to send single unicode sms
-            console.log("res",resposne.data)
+            // console.log("res",resposne.data)
             return resposne.status;
         } catch (e) {
             console.log("error", e);

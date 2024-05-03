@@ -36,23 +36,6 @@ export class ResusableFunctions {
         return sendSingleSms;
     }
 
-    // async sendSmsInKannadaUnicode(mobile_no, otp) {
-    //     let text = `Dear Employee,
-    //     As you are covered under National Pension Scheme, you are informed to contact your DDO to get the PRAN number immediately.
-    //     ಆತ್ಮೀಯ ಉದ್ಯೋಗಿ,
-    //     ತಾವು ರಾಷ್ಟ್ರೀಯ ಪಿಂಚಣಿ  ಯೋಜನೆಗೆ ಒಳಪಡುವುದರಿಂದ, ತಮ್ಮ ಪ್ರಾನ್‌ ಸಂಖ್ಯೆಯನ್ನು  ಪಡೆಯಲು ತಮ್ಮ ಡಿಡಿಓರವರನ್ನು ಸಂಪರ್ಕಿಸಲು ತಿಳಿಸಿದೆ.
-    //     --Department of Treasuries, Government of Karnataka.`;
-    //     let sendSingleSms = await this.ResusableFunctions.sendSingleUnicode(
-    //         "Mobile_1-KIIGOK",
-    //         "kiigok@1234",
-    //         'KIIGOK',  
-    //         text,
-    //         mobile_no,
-    //         'e8f4e2f0-d005-4ecb-bbdc-0a4cbac18088',
-    //         '1107170167482102813'
-    //     );
-    //     return sendSingleSms;
-    // }
 
     async sendOtpAsReadyForDeliver(mobile_no, otp, order_number) {
         let text = `${otp} is the OTP for Spectacle Delivery for the order number ${order_number}
