@@ -6,7 +6,7 @@
     "experimentalDecorators": true,
     "allowJs": true,
     "module": "CommonJS",
-    "outDir": "dist/src",
+    "outDir": "./dist",
     "jsx": "react"
   },
   "compileOnSave": true

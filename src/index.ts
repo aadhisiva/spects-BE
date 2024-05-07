@@ -12,6 +12,8 @@ import dotenv from 'dotenv';
 import morgan from 'morgan';
 import Logger from "./utility/winstonLogger";
 import fs from "fs";
+import sessions from "express-session";
+import { TypeormStore } from "typeorm-store";
 import cors from "cors";
 import { AppDataSource } from "./dbConfig/mysql";
 import UserController from "./apiController/userController";
@@ -19,11 +21,7 @@ import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
 import AdminController from "./apiController/adminController";
-import { aadharToHash, checkEligableCandiadate, createUniqueIdBasedOnCodes, decrypt } from './utility/resusableFun';
-import sessions from "express-session";
-import { TypeormStore } from "typeorm-store";
 import { Session } from './entity';
-import path from 'path';
 
 // for acceessing env variables
 dotenv.config();
@@ -48,7 +46,6 @@ const twoHour = 1000 * 60 * 60 * 2;
 
 // check node is running on production or not
 let secure = process.env.NODE_ENV == "production" ? true : false;
-let setOrigin = process.env.NODE_ENV == "production" ? process.env.NODE_PRO : process.env.NODE_DEV;
 
 // cors setup for communication of sever and client
 app.use(cors({
@@ -93,37 +90,18 @@ app.set('views', __dirname);
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
 
-// add masters data
-app.post("/add", async (req, res) => {
-  let {no} = req.body;
-  // let data = await checkEligableCandiadate("Kalaburgi".toLowerCase(), 'Kalaburgi'.toLowerCase());
-  // let data = await createUniqueIdBasedOnCodes('2023_8395', 'school')
-  let aadhar = await aadharToHash(no)
-  res.send(aadhar)
-});
-
-// console.log(decrypt("4MID53Z+xI8G/1WBM8m2liX1V9JNvotuuSmzzz20Cso5ejfj0Jdfl6Eknp1XQFUoMQi1xdYNay+gYozwbLCnI0WNuzq6noXWzNMcCZC+PEX5s5U77q4D5W/ObEdWjtOLJQWeCYHHAFDGn/LdtPxDZ1ANUHg/cfBiv3TsP4+LcxbspChyH5MufLTzG/bmruuWDu+GqEhlSWA7pFUsC55qkcfZCwXOw/spg+xqRfc0JPV4WaEv9rKSYoRNowjF5PX3gjjtWLOz3LzbEACgN9+lEBMatydVBks640H75kGOwAk="));
+app.get("/spectsApi/login", (req, res) => {
+  res.send("Running Successfully");
+})
 
 // controllers for routes
-app.use("/login", UserController);
-app.use("/school", SchoolController);
-app.use("/other", OtherBenfController);
-app.use("/edcs", EkycController);
-app.use("/admin", AdminController);
+app.use("/spectsApi/login", UserController);
+app.use("/spectsApi/school", SchoolController);
+app.use("/spectsApi/other", OtherBenfController);
+app.use("/spectsApi/edcs", EkycController);
+app.use("/spectsApi/admin", AdminController);
 
 // we are adding port connection here
-app.listen(port, async () => {
-  let connection = await AppDataSource.initialize();
-  if (connection instanceof Error) {
-    Logger.error("connection error :::::::", connection);
-    throw new Error(JSON.stringify(connection));
-  } else {
-    Logger.info(`⚡️[Database]: Database connected....`);
-  }
-  Logger.info(`⚡️[server]: Server is running at ${port}`);
-});
-
-
 AppDataSource.initialize().then(async (connection) => {
   app.listen(port, () => {
     Logger.info(`⚡️[Database]: Database connected....+++++++ ${port}`);

@@ -18,12 +18,12 @@ import path from 'path';
 import { authTokenAndVersion, requestAndResonseTime } from '../utility/middlewares';
 import { API_VERSION_ISSUE } from '../utility/constants';
 import axios from 'axios';
-import {data} from "../../bulk";
-import { Console } from 'console';
 
 const router = express.Router();
 
 const schoolServices = Container.get(SchoolServices);
+
+const data= [];
 
 // ************************** school apis **********************
 router.post("/add_school", requestAndResonseTime, async (req: Request, res: Response) => {

@@ -1,10 +1,9 @@
 import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
-import { district_data, master_data, other_benf_data, phco_data, sub_centre_data, taluka_data } from "../entity";
+import { district_data, master_data, other_benf_data, phco_data, taluka_data } from "../entity";
 import { state_data } from "../entity/state_data";
 import { PrameterizedQueries, PrameterizedQueriesForRefractionist, PrameterizedQueriesWithExtraQueries } from "../utility/resusableFun";
-import { Equal } from "typeorm";
 import { DISTRICT_OFFICER_LOGIN, PHCO_OFFICER_LOGIN, REFRACTIONIST_LOGIN, TALUKA_OFFICER_LOGIN, YES } from "../utility/constants";
 
 @Service()

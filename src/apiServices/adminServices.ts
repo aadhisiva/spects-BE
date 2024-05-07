@@ -7,16 +7,6 @@ import jwt from "jsonwebtoken";
 import { AppDataSource } from "../dbConfig/mysql";
 import { district_data } from "../entity";
 
-const switchFunctionForTypeWise = async (data) => {
-    switch (data?.type) {
-        case "district_officer":
-            return await AppDataSource.getRepository(district_data).createQueryBuilder('child').andWhere
-        case "taluka":
-        case "taluka":
-        case "phco":
-    }
-
-}
 @Service()
 export class AdminServices {
     constructor(public AdminRepo: AdminRepo, public ResusableFunctions: ResusableFunctions) { }
