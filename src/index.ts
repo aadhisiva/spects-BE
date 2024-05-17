@@ -90,16 +90,16 @@ app.set('views', __dirname);
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
 
-app.get("/spectsApi/login", (req, res) => {
+app.get("/edcs/run", (req, res) => {
   res.send("Running Successfully");
 })
 
 // controllers for routes
-app.use("/spectsApi/login", UserController);
-app.use("/spectsApi/school", SchoolController);
-app.use("/spectsApi/other", OtherBenfController);
-app.use("/spectsApi/edcs", EkycController);
-app.use("/spectsApi/admin", AdminController);
+app.use("/edcs/login", UserController);
+app.use("/edcs/school", SchoolController);
+app.use("/edcs/other", OtherBenfController);
+app.use("/edcs", EkycController);
+app.use("/edcs/admin", AdminController);
 
 // we are adding port connection here
 AppDataSource.initialize().then(async (connection) => {

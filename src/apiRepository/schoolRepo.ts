@@ -2,10 +2,12 @@ import { Service } from "typedi";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
 import { master_data, other_benf_data, school_data, students_data } from "../entity";
-import { Between, Equal, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
+import { Between, Brackets, Equal, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { createUniqueIdBasedOnCodes } from "../utility/resusableFun";
 import { COMPLETED, DELIVERED, ORDER_PENDING, READY_TO_DELIVER } from "../utility/constants";
 
+
+const studentRepo = AppDataSource.getRepository(students_data);
 @Service()
 export class SchoolRepo {
 
@@ -29,7 +31,7 @@ export class SchoolRepo {
 
     async saveSchoolData(data: any) {
         try {
-            data.school_unique_id =  'SC' + String(new Date().getTime()).slice(7,14) + new Date().getMilliseconds();
+            data.school_unique_id = 'SC' + String(new Date().getTime()).slice(7, 14) + new Date().getMilliseconds();
             return await AppDataSource.getTreeRepository(school_data).save(data);
         } catch (e) {
             Logger.error("schoolRepo => postSchoolData", e)
@@ -136,7 +138,7 @@ export class SchoolRepo {
 
     async saveStudentData(data: any) {
         try {
-            data.student_unique_id =  'ST' + String(new Date().getTime()).slice(7,14) + new Date().getMilliseconds();
+            data.student_unique_id = 'ST' + String(new Date().getTime()).slice(7, 14) + new Date().getMilliseconds();
             data.order_number = await createUniqueIdBasedOnCodes(data.user_id, 'school');
             return await AppDataSource.getTreeRepository(students_data).save(data);
         } catch (e) {
@@ -169,20 +171,55 @@ export class SchoolRepo {
     async getAllStudentData(data) {
         try {
             const { pagination, take, skip, user_id, school_id, searchTerm } = data;
+
+            console.log(data)
             if (pagination == 'Yes') {
-                let pending_count = await AppDataSource.getRepository(students_data).countBy({ user_id: user_id, school_id: school_id, status: ORDER_PENDING, applicationStatus: COMPLETED });
-                let ready_count = await AppDataSource.getRepository(students_data).countBy({ user_id: user_id, school_id: school_id, status: READY_TO_DELIVER, applicationStatus: COMPLETED });
-                let delivered_count = await AppDataSource.getRepository(students_data).countBy({ user_id: user_id, school_id: school_id, status: DELIVERED, applicationStatus: COMPLETED });
-                let totalData = await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
+                let delivered_count = await studentRepo.createQueryBuilder("child")
+                    .where("child.user_id= :user_id and child.school_id= :school_id and child.applicationStatus= :appStatus",
+                        { user_id: user_id, school_id: school_id, appStatus: COMPLETED })
+                    .andWhere(new Brackets(qb => {
+                        qb.where("child.order_number like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.student_name like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.sats_id like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.status like :term", { term: `%${searchTerm}%` })
+                    }))
+                    .getCount();
+                let ready_count = await studentRepo.createQueryBuilder("child")
+                    .where("child.user_id= :user_id and child.school_id= :school_id and child.applicationStatus= :appStatus",
+                        { user_id: user_id, school_id: school_id, appStatus: READY_TO_DELIVER })
+                    .andWhere(new Brackets(qb => {
+                        qb.where("child.order_number like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.student_name like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.sats_id like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.status like :term", { term: `%${searchTerm}%` })
+                    }))
+                    .getCount();
+                let pending_count = await studentRepo.createQueryBuilder("child")
+                    .where("child.user_id= :user_id and child.school_id= :school_id and child.applicationStatus= :appStatus",
+                        { user_id: user_id, school_id: school_id, appStatus: ORDER_PENDING })
+                    .andWhere(new Brackets(qb => {
+                        qb.where("child.order_number like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.student_name like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.sats_id like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.status like :term", { term: `%${searchTerm}%` })
+                    }))
+                    .getCount();
+                let totalData = await studentRepo.createQueryBuilder('child')
                     .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
-                    .where("child.user_id= :user_id and child.school_id= :school_id and applicationStatus= :appStatus",
-                        { user_id: user_id, school_id: school_id, appStatus: COMPLETED })
-                    .orWhere("other.order_number like :term1 or other.student_name like :term2 or other.sats_id like :term3", {term1: `%${searchTerm}%`, term2: `%${searchTerm}%`, term3: `%${searchTerm}%` })
-                    .orderBy('child.student_unique_id')
-                    .skip(skip)
-                    .take(take)
+                    .where("child.user_id = :user_id and child.school_id = :school_id and child.applicationStatus = :appStatus",
+                        { user_id, school_id, appStatus: COMPLETED })
+                    .andWhere(new Brackets(qb => {
+                        qb.where("child.order_number like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.student_name like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.sats_id like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.status like :term", { term: `%${searchTerm}%` })
+                    }))
+                    .orderBy('child.created_at', 'DESC')
+                    .skip(+skip)
+                    .take(+take)
                     .getRawMany();
+
                 return {
                     take: take,
                     skip: skip,
@@ -254,21 +291,26 @@ export class SchoolRepo {
         try {
             const { pagination, take, skip, user_id, school_id, searchTerm } = data;
             if (pagination == 'Yes') {
-                return await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
+                return await studentRepo.createQueryBuilder('child')
                     .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
-                    .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and applicationStatus= :appStatus",
-                        { user_id: user_id, school_id: school_id, status: DELIVERED, appStatus: COMPLETED })
-                    .orWhere("other.order_number like :term1 or other.student_name like :term2 or other.sats_id like :term3", {term1: `%${searchTerm}%`, term2: `%${searchTerm}%`, term3: `%${searchTerm}%` })
-                    .orderBy('child.student_unique_id')
-                    .skip(skip)
-                    .take(take)
+                    .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and childapplicationStatus= :appStatus",
+                        { user_id, school_id, status: DELIVERED, appStatus: COMPLETED })
+                    .andWhere(new Brackets(qb => {
+                        qb.where("child.order_number like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.student_name like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.sats_id like :term", { term: `%${searchTerm}%` })
+                            .orWhere("child.status like :term", { term: `%${searchTerm}%` })
+                    }))
+                    .orderBy('child.created_at', 'DESC')
+                    .skip(+skip)
+                    .take(+take)
                     .getRawMany();
             } else {
                 return await AppDataSource.getTreeRepository(students_data).createQueryBuilder('child')
                     .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
-                    .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and applicationStatus= :appStatus",
+                    .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and child.applicationStatus= :appStatus",
                         { user_id: data?.user_id, school_id: data?.school_id, status: DELIVERED, appStatus: COMPLETED })
                     .getRawMany();
             }
@@ -299,7 +341,7 @@ export class SchoolRepo {
         try {
             const { user_id } = data;
             let studentDataBase = await AppDataSource.getRepository(students_data);
-            let refractionistData = await AppDataSource.getRepository(master_data).findOneBy({unique_id: user_id});
+            let refractionistData = await AppDataSource.getRepository(master_data).findOneBy({ unique_id: user_id });
             let result = await studentDataBase.findOneBy({ school_id: data.school_id, user_id: data.user_id, sats_id: data.sats_id });
             if (!result) {
                 return 422;

@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { Equal } from "typeorm";
+import { Brackets, Equal, ILike } from "typeorm";
 import Logger from "../utility/winstonLogger";
 import { AppDataSource } from "../dbConfig/mysql";
 import { other_benf_data } from "../entity/other_benf_data";
@@ -9,6 +9,7 @@ import { rc_data } from "../entity/rc_data";
 import { ACCESS_DENIED, COMPLETED, DELIVERED, ORDER_PENDING, READY_TO_DELIVER } from "../utility/constants";
 import { demoAuthResponse } from "../entity/demoAuth";
 
+const otherbenfRepo = AppDataSource.getRepository(other_benf_data);
 
 const dataDriven = (data = "Yes") => {
     switch (data) {
@@ -529,7 +530,7 @@ export class OtherBenfRepo {
         try {
             return await AppDataSource.getRepository(other_benf_data).findOneBy({ user_id: data });
         } catch (e) {
-            Logger.error("otherBenfRepo => getDataByRcNo", e)
+            Logger.error("otherBenfRepo => checkLoginUser", e)
             return e;
         }
     };
@@ -538,7 +539,7 @@ export class OtherBenfRepo {
         try {
             return await AppDataSource.getRepository(other_benf_data).findOneBy({ benf_unique_id: id });
         } catch (e) {
-            Logger.error("otherBenfRepo => getDataByRcNo", e)
+            Logger.error("otherBenfRepo => findWithBenfData", e)
             return e;
         }
     };
@@ -548,7 +549,7 @@ export class OtherBenfRepo {
             return await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, address,order_number, 
             benf_name, phone_number, initial_image, status from other_benf_data where benf_unique_id='${data.benf_unique_id}'`);
         } catch (e) {
-            Logger.error("otherBenfRepo => getDataByRcNo", e)
+            Logger.error("otherBenfRepo => checkStatusWiseData", e)
             return e;
         }
     };
@@ -578,7 +579,7 @@ export class OtherBenfRepo {
             let result = await AppDataSource.getRepository(other_benf_data).findOne({ where: { aadhar_no: Equal(data.aadhar_no), user_id: Equal(data.user_id) } });
             return result;
         } catch (e) {
-            Logger.error("otherBenfRepo => getDataByRcNoAnadAadharHash", e)
+            Logger.error("otherBenfRepo => getDataByRcNoAnadAadharHashWithUniId", e)
             return e;
         }
     };
@@ -589,7 +590,7 @@ export class OtherBenfRepo {
                 .where("sats_id = :id", { id: data.education_id }).getRawOne();
             return result;
         } catch (e) {
-            Logger.error("otherBenfRepo => getDataByRcNoAnadAadharHash", e)
+            Logger.error("otherBenfRepo => checkDuplicatesWithSats", e)
             return e;
         }
     };
@@ -600,7 +601,7 @@ export class OtherBenfRepo {
                 .where("education_id = :education_id", { education_id: data.education_id }).getRawOne();
             return result;
         } catch (e) {
-            Logger.error("otherBenfRepo => getDataByRcNoAnadAadharHash", e)
+            Logger.error("otherBenfRepo => checkSatsDuplicate", e)
             return e;
         }
     };
@@ -609,15 +610,44 @@ export class OtherBenfRepo {
         try {
             const { pagination, skip = 0, take = 10, user_id, searchTerm } = data;
             if (pagination == 'Yes') {
-                let pending_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: ORDER_PENDING, applicationStatus: COMPLETED });
-                let ready_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: READY_TO_DELIVER, applicationStatus: COMPLETED });
-                let delivered_count = await AppDataSource.getRepository(other_benf_data).countBy({ user_id: user_id, status: DELIVERED, applicationStatus: COMPLETED });
+                let pending_count = await otherbenfRepo.createQueryBuilder("other")
+                .where("other.user_id= :user_id and other.status= :status and other.applicationStatus= :aps", {user_id, status: ORDER_PENDING, aps: COMPLETED })
+                .andWhere(new Brackets(qb => {
+                    qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+                        .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+                        .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+                        .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+                }))
+                .getCount();
+                let delivered_count = await otherbenfRepo.createQueryBuilder("other")
+                .where("other.user_id= :user_id and other.status= :status and other.applicationStatus= :aps", {user_id, status: DELIVERED, aps: COMPLETED })
+                .andWhere(new Brackets(qb => {
+                    qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+                        .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+                        .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+                        .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+                }))
+                .getCount();
+                let ready_count = await otherbenfRepo.createQueryBuilder("other")
+                .where("other.user_id= :user_id and other.status= :status and other.applicationStatus= :aps", {user_id, status: READY_TO_DELIVER, aps: COMPLETED })
+                .andWhere(new Brackets(qb => {
+                    qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+                        .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+                        .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+                        .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+                }))
+                .getCount();
                 let totalData = await AppDataSource.getRepository(other_benf_data).createQueryBuilder('other').
                     select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name', 'other.order_number as order_number',
                         'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
                     .where("other.user_id = :id and other.applicationStatus = :applicationStatus", { id: user_id, applicationStatus: COMPLETED })
-                    .orWhere("other.order_number like :term1 or other.benf_name like :term2 or other.phone_number like :term3", {term1: `%${searchTerm}%`, term2: `%${searchTerm}%`, term3: `%${searchTerm}%` })
-                    .orderBy('other.benf_unique_id')
+                    .andWhere(new Brackets(qb => {
+                        qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+                            .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+                            .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+                            .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+                    }))
+                    .orderBy('other.created_at', 'DESC')
                     .skip(+skip)
                     .take(+take)
                     .getRawMany();
@@ -662,7 +692,7 @@ export class OtherBenfRepo {
         try {
             return await AppDataSource.getRepository(other_benf_data).findOneBy({ benf_unique_id: data });
         } catch (e) {
-            Logger.error("otherBenfRepo => getBenificaryStatus", e)
+            Logger.error("otherBenfRepo => checkBenfUniId", e)
             return e;
         }
     };
@@ -672,7 +702,7 @@ export class OtherBenfRepo {
             return await AppDataSource.getRepository(other_benf_data).query(`SELECT benf_unique_id, address, aadhar_no,order_number, 
             benf_name, phone_number, initial_image status from other_benf_data where user_id='${data.user_id}' and aadhar_no='${data.aadhar_no}'`);
         } catch (e) {
-            Logger.error("otherBenfRepo => getBenificaryStatus", e)
+            Logger.error("otherBenfRepo => statusDataByIdWith", e)
             return e;
         }
     };
@@ -705,12 +735,17 @@ export class OtherBenfRepo {
                 return await AppDataSource.getRepository(other_benf_data).createQueryBuilder('other').
                     select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name', 'other.order_number as order_number',
                         'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
-                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus and other.status = :status ",
+                    .where("other.user_id = :id and other.applicationStatus = :applicationStatus and other.status = :status",
                         { id: user_id, applicationStatus: COMPLETED, status: DELIVERED })
-                    .orWhere("other.order_number like :term1 or other.benf_name like :term2 or other.phone_number like :term3", {term1: `%${searchTerm}%`, term2: `%${searchTerm}%`, term3: `%${searchTerm}%` })
-                    .orderBy('other.benf_unique_id')
-                    .skip(skip)
-                    .take(take)
+                    .andWhere(new Brackets(qb => {
+                        qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+                            .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+                            .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+                            .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+                    }))
+                    .orderBy('other.created_at', 'DESC')
+                    .skip(+skip)
+                    .take(+take)
                     .getRawMany();
             } else {
                 return await this.getBenfDevliverd(data);

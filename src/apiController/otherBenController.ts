@@ -424,8 +424,7 @@ router.post("/get_bef_status", requestAndResonseTime, async (req: Request, res: 
         let result = await otherBenfServices.getBenificaryStatus(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            // ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), result);
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
@@ -545,15 +544,6 @@ router.post("/ekyc_text", requestAndResonseTime, async (req: Request, res: Respo
     };
 });
 
-async function checkData(data, res) {
-    let resultData = await otherBenfServices.getEkycDataFromEkyc(data);
-    if (!res.headersSent) {
-        if (resultData?.code != 500) {
-            return res.send({ code: resultData.code, status: resultData.status, data: encryptData(resultData.message) });
-        }
-    }
-};
-
 router.post("/ekyc_response", requestAndResonseTime, async (req: Request, res: Response) => {
     try {
         let data = new other_benf_data(req.body);
@@ -573,8 +563,7 @@ router.post("/get_bef_history", requestAndResonseTime, async (req: Request, res:
         let result = await otherBenfServices.getBenificaryHistory(data);
         let response = (result?.code || result instanceof Error) ?
             ResponseMessages(ResponseCode.UNPROCESS, (result?.message || RESPONSEMSG.UNPROCESS), RESPONSE_EMPTY_DATA) :
-            // ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
-            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), result);
+            ResponseMessages(ResponseCode.SUCCESS, (result?.message || RESPONSEMSG.RETRIVE_SUCCESS), encryptData(result));
         res.send(response);
     } catch (e) {
         Logger.error("OtherBenficiary => ", e);
