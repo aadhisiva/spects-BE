@@ -13,14 +13,14 @@ import { RESPONSEMSG, RESPONSE_EMPTY_DATA, ResponseCode, ResponseMessages } from
 import { AdminServices } from '../apiServices/adminServices';
 import { district_data, master_data } from '../entity';
 import { reUsableResSendFunction } from '../utility/resusableFun';
-import { authenticateToken, validateFeilds, verifyUser } from '../utility/middlewares';
+import { authenticateToken, validateFeilds } from '../utility/middlewares';
 import { login_validation, otp_validation, update_district, update_phco_validate, update_refractionist, update_taluka } from '../utility/validations';
 
 const router = express.Router();
 
 const adminServices = Container.get(AdminServices); 
 // skip user
-router.post("/skip", authenticateToken, verifyUser, async (req: any, res: Response) => {
+router.post("/skip", authenticateToken, async (req: any, res: Response) => {
     try {
         req.session.user.isIntialLogin = "N"
         return res.send("");
@@ -91,7 +91,7 @@ router.post("/resend_otp", validateFeilds(login_validation), async (req: Request
     }
 });
 // all master based on login user
-router.post("/all_masters", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/all_masters", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.getAllMasters(data);
@@ -104,7 +104,7 @@ router.post("/all_masters", authenticateToken, verifyUser, async (req: Request, 
     }
 });
 // all eligibale users api
-router.post("/get_orders_count", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/get_orders_count", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.getAllOrders(data);
@@ -117,7 +117,7 @@ router.post("/get_orders_count", authenticateToken, verifyUser, async (req: Requ
     }
 });
 // delivered users api
-router.post("/delivered", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/delivered", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.getAllDelivered(data);
@@ -130,7 +130,7 @@ router.post("/delivered", authenticateToken, verifyUser, async (req: Request, re
     }
 });
 // oending users
-router.post("/pending", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/pending", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.getAllPending(data);
@@ -143,7 +143,7 @@ router.post("/pending", authenticateToken, verifyUser, async (req: Request, res:
     }
 });
 // update user data
-router.post("/update_data", authenticateToken, verifyUser, validateFeilds(update_refractionist), async (req: Request, res: Response) => {
+router.post("/update_data", authenticateToken, validateFeilds(update_refractionist), async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.getUpdatedData(data);
@@ -156,7 +156,7 @@ router.post("/update_data", authenticateToken, verifyUser, validateFeilds(update
     }
 });
 // addd new multiple users to same village user data
-router.post("/add_new_data_with_exist", authenticateToken, verifyUser, validateFeilds(update_refractionist), async (req: Request, res: Response) => {
+router.post("/add_new_data_with_exist", authenticateToken, validateFeilds(update_refractionist), async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.addNewDataWithExistsRow(data);
@@ -169,7 +169,7 @@ router.post("/add_new_data_with_exist", authenticateToken, verifyUser, validateF
     }
 });
 // get talukas data
-router.post("/talukas_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/talukas_data", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.getTalukasData(data);
@@ -183,7 +183,7 @@ router.post("/talukas_data", authenticateToken, verifyUser, async (req: Request,
 });
 /* ---------------------------------------------------------------------------------------------------------- */
 // get phco's data  phco_data
-router.post("/phco_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/phco_data", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.getPhcosData(data);
@@ -196,7 +196,7 @@ router.post("/phco_data", authenticateToken, verifyUser, async (req: Request, re
     }
 });
 // update phco table data
-router.post("/update_phco_data", authenticateToken, verifyUser, validateFeilds(update_phco_validate), async (req: Request, res: Response) => {
+router.post("/update_phco_data", authenticateToken, validateFeilds(update_phco_validate), async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.updatePhcoData(data);
@@ -208,7 +208,7 @@ router.post("/update_phco_data", authenticateToken, verifyUser, validateFeilds(u
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-router.post("/update_phco_screenings", authenticateToken, verifyUser, async (req: any, res: Response) => {
+router.post("/update_phco_screenings", authenticateToken, async (req: any, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.updatePhcoScreeningData(data);
@@ -222,7 +222,7 @@ router.post("/update_phco_screenings", authenticateToken, verifyUser, async (req
     }
 });
 // phco data village wise
-router.post("/get_phco_wise_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/get_phco_wise_data", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result: any = await adminServices.getPhcoWiseData(data);
@@ -238,7 +238,7 @@ router.post("/get_phco_wise_data", authenticateToken, verifyUser, async (req: Re
 /* -------------------------------------------------------------------------------------------------------------- */
 
 // get district data
-router.post("/districts_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/districts_data", authenticateToken, async (req: Request, res: Response) => {
     try {
         let result = await adminServices.getDistrictsData();
         let response = (result?.code || result instanceof Error) ?
@@ -251,7 +251,7 @@ router.post("/districts_data", authenticateToken, verifyUser, async (req: Reques
     }
 });
 // update districts data
-router.post("/update_districts_Data", authenticateToken, verifyUser, validateFeilds(update_district), async (req: Request, res: Response) => {
+router.post("/update_districts_Data", authenticateToken, validateFeilds(update_district), async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.updateDistrictsData(data);
@@ -265,7 +265,7 @@ router.post("/update_districts_Data", authenticateToken, verifyUser, validateFei
     }
 });
 // update taluka data
-router.post("/update_taluka_data", authenticateToken, verifyUser, validateFeilds(update_taluka), async (req: Request, res: Response) => {
+router.post("/update_taluka_data", authenticateToken, validateFeilds(update_taluka), async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.updateTalukaData(data);
@@ -279,7 +279,7 @@ router.post("/update_taluka_data", authenticateToken, verifyUser, validateFeilds
     }
 });
 // reports data
-router.post("/reports_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/reports_data", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = req.body;
         let result = await adminServices.getReportsData(data);
@@ -295,7 +295,7 @@ router.post("/reports_data", authenticateToken, verifyUser, async (req: Request,
 
 // get user data by using of login user
 
-router.post("/getUser_data", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/getUser_data", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = new district_data(req.body);
         let result = await adminServices.getLoginUserData(data);
@@ -312,7 +312,7 @@ router.post("/getUser_data", authenticateToken, verifyUser, async (req: Request,
 
 // new apis for managing more records
 
-router.post("/uniqueDistricts", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/uniqueDistricts", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.uniqueDistricts(data);
@@ -325,7 +325,7 @@ router.post("/uniqueDistricts", authenticateToken, verifyUser, async (req: Reque
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-router.post("/searchData", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/searchData", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.searchData(data);
@@ -338,7 +338,7 @@ router.post("/searchData", authenticateToken, verifyUser, async (req: Request, r
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-router.post("/searchDataStateAndDistrictWise", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/searchDataStateAndDistrictWise", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.searchDataStateAndDistrictWise(data);
@@ -351,7 +351,7 @@ router.post("/searchDataStateAndDistrictWise", authenticateToken, verifyUser, as
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-router.post("/eachDataIdWise", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/eachDataIdWise", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.eachDataIdWise(data);
@@ -364,7 +364,7 @@ router.post("/eachDataIdWise", authenticateToken, verifyUser, async (req: Reques
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-router.post("/refractionistReports", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/refractionistReports", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.refractionistReports(data);
@@ -377,7 +377,7 @@ router.post("/refractionistReports", authenticateToken, verifyUser, async (req: 
         return ResponseMessages(ResponseCode.EXCEPTION, (e || RESPONSEMSG.EXCEPTION), RESPONSE_EMPTY_DATA);
     }
 });
-router.post("/makeNullToValues", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/makeNullToValues", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.makeNullToValues(data);
@@ -392,7 +392,7 @@ router.post("/makeNullToValues", authenticateToken, verifyUser, async (req: Requ
 });
 
 // get primary count
-router.post("/getPrimaryCount", authenticateToken, verifyUser, async (req: Request, res: Response) => {
+router.post("/getPrimaryCount", authenticateToken, async (req: Request, res: Response) => {
     try {
         let data = new master_data(req.body);
         let result = await adminServices.getPrimaryCount(data);

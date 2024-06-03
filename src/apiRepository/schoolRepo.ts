@@ -208,7 +208,7 @@ export class SchoolRepo {
                     .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
                     .where("child.user_id = :user_id and child.school_id = :school_id and child.applicationStatus = :appStatus",
-                        { user_id, school_id, appStatus: COMPLETED })
+                        { user_id: user_id, school_id: school_id, appStatus: COMPLETED })
                     .andWhere(new Brackets(qb => {
                         qb.where("child.order_number like :term", { term: `%${searchTerm}%` })
                             .orWhere("child.student_name like :term", { term: `%${searchTerm}%` })
@@ -294,8 +294,8 @@ export class SchoolRepo {
                 return await studentRepo.createQueryBuilder('child')
                     .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
-                    .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and childapplicationStatus= :appStatus",
-                        { user_id, school_id, status: DELIVERED, appStatus: COMPLETED })
+                    .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and child.applicationStatus= :appStatus",
+                        { user_id: user_id, school_id: school_id, status: DELIVERED, appStatus: COMPLETED })
                     .andWhere(new Brackets(qb => {
                         qb.where("child.order_number like :term", { term: `%${searchTerm}%` })
                             .orWhere("child.student_name like :term", { term: `%${searchTerm}%` })
@@ -311,7 +311,7 @@ export class SchoolRepo {
                     .select(['child.student_unique_id as student_unique_id', 'child.order_number as order_number',
                         'child.student_name as student_name', 'child.sats_id as sats_id', 'child.status as status'])
                     .where("child.user_id= :user_id and child.school_id= :school_id and child.status= :status and child.applicationStatus= :appStatus",
-                        { user_id: data?.user_id, school_id: data?.school_id, status: DELIVERED, appStatus: COMPLETED })
+                        { user_id: user_id, school_id: school_id, status: DELIVERED, appStatus: COMPLETED })
                     .getRawMany();
             }
         } catch (e) {

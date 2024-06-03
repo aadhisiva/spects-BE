@@ -25,7 +25,7 @@ export class AdminServices {
     };
 
     async validationOtp(data, req) {
-        var session;
+        // var session;
         if (!data.mobile_number) return { code: 422, message: "Phone Number Cannot Be Null." };
         if (data.mobile_number.length !== 10) return { code: 422, message: "Phone Number Not Valid." }
         let checkData = await this.AdminRepo.checkTypeWiseLoginData(data);
@@ -34,9 +34,9 @@ export class AdminServices {
         if (!checkOtp) return { code: 422, message: RESPONSEMSG.VALIDATE_FAILED };
         const token = jwt.sign({ user_id: checkData.code }, process.env.USERFRONT_PUBLIC_KEY, { expiresIn: "12h", });
         let finalResult = { unique_id: checkData?.code, isIntialLogin: checkData?.is_initial_login, type: data?.type, token, codes: checkData?.codes };
-        session = req.session;
-        session.user = finalResult
-        return { message: RESPONSEMSG.VALIDATE, data: {} };
+        // session = req.session;
+        // session.user = finalResult
+        return { message: RESPONSEMSG.VALIDATE, data: {success: true, userData: finalResult} };
     };
 
     async resendOtp(data) {

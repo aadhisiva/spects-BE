@@ -12,8 +12,6 @@ import dotenv from 'dotenv';
 import morgan from 'morgan';
 import Logger from "./utility/winstonLogger";
 import fs from "fs";
-import sessions from "express-session";
-import { TypeormStore } from "typeorm-store";
 import cors from "cors";
 import { AppDataSource } from "./dbConfig/mysql";
 import UserController from "./apiController/userController";
@@ -21,7 +19,6 @@ import SchoolController from "./apiController/schoolController";
 import OtherBenfController from "./apiController/otherBenController";
 import EkycController from "./apiController/ekycController";
 import AdminController from "./apiController/adminController";
-import { Session } from './entity';
 
 // for acceessing env variables
 dotenv.config();
@@ -37,38 +34,14 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
-// session creation for client side
-let repository = AppDataSource.getRepository(Session);
-
 // time milliseconds * seconds * minutes * hours
-const twoHour = 1000 * 60 * 60 * 2;
-// const twoHour = 1000 * 10;
-
-// check node is running on production or not
-let secure = process.env.NODE_ENV == "production" ? true : false;
 
 // cors setup for communication of sever and client
-app.use(cors({
-  origin: ["http://localhost:3000"],
-  methods: ["POST", "GET"],
-  credentials: true,
-}));
+const corsOptions = {
+  origin: ['https://spectacles.karanataka.gov.in', "http://localhost:3000"], // Your React app domain
+  credentials: true
+};
 
-//session middleware
-app.use(sessions({
-  secret: process.env.COOKIE_PARSER_KEY,
-  saveUninitialized: false, // it is maintaining same session id in same browser at every time
-  cookie: {
-    maxAge: twoHour, // max age set in milliseconds
-    secure, // secure true is only works in https - rememeber this
-    // sameSite: true // protection against a variety of cross-site attacks, including CSRF, cross-site leaks, and some CORS exploits.
-  },
-  store: new TypeormStore({ repository }),
-  resave: false,
-  name: "user"
-}));
-
-//setting req headers and res headers 
 app.use(function (req, res, next) {
   res.header("X-Frame-Options", "SAMEORIGIN");
   res.header("X-XSS-Protection", "1; mode=block'");
@@ -83,12 +56,8 @@ app.use(morgan('common', {
   stream: fs.createWriteStream('./logs/application.log', { flags: 'a' })
 }));
 
-// Set directory to contain the templates ('views')
-app.set('views', __dirname);
+app.use(cors(corsOptions));
 
-// Set view engine to use
-app.set('view engine', 'ejs');
-app.use(morgan('dev'));
 
 app.get("/edcs/run", (req, res) => {
   res.send("Running Successfully");
@@ -100,9 +69,17 @@ app.use("/edcs/school", SchoolController);
 app.use("/edcs/other", OtherBenfController);
 app.use("/edcs", EkycController);
 app.use("/edcs/admin", AdminController);
+// Set directory to contain the templates ('views')
+app.set('views', __dirname);
+
+// Set view engine to use
+app.set('view engine', 'ejs');
+app.use(morgan('dev'));
+
 
 // we are adding port connection here
 AppDataSource.initialize().then(async (connection) => {
+
   app.listen(port, () => {
     Logger.info(`⚡️[Database]: Database connected....+++++++ ${port}`);
   });
