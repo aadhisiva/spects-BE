@@ -1,0 +1,53 @@
+{
+  "name": "watershead",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon src/index.ts",
+    "pro": "node dist/index.js",
+    "build": "npx tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aadhisiva/waterShead.git"
+  },
+  "author": "aadhisivapanjagala@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aadhisiva/waterShead/issues"
+  },
+  "homepage": "https://github.com/aadhisiva/waterShead#readme",
+  "dependencies": {
+    "axios": "^1.6.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.18.1",
+    "fs": "^0.0.1-security",
+    "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "mssql": "^9.3.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemon": "^3.0.1",
+    "npm": "^10.8.2",
+    "path": "^0.12.7",
+    "reflect-metadata": "^0.1.13",
+    "ts-node": "^10.9.1",
+    "typedi": "^0.10.0",
+    "typeorm": "^0.3.17",
+    "winston": "^3.11.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.1",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/morgan": "^1.9.9",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^20.8.10"
+  }
+}
