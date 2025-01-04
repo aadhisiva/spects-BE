@@ -64,7 +64,7 @@ export class OtherBenfData {
   @Column({ default: null, type: 'nvarchar', length: 100 })
   father_name!: string;
 
-  @Column({ default: null, type: 'nvarchar', length: 100 })
+  @Column({ default: null, type: 'nvarchar', length: 255 })
   address!: string;
 
   @Column({ default: null, type: 'nvarchar', length: 100 })
@@ -177,6 +177,9 @@ export class OtherBenfData {
 
   @Column({ default: null, type: 'nvarchar', length: 100 })
   schoolName!: string;
+
+  @Column({ default: null, type: 'nvarchar', length: 100 })
+  oldUserId!: string;
 
   @CreateDateColumn()
   CreatedDate!: Date;

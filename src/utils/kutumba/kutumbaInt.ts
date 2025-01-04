@@ -191,4 +191,5 @@ export const ekycVerification = async (data: any) => {
     } catch (e) {
         return e;
     }
-}
+};
+

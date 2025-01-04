@@ -59,7 +59,7 @@ export enum RESPONSEAPI_MESSAGE {
 export const EKYC_ACCESS_DENIED = "Access Denied From EKYC."
 export const KUTUMBA_ACCESS_DENIED = "Access Denied From Kutumba."
 export const EKYC_SUCCESS = "You Are Completed Ekyc SuccessFully."
-export const ACCESS_DENIED = "Access Denied." 
+export const ACCESS_DENIED = "No Data Found." 
 export const DATA_SAVED = "Data Saved." 
 export const COMPLETED = "Completed" 
 export const PHONE_REGESTERED = "Phone Number Already Registered With Four Members." ;

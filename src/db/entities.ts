@@ -11,6 +11,7 @@ import { OtpLogs } from "../entities/otpLogs";
 import { RolesAccess } from "../entities/roleAccess";
 import { Roles } from "../entities/roles";
 import { SchoolData } from "../entities/schoolData";
+import { SecondaryScreening } from "../entities/secondaryScreening";
 import { StudentData } from "../entities/studentData";
 import { UserData } from "../entities/userData";
 import { Versions } from "../entities/versions";
@@ -34,5 +35,6 @@ export const allEntities = [
     NewDistricts,
     DemoAuthResponse,
     OtherBenfDataDummy,
-    EkycData
+    EkycData,
+    SecondaryScreening
 ]

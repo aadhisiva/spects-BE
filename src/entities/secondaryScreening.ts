@@ -6,14 +6,11 @@ import {
     UpdateDateColumn,
   } from "typeorm";
   
-  @Entity({name: "MasterData"})
-  export class MasterData {
+  @Entity({name: "SecondaryScreening"})
+  export class SecondaryScreening {
   
     @PrimaryGeneratedColumn()
     id!: number;
-
-    @Column({ default: null,  type: 'nvarchar', length: 100 })
-    SubCenterName!: string;
 
     @Column({ default: null,  type: 'nvarchar', length: 70 })
     DistrictCode!: string;
@@ -21,26 +18,8 @@ import {
     @Column({ default: null,  type: 'nvarchar', length: 100 })
     TalukCode!: string;
 
-    @Column({ default: null,  type: 'nvarchar', length: 150 })
-    VillageName!: string;
-
-    @Column({ default: null,  type: 'nvarchar', length: 150 })
-    VillageCode!: string;
-
-    @Column({ default: null,  type: 'nvarchar', length: 100 })
-    DistrictName!: string;
-
-    @Column({ default: null,  type: 'nvarchar', length: 100 })
-    TalukName!: string;
-
     @Column({ default: null,  type: 'nvarchar', length: 100 })
     PhcoCode!: string;
-
-    @Column({ default: null,  type: 'nvarchar', length: 100 })
-    PhcoName!: string;
-
-    @Column({ default: null,  type: 'nvarchar', length: 100 })
-    HealthBlock!: string;
 
     @Column({ default: null,  type: 'nvarchar', length: 100 })
     UniqueCode!: string;
@@ -50,8 +29,17 @@ import {
   
     @Column({ default: null,  type: 'nvarchar', length: 100 })
     SubCenterCode!: string;
+  
+    @Column({ default: null,  type: 'nvarchar', length: 100 })
+    TotalPSCompleted!: string;
+  
+    @Column({ default: null,  type: 'nvarchar', length: 100 })
+    TotalSSRequired!: string;
 
     @CreateDateColumn()
     CreatedDate!: Date;
+
+    @UpdateDateColumn()
+    UpdatedDate!: Date;
   };
   

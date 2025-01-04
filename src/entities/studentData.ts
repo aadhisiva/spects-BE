@@ -142,6 +142,9 @@ export class StudentData {
   @Column({ default: null, type: 'nvarchar', length: 100 })
   section!: string;
 
+  @Column({ default: null, type: 'nvarchar', length: 100 })
+  oldUserId!: string;
+
   @CreateDateColumn()
   CreatedDate!: Date;
 

@@ -33,5 +33,19 @@ router.post('/addDemoAuthWithVersion', authenticateToken, mobileController.addDe
 router.post('/saveDemoAuthResponse', authenticateToken, mobileController.saveDemoAuthResponse);  
 router.post('/ekycProcessWithKutumba', authenticateToken, mobileController.ekycProcessWithKutumba);  
 router.post('/addDataAfterEkyc', authenticateToken, mobileController.addDataAfterEkyc);  
+router.post('/rcBasedOnNumberWise', authenticateToken, mobileController.rcBasedOnNumberWise);  
+router.post('/otpCheckRcMember', authenticateToken, mobileController.otpCheckRcMember);  
+router.post('/updateRcAadharData', authenticateToken, mobileController.updateRcAadharData);  
+router.post('/eachStatusWise', authenticateToken, mobileController.eachStatusWise);  
+router.post('/readyToDeliverOtp', authenticateToken, mobileController.readyToDeliverOtp);  
+router.post('/validateReadyToDeliverOtp', authenticateToken, mobileController.validateReadyToDeliverOtp);  
+router.post('/delivered', authenticateToken, mobileController.delivered);  
+router.post('/otpSentToNewNumber', authenticateToken, mobileController.otpSentToNewNumber);  
+router.post('/read_to_delivered', authenticateToken, mobileController.chnageStatusReadyToDeliver);  
+router.post('/pending_to_ready', authenticateToken, mobileController.chnageStatusPendingToReady);  
+router.post('/rc_aadhar_data', authenticateToken, mobileController.getAaadharDataFromRcData);  
+router.post('/get_aadhar_data', authenticateToken, mobileController.getAadharHashData);  
+router.post('/get_bef_history', authenticateToken, mobileController.getBenfHistory);  
+router.post('/get_bef_status', authenticateToken, mobileController.getBenfStatusWise);  
 
 export default router;

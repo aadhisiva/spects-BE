@@ -8,6 +8,7 @@ import { response200, response400, response404 } from "../utils/resBack";
 import { encryptData } from "../utils/resuableCode";
 import { apiErrorHandler } from "../utils/reqResHandler";
 import { repoNames, repository } from "../db/repos";
+import XLSX from "xlsx";
 
 interface ExcelData {
   [key: string]: string | number;
@@ -127,10 +128,10 @@ export class WebController {
       if (ReqType == 1) {
         if (loginType == "District") {
           let result = await repository.masterDataRepo.createQueryBuilder('dd')
-          .innerJoinAndSelect(repoNames.AssignedMastersTable, 'am', 'am.DistrictCode=dd.DistrictCode')
-          .select(["DISTINCT dd.DistrictCode as value", "dd.DistrictName as name"])
-          .where("am.Mobile = :Mobile and am.ListType = :ListType and am.Type = :Type", { Mobile, ListType, Type })
-          .getRawMany();
+            .innerJoinAndSelect(repoNames.AssignedMastersTable, 'am', 'am.DistrictCode=dd.DistrictCode')
+            .select(["DISTINCT dd.DistrictCode as value", "dd.DistrictName as name"])
+            .where("am.Mobile = :Mobile and am.ListType = :ListType and am.Type = :Type", { Mobile, ListType, Type })
+            .getRawMany();
           return response200(res, result);
         };
         let fetchedResult = await repository.masterDataRepo.createQueryBuilder('dd')
@@ -179,6 +180,78 @@ export class WebController {
         let result = await repository.masterDataRepo.createQueryBuilder('vd')
           .select(["DISTINCT vd.SubCenterCode as value", "vd.SubCenterName as name"])
           .where("vd.PhcoCode = :hc and vd.DistrictCode = :dc and vd.TalukCOde = :tc and vd.Type = :Type", { hc: UPCode, dc: UDCode, tc: UTCode, Type })
+          .getRawMany();
+        return response200(res, result);
+      } else {
+        return response400(res, "Your request is not found");
+      }
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async getMasterDropDownForReports(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = req.body;
+    const { ReqType, UDCode, UTCode, UPCode, Mobile, loginType, ListType, Type } = bodyData;
+
+    // if (!ListType) return response400(res, "Missing 'ListType' in req formate");
+    // if (!Mobile) return response400(res, "Missing 'Mobile' in req formate");
+    if (!ReqType) response400(res, "Missing 'ReqType' in req formate");
+    try {
+      if (ReqType == 1) {
+        if (loginType == "District") {
+          let result = await repository.masterDataRepo.createQueryBuilder('dd')
+            .innerJoinAndSelect(repoNames.AssignedMastersTable, 'am', 'am.DistrictCode=dd.DistrictCode')
+            .select(["DISTINCT dd.DistrictCode as value", "dd.DistrictName as name"])
+            .where("am.Mobile = :Mobile and am.ListType = :ListType", { Mobile, ListType })
+            .getRawMany();
+          return response200(res, result);
+        };
+        let fetchedResult = await repository.masterDataRepo.createQueryBuilder('dd')
+          .select(["DISTINCT dd.DistrictCode as value", "dd.DistrictName as name"])
+          .orderBy("DistrictName", "DESC")
+          .getRawMany();
+        return response200(res, fetchedResult);
+
+      } else if (ReqType == 2) {
+        if (loginType == "Taluk") {
+          let result = await repository.masterDataRepo.createQueryBuilder('tt')
+            .leftJoinAndSelect(repoNames.AssignedMastersTable, 'am', 'am.TalukCode=tt.TalukCode and am.DistrictCode=tt.DistrictCode')
+            .select(["DISTINCT tt.TalukCode as value", "tt.TalukName as name"])
+            .where("am.Mobile = :Mobile and am.ListType = :ListType", { Mobile, ListType })
+            .getRawMany();
+          return response200(res, result);
+        };
+        if (!UDCode) return { code: 400, message: "Provide UDCode" };
+        let fetchedResult = await repository.masterDataRepo.createQueryBuilder('tt')
+          .select(["DISTINCT tt.TalukCode as value", "tt.TalukName as name"])
+          .where("tt.DistrictCode = :dc", { dc: UDCode })
+          .getRawMany();
+        return response200(res, fetchedResult);
+
+      } else if (ReqType == 3) {
+        if (loginType == "Phco") {
+          let result = await repository.masterDataRepo.createQueryBuilder('gd')
+            .innerJoinAndSelect(repoNames.AssignedMastersTable, 'am', 'am.TalukCode=gd.TalukCode and am.DistrictCode=gd.DistrictCode and am.PhcoCode=gd.PhcoCode')
+            .select(["DISTINCT gd.PhcoCode as value", "gd.PhcoName as name"])
+            .where("am.Mobile = :Mobile and am.ListType = :ListType", { Mobile, ListType })
+            .getRawMany();
+          return response200(res, result);
+        };
+        if (!UDCode) return { code: 400, message: "Provide UDCode" };
+        if (!UTCode) return { code: 400, message: "Provide UTCode" };
+        let fetchedResult = await repository.masterDataRepo.createQueryBuilder('gd')
+          .select(["DISTINCT gd.PhcoCode as value", "gd.PhcoName as name"])
+          .where("gd.TalukCode = :tc and gd.DistrictCode = :dc", { tc: UTCode, dc: UDCode })
+          .getRawMany();
+        return response200(res, fetchedResult);
+      } else if (ReqType == 4) {
+        if (!UDCode) return { code: 400, message: "Provide UDCode" };
+        if (!UTCode) return { code: 400, message: "Provide UTCode" };
+        if (!UPCode) return { code: 400, message: "Provide UPCode" };
+        let result = await repository.masterDataRepo.createQueryBuilder('vd')
+          .select(["DISTINCT vd.SubCenterCode as value", "vd.SubCenterName as name"])
+          .where("vd.PhcoCode = :hc and vd.DistrictCode = :dc and vd.TalukCOde = :tc", { hc: UPCode, dc: UDCode, tc: UTCode })
           .getRawMany();
         return response200(res, result);
       } else {
@@ -319,6 +392,206 @@ export class WebController {
       } else {
         return response400(res, "Sending wrong request to server.");
       }
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async fetchSearchReports(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { DataType, DistrictCode, TalukCode, PhcoCode, SubCenterCode, Status, FromDate, ToDate, PageNumber = 1,
+      RowsPerPage = 10, UserId } = bodyData;
+    if (!DataType) return response400(res, "Missing 'DataType' in req formate");
+
+    const DistrictCodeInput = DistrictCode == '' ? null : DistrictCode;
+    const TalukCodeInput = TalukCode == '' ? null : TalukCode;
+    const PhcoCodeInput = PhcoCode == '' ? null : PhcoCode;
+    const SubCenterCodeInput = SubCenterCode == '' ? null : SubCenterCode;
+    const StatusInput = Status == '' ? null : Status;
+    const FromDateInput = FromDate == '' ? null : FromDate;
+    const ToDateInput = ToDate == '' ? null : ToDate; 
+    try {
+      let spQueryForCounts = `execute WebFetchSearchCountsBasedOnInputs @0,@1,@2,@3,@4,@5,@6,@7,@8`;
+      let spQuery = `execute WebFetchSearchDataBasedOnInputs @0,@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11`;
+      let responseForCounts = await AppDataSource.query(spQueryForCounts, [DataType, DistrictCodeInput, TalukCodeInput, PhcoCodeInput, SubCenterCodeInput, StatusInput, FromDateInput, ToDateInput, UserId]);
+      let response = await AppDataSource.query(spQuery, [DataType, "report", DistrictCodeInput, TalukCodeInput, PhcoCodeInput, SubCenterCodeInput, StatusInput, FromDateInput, ToDateInput, UserId, PageNumber, RowsPerPage]);
+      let result = {
+        TotalCount: responseForCounts[0].TotalCount,
+        Applied: responseForCounts[0]?.Applied,
+        Pending: responseForCounts[0]?.Pending,
+        Delivered: responseForCounts[0]?.Delivered,
+        Ready: responseForCounts[0]?.Ready,
+        Page: PageNumber,
+        RowsPerPage: RowsPerPage,
+        TotalData: response
+      };
+      return response200(res, result);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async searchAndDownloadReports(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user.UserId } };
+    const { DataType, Type, DistrictCode, TalukCode, PhcoCode, SubCenterCode, Status, FromDate, ToDate, PageNumber = 1,
+      RowsPerPage = 10, UserId } = bodyData;
+    if (!DataType) return response400(res, "Missing 'DataType' in req formate");
+
+    const DistrictCodeInput = DistrictCode == '' ? null : DistrictCode;
+    const TalukCodeInput = TalukCode == '' ? null : TalukCode;
+    const PhcoCodeInput = PhcoCode == '' ? null : PhcoCode;
+    const SubCenterCodeInput = SubCenterCode == '' ? null : SubCenterCode;
+    const StatusInput = Status == '' ? null : Status;
+    const FromDateInput = FromDate == '' ? null : FromDate;
+    const ToDateInput = ToDate == '' ? null : ToDate;
+    try {
+      let spQuery = `execute WebFetchSearchDataBasedOnInputs @0,@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11`;
+      let response = await AppDataSource.query(spQuery, [DataType, "download", DistrictCodeInput, TalukCodeInput, PhcoCodeInput, SubCenterCodeInput, StatusInput, FromDateInput, ToDateInput, UserId, PageNumber, RowsPerPage]);
+      // Convert data to XLSX
+      const ws = XLSX.utils.json_to_sheet(response);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'SNGData');
+      const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+      res.setHeader('Content-Disposition', 'attachment; filename=data.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buf);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async fetchStateOrDistrictReports(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { DataType, DistrictCode, TalukCode, FromDate, ToDate, PageNumber = 1,
+      RowsPerPage = 10, UserId } = bodyData;
+    if (!DataType) return response400(res, "Missing 'DataType' in req formate");
+
+    const DistrictCodeInput = DistrictCode == '' ? null : DistrictCode;
+    const TalukCodeInput = TalukCode == '' ? null : TalukCode;
+    const FromDateInput = FromDate == '' ? null : FromDate;
+    const ToDateInput = ToDate == '' ? null : ToDate;
+    try {
+      let spQueryForCounts = `execute WebFetchStateAndDistrictCountsBasedOnInputs @0,@1,@2,@3,@4,@5`;
+      let spQuery = `execute WebFetchStateAndDistrictDataBasedOnInputs @0,@1,@2,@3,@4,@5,@6,@7,@8`;
+      let responseForCounts = await AppDataSource.query(spQueryForCounts, [DataType, DistrictCodeInput, TalukCodeInput, FromDateInput, ToDateInput, UserId]);
+      let response = await AppDataSource.query(spQuery, [DataType, "report", DistrictCodeInput, TalukCodeInput, FromDateInput, ToDateInput, UserId, PageNumber, RowsPerPage]);
+      let result = {
+        TotalCount: responseForCounts[0]?.TotalCount,
+        Applied: responseForCounts[0]?.Applied,
+        Pending: responseForCounts[0]?.Pending,
+        Delivered: responseForCounts[0]?.Delivered,
+        Ready: responseForCounts[0]?.Ready,
+        Page: PageNumber,
+        RowsPerPage: RowsPerPage,
+        TotalData: response
+      };
+      return response200(res, result);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async downloadStateOrDistrictReports(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user.UserId } };
+    const { DataType, Type, DistrictCode, TalukCode, FromDate, ToDate, PageNumber = 1,
+      RowsPerPage = 10, UserId } = bodyData;
+    if (!DataType) return response400(res, "Missing 'DataType' in req formate");
+
+    const DistrictCodeInput = DistrictCode == '' ? null : DistrictCode;
+    const TypeInput = Type == '' ? null : Type;
+    const TalukCodeInput = TalukCode == '' ? null : TalukCode;
+    const FromDateInput = FromDate == '' ? null : FromDate;
+    const ToDateInput = ToDate == '' ? null : ToDate;
+    try {
+      let spQuery = `execute WebFetchStateAndDistrictDataBasedOnInputs @0,@1,@2,@3,@4,@5,@6,@7,@8`;
+      let response = await AppDataSource.query(spQuery, [DataType, "download", DistrictCodeInput, TalukCodeInput, FromDateInput, ToDateInput, UserId, PageNumber, RowsPerPage]);
+      // Convert data to XLSX
+      const ws = XLSX.utils.json_to_sheet(response);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'SNGData');
+      const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+      res.setHeader('Content-Disposition', 'attachment; filename=data.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buf);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async fetchRefraLoginReports(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { DataType, FromDate, ToDate, PageNumber = 1,
+      RowsPerPage = 10, UserId } = bodyData;
+    if (!DataType) return response400(res, "Missing 'DataType' in req formate");
+
+    const FromDateInput = FromDate == '' ? null : FromDate;
+    const ToDateInput = ToDate == '' ? null : ToDate;
+    try {
+      let spQueryForCounts = `execute WebRefraLoginReportCountsBasedOnInputs @0,@1,@2,@3`;
+      let spQuery = `execute WebRefraLoginReportBasedOnInputs @0,@1,@2,@3,@4,@5,@6`;
+      let responseForCounts = await AppDataSource.query(spQueryForCounts, [DataType, FromDateInput, ToDateInput, UserId]);
+      let response = await AppDataSource.query(spQuery, [DataType, "report", FromDateInput, ToDateInput, UserId, PageNumber, RowsPerPage]);
+      let result = {
+        TotalCount: responseForCounts[0]?.TotalCount,
+        Applied: responseForCounts[0]?.Applied,
+        Pending: responseForCounts[0]?.Pending,
+        Delivered: responseForCounts[0]?.Delivered,
+        Ready: responseForCounts[0]?.Ready,
+        Page: PageNumber,
+        RowsPerPage: RowsPerPage,
+        TotalData: response
+      };
+      return response200(res, result);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async downloadRefraLoginReports(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user.UserId } };
+    const { DataType, FromDate, ToDate, PageNumber = 1,
+      RowsPerPage = 10, UserId } = bodyData;
+    if (!DataType) return response400(res, "Missing 'DataType' in req formate");
+
+    const FromDateInput = FromDate == '' ? null : FromDate;
+    const ToDateInput = ToDate == '' ? null : ToDate;
+    try {
+      let spQuery = `execute WebRefraLoginReportBasedOnInputs @0,@1,@2,@3,@4,@5,@6`;
+      let response = await AppDataSource.query(spQuery, [DataType, "download", FromDateInput, ToDateInput, UserId, PageNumber, RowsPerPage]);
+      // Convert data to XLSX
+      const ws = XLSX.utils.json_to_sheet(response);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'SNGData');
+      const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+      res.setHeader('Content-Disposition', 'attachment; filename=data.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buf);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async fetchCountsByLogin(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user.UserId } };
+    const { UserId, ReqType } = bodyData;
+    if (!ReqType) return response400(res, "Missing 'ReqType' in req formate");
+    try {
+      let spQuery = `execute WebFetchCountsByLogin @0,@1`;
+      let response = await AppDataSource.query(spQuery, [ReqType, UserId]);
+      return response200(res, response);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async fetchPrimaryScreeningReports(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user.UserId } };
+    const { UserId, ReqType } = bodyData;
+    if (!ReqType) return response400(res, "Missing 'ReqType' in req formate");
+    try {
+      let spQuery = `execute WebFetchPSByLoginWise @0,@1`;
+      let response = await AppDataSource.query(spQuery, [ReqType, UserId]);
+      return response200(res, response);
     } catch (error) {
       return apiErrorHandler(error, req, res);
     };

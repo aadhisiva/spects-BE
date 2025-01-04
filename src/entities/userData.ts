@@ -12,6 +12,7 @@ import { Roles } from "./roles";
 import { SchoolData } from "./schoolData";
 import { StudentData } from "./studentData";
 import { OtherBenfData } from "./otherBenfData";
+import { OtherBenfDataDummy } from "./otherBenfDataDum";
 
 @Entity({ name: "UserData" })
 export class UserData {
@@ -50,11 +51,17 @@ export class UserData {
   @Column({ type: "nvarchar", length: 50, default: null })
   Version!: string;
 
+  @Column({ type: "nvarchar", length: 50, default: null })
+  oldUserId!: string;
+
   @Column({ type: "nvarchar", length: 20, default: null })
   CreatedMobile!: string;
 
   @Column({ type: "nvarchar", length: 30, default: null })
   CreatedRole!: string;
+
+  @Column({ type: "nvarchar", length: 30, default: null })
+  NgoOrGov!: string;
 
   @CreateDateColumn()
   CreatedDate!: Date;
@@ -64,6 +71,9 @@ export class UserData {
 
   @OneToMany(() => OtherBenfData, otherbd => otherbd.UserId, {cascade: true, onDelete: 'CASCADE'})
   OtherBenfDataFK!: OtherBenfData[]
+
+  @OneToMany(() => OtherBenfDataDummy, otherbd => otherbd.UserId, {cascade: true, onDelete: 'CASCADE'})
+  OtherBenfDataDummyFK!: OtherBenfDataDummy[]
 
   @OneToMany(() => SchoolData, sc => sc.UserId, {cascade: true, onDelete: 'CASCADE'})
   SchoolDataFK!: SchoolData[]

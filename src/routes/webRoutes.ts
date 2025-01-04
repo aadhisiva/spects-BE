@@ -3,7 +3,7 @@ import multer from "multer";
 
 const router = express.Router()
 
-import { authenticateToken, authVersion } from '../utils/middlewares';
+import { authenticateToken, authenticateTokenWeb, authVersion } from '../utils/middlewares';
 import Container from 'typedi';
 import { WebController } from '../controller/webController';
 
@@ -26,12 +26,24 @@ router.post('/checkMobileLogin', webController.checkMobileLogin);
 router.post('/getDataAccess', webController.getDataAccess);
 router.post('/verifyOtp', webController.verifyOtp);
 
-router.post('/getMasterDropDown', webController.getMasterDropDown);
-router.post('/getAssignedMasters', webController.getAssignedMasters);
-router.post('/getChildBasedOnParent', webController.getChildBasedOnParent);
-router.post('/assignChildAndGet', webController.assignChildAndGet);
-router.post('/addOrGetRoles', webController.addOrGetRoles);
-router.post('/addOrGetRoleAccess', webController.addOrGetRoleAccess);
-router.post('/assignmentProcess', webController.assignmentProcess);
+router.post('/getMasterDropDown', authenticateTokenWeb, webController.getMasterDropDown);
+router.post('/getMasterDropDownForReports', authenticateTokenWeb, webController.getMasterDropDownForReports);
+router.post('/getAssignedMasters',authenticateTokenWeb, webController.getAssignedMasters);
+router.post('/getChildBasedOnParent', authenticateTokenWeb, webController.getChildBasedOnParent);
+router.post('/assignChildAndGet', authenticateTokenWeb, webController.assignChildAndGet);
+router.post('/addOrGetRoles', authenticateTokenWeb, webController.addOrGetRoles);
+router.post('/addOrGetRoleAccess', authenticateTokenWeb, webController.addOrGetRoleAccess);
+router.post('/assignmentProcess', authenticateTokenWeb, webController.assignmentProcess);
+
+router.post('/fetchSearchReports', authenticateTokenWeb, webController.fetchSearchReports);
+router.post('/searchAndDownloadReports', authenticateTokenWeb, webController.searchAndDownloadReports);
+
+router.post('/fetchStateOrDistrictReports', authenticateTokenWeb, webController.fetchStateOrDistrictReports);
+router.post('/downloadStateOrDistrictReports', authenticateTokenWeb, webController.downloadStateOrDistrictReports);
+
+router.post('/fetchRefraLoginReports', authenticateTokenWeb, webController.fetchRefraLoginReports);
+router.post('/downloadStateOrDistrictReports', authenticateTokenWeb, webController.downloadRefraLoginReports);
+router.post('/fetchCountsByLogin', authenticateTokenWeb, webController.fetchCountsByLogin);
+router.post('/fetchPrimaryScreeningReports', authenticateTokenWeb, webController.fetchPrimaryScreeningReports);
 
 export default router;

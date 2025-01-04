@@ -21,7 +21,7 @@ export class OtherBenfDataDummy {
   @Column({ default: null, type: 'nvarchar', length: 20 })
   dob!: string;
 
-  @ManyToOne(() => UserData, lr => lr.OtherBenfDataFK)
+  @ManyToOne(() => UserData, lr => lr.OtherBenfDataDummyFK)
   @JoinColumn({ name: "UserId" })
   UserId!: string;
 
@@ -64,7 +64,7 @@ export class OtherBenfDataDummy {
   @Column({ default: null, type: 'nvarchar', length: 100 })
   father_name!: string;
 
-  @Column({ default: null, type: 'nvarchar', length: 100 })
+  @Column({ default: null, type: 'nvarchar', length: 255 })
   address!: string;
 
   @Column({ default: null, type: 'nvarchar', length: 100 })

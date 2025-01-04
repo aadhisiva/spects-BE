@@ -58,6 +58,9 @@ export class AssignedMasters {
   @Column({ type: "nvarchar", length: 30, default: null })
   CreatedRole!: string;
 
+  @Column({ type: "nvarchar", length: 30, default: null })
+  IsIntialLogin!: string;
+
   @Column({ type: 'datetime', nullable: true })
   BlockTime!: Date | null;
 

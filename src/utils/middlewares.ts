@@ -26,7 +26,7 @@ export const authenticateToken = async (req: Request | any, res: Response | any,
         if (err) {
             return res.status(403).json({ code: 403, message: 'Failed to authenticate.' });
         }
-        req.user = {...req.user, ...user};
+        req.user = { ...req.user, ...user };
         next();
     });
 };
@@ -35,11 +35,15 @@ export const authenticateTokenWeb = async (req: Request | any, res: Response | a
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (!token) return response401(res, 'Access denied. No token provided');
-    const options: any = { algorithms: 'HS256' }
-    jwt.verify(token, process.env.SECRET_KEY!, options, async (err, user) => {
-        if (err) return response403(res, 'Failed to authenticate');
-        req.user = user;
+    if (!token) {
+        return res.status(401).json({ code: 401, message: 'Access denied. No token provided.' });
+    }
+    const options: any = { algorithms: 'HS256' as Algorithm }
+    jwt.verify(token, process.env.SECRET_KEY!, options, async (err: any, user: any) => {
+        if (err) {
+            return res.status(403).json({ code: 403, message: 'Failed to authenticate.' });
+        }
+        req.user = { ...req.user, ...user };
         next();
     });
 };

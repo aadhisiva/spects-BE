@@ -8,9 +8,11 @@ import { NewDistricts } from "../entities/newDistricts";
 import { OtherBenfData } from "../entities/otherBenfData";
 import { OtherBenfDataDummy } from "../entities/otherBenfDataDum";
 import { OtpLogs } from "../entities/otpLogs";
+import { RcData } from "../entities/rcData";
 import { RolesAccess } from "../entities/roleAccess";
 import { Roles } from "../entities/roles";
 import { SchoolData } from "../entities/schoolData";
+import { SecondaryScreening } from "../entities/secondaryScreening";
 import { StudentData } from "../entities/studentData";
 import { UserData } from "../entities/userData";
 import { Versions } from "../entities/versions";
@@ -36,6 +38,8 @@ export const repository = {
     demoAuthResponseRepo: AppDataSource.getRepository(DemoAuthResponse),
     otherBenfDataDummyRepo: AppDataSource.getRepository(OtherBenfDataDummy),
     ekycDataRepo: AppDataSource.getRepository(EkycData),
+    rcDataRepo: AppDataSource.getRepository(RcData),
+    secondaryScreeningRepo: AppDataSource.getRepository(SecondaryScreening),
 };
 
 export const repoNames = {
@@ -55,4 +59,6 @@ export const repoNames = {
     NewDistrictsTable: NewDistricts,
     DemoAuthResponseTable: DemoAuthResponse,
     EkycDataTable: EkycData,
+    RcDataTable: RcData,
+    SecondaryScreeningTable: SecondaryScreening,
 }

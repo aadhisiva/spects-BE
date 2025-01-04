@@ -55,8 +55,8 @@ export enum RESPONSEMSG {
   VALIDATE_FIELDS = "Fields Not Provided.",
   ACCESS_DENIED = "Access Denied.."
 }
-export const ResponseMessages = (code, message = "", data = {}) => {
-  const httpStatusCode = {
+export const ResponseMessages = (code: any, message = "", data = {}) => {
+  const httpStatusCode: any = {
     SUCCESS: {
       code: HttpStatusCodes.OK,
       status: HttpStatusMessages.SUCCESS,

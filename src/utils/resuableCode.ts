@@ -26,13 +26,11 @@ export function generateUniqueId() {
 
 // convert aadhar no to hash for getting details from kutumba
 export const convertAadharToSha256Hex = async (data: any) => {
-    console.log("HASHING256", process.env.HASHING256)
     try {
         let hash = crypto.createHash(process.env.HASHING256!);
         hash.update(data);
         return hash.digest("hex").toUpperCase();
     } catch (e: any) {
-        Logger.error("[******* convertAadharToSha256Hex *******]", e);
         return e.message;
     }
 };
@@ -130,5 +128,6 @@ export const getAgeFromBirthDateToEkyc = (dob: any) => {
     let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
     return age;
   };
+  
   
   

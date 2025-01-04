@@ -3,17 +3,18 @@ import jsonwebtoken, { Algorithm } from "jsonwebtoken";
 import { Service } from "typedi";
 import crypto from "crypto";
 
-import { AppDataSource } from "../db/config";
 import { response200, response400, response404, responseForSpec200 } from "../utils/resBack";
-import { checkEligableCandiadate, createUniqueIdBasedOnCodes, encryptData, generateUniqueId, getAgeFromBirthDateToEkyc } from "../utils/resuableCode";
+import { checkEligableCandiadate, convertAadharToSha256Hex, createUniqueIdBasedOnCodes, encryptData, generateOtp, generateUniqueId, getAgeFromBirthDateToEkyc } from "../utils/resuableCode";
 import { apiErrorHandler } from "../utils/reqResHandler";
 import { repoNames, repository } from "../db/repos";
-import { AADHAR_PROCESS, COMPLETED, DELIVERED, EKYC_ACCESS_DENIED, NO, ORDER_PENDING, OTHER_BENEFICIARY, READY_TO_DELIVER, RESPONSEAPI_MESSAGE, YES } from "../utils/constants";
-import { RequestHandler } from "express";
+import { AADHAR_PROCESS, ACCESS_DENIED, COMPLETED, DELIVERED, EKYC_ACCESS_DENIED, NO, ORDER_PENDING, OTHER_BENEFICIARY, PHONE_REGESTERED, READY_TO_DELIVER, RESPONSEAPI_MESSAGE, YES } from "../utils/constants";
 import { demoAuthEkycProcess, ekycVerification, fetchDataFromKutumba, getSchoolDataFromExternal, mappingKutmbaDetails } from "../utils/kutumba/kutumbaInt";
 import { SchoolData } from "../entities/schoolData";
 import { OtherBenfData } from "../entities/otherBenfData";
 import { EkycData } from "../entities/ekycData";
+import { OtherBenfDataDummy } from "../entities/otherBenfDataDum";
+import { ResusableFunctions } from "../utils/smsServceResusable";
+import { RESPONSEMSG } from "../utils/statusCodes";
 
 const options = {
   expiresIn: '12h', // Token expiration time
@@ -45,7 +46,7 @@ const studentDataAssignToLocal = (res: any) => {
 
 @Service()
 export class MobileController {
-  constructor() { };
+  constructor(public ResusableFunctions: ResusableFunctions) { };
 
   async loginWithoutEncryption(req: Request | any, res: Response | any): Promise<any> {
     const bodyData = { ...req.body };
@@ -53,32 +54,35 @@ export class MobileController {
 
     if (!Mobile) return response400(res, "Missing 'Mobile' in req formate");
     if (Mobile.length !== 10) return response400(res, "Enter valid number");
-    bodyData.Otp = "1111";
+    bodyData.Otp = "111111";
     try {
       let fetchedVersion = await repository.versionRepo.find();
       bodyData.Version = fetchedVersion[0].Version;
 
       let findData = await repository.userDataRepo.findOneBy({ Mobile: Equal(Mobile) });
       if (!findData) return response404(res, "User not found");
+      // let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(Mobile, bodyData.Otp);
+      // if (smsOtp !== 200) return response400(res, RESPONSEMSG.OTP_FAILED);
       let newData = { ...findData, ...bodyData };
       await repository.userDataRepo.save(newData);
       let fecthedRecord = await repository.userDataRepo.createQueryBuilder('vs')
         .innerJoinAndSelect(repoNames.MasterDataTable, 'md', 'md.DistrictCode=vs.DistrictCode and md.TalukCode=vs.TalukCode and md.PhcoCode=vs.PhcoCode and md.SubCenterCode=vs.SubCenterCode')
-        .select([`DISTINCT vs.DistrictCode as DistrictCode, vs.TalukCode as TalukCode, vs.PhcoCode as PhcoCode, vs.SubCenterCode as SubCenterCode, vs.UserId as UserId, 
-            CONCAT('D-',md.DistrictName,'-T-',md.TalukName,'-H-',md.PhcoName, '-S-',md.SubCenterName) as assignedSubCenter`
+        .select([`DISTINCT vs.UserId as UserId, 
+            CONCAT('D-',md.DistrictName,'-S-',md.SubCenterName) as assignedSubCenter`
         ])
         .where("vs.Mobile = :Mobile", { Mobile: Mobile })
         .getRawMany();
 
-      let result = (fecthedRecord || []).map(obj => {
-        return {
-          ...obj,
-          Token: jsonwebtoken.sign({ DistrictCode: obj.DistrictCode, TalukCode: obj?.TalukCode, RoleId: obj.RoleId, UserId: obj.UserId },
-            process.env.SECRET_KEY!, options)
-        }
-      })
-      return response200(res, { Otp: bodyData?.Otp, mappedRes: result }, "Retireved successFully");
+      // let result = (fecthedRecord || []).map(obj => {
+      //   return {
+      //     ...obj,
+      //     Token: jsonwebtoken.sign({ DistrictCode: obj.DistrictCode, TalukCode: obj?.TalukCode, RoleId: obj.RoleId, UserId: obj.UserId },
+      //       process.env.SECRET_KEY!, options)
+      //   }
+      // })
+      return response200(res, { Otp: bodyData?.Otp, mappedRes: fecthedRecord }, "Retireved successFully");
     } catch (error) {
+      console.log(error)
       return apiErrorHandler(error, req, res);
     };
   };
@@ -92,10 +96,15 @@ export class MobileController {
     if (!Otp) return response400(res, "Missing 'Otp' in req formate");
     if (Mobile.length !== 10) return response400(res, "Enter valid number");
     try {
-      let result = await repository.userDataRepo.findOneBy({ Mobile: Equal(Mobile), UserId: Equal(UserId) });
+      let result = await repository.userDataRepo.findOneBy({ Mobile: Equal(Mobile) });
       if (!result) return response404(res, "User not found");
       if (result.Otp !== Otp) return response400(res, RESPONSEAPI_MESSAGE.OTP_VERFIY_FAILED);
-      return response200(res, {}, RESPONSEAPI_MESSAGE.OTP_VERFIY);
+      let findObj = await repository.userDataRepo.findOneBy({ UserId: Equal(UserId) });
+      let newData = { ...findObj, ...{ Otp: Otp } };
+      await repository.userDataRepo.save(newData);
+      let token = jsonwebtoken.sign({ UserId: UserId },
+        process.env.SECRET_KEY!, options)
+      return response200(res, token, RESPONSEAPI_MESSAGE.OTP_VERFIY);
     } catch (error) {
       return apiErrorHandler(error, req, res);
     };
@@ -141,7 +150,7 @@ export class MobileController {
         where: {
           UserId: UserId, school_id: school_id
         },
-        select: ['school_id', 'school_mail', 'school_incharge_contact_no', 'school_incharge_name', 'village', 'taluk', 'district']
+        select: ['school_id', 'school_mail', 'school_incharge_contact_no', 'school_incharge_name', 'village', 'taluk', 'district', 'school_institute_name']
       });
       return response200(res, fecthedRecord, RESPONSEAPI_MESSAGE.FETCHED);
     } catch (error) {
@@ -183,6 +192,7 @@ export class MobileController {
     if (!school_id) return response400(res, "Missing 'school_id' in req formate");
     try {
       let fecthedRecord = await repository.schoolDataRepo.findOneBy({ school_id: Equal(school_id), UserId: Equal(UserId) });
+      if (!fecthedRecord) return response404(res, "No Data Found");
       bodyData.applicationStatus = COMPLETED;
       await repository.schoolDataRepo.save({ ...fecthedRecord, ...bodyData })
       return response200(res, {}, RESPONSEAPI_MESSAGE.UPDATED);
@@ -270,7 +280,7 @@ export class MobileController {
       let fecthedRecord = await repository.studentDataRepo.createQueryBuilder('st')
         .innerJoinAndSelect(SchoolData, 'sd', 'sd.school_id=st.school_id')
         .select([`st.sats_id as sats_id, st.dob as dob, sd.address as address, st.order_number as order_number, sd.school_institute_name as school_institute_name,
-        st.student_name as student_name, sd.school_id as school_id, st.gender as gender, st.father_name as father_name, st.parent_phone_number as parent_phone_number`
+        st.student_name as student_name, st.age as age, sd.school_id as school_id, st.gender as gender, st.father_name as father_name, st.parent_phone_number as parent_phone_number`
         ])
         .where("st.UserId = :UserId and st.sats_id = :sats_id and st.school_id = :school_id", { UserId, sats_id, school_id })
         .getRawMany();
@@ -369,12 +379,7 @@ export class MobileController {
         .skip(+skip)
         .take(+take)
         .getRawMany();
-      let result = {
-        take: take,
-        skip: skip,
-        totalData
-      };
-      return response200(res, result, RESPONSEAPI_MESSAGE.FETCHED);
+      return response200(res, totalData, RESPONSEAPI_MESSAGE.FETCHED);
     } catch (error) {
       return apiErrorHandler(error, req, res);
     };
@@ -391,6 +396,7 @@ export class MobileController {
       let fecthedUser = await repository.userDataRepo.findOneBy({ UserId: Equal(UserId) });
       if (!fecthedUser) return response404(res, "No User Found");
       let fecthedRecord = await repository.studentDataRepo.findOneBy({ school_id: Equal(school_id), UserId: Equal(UserId), sats_id: Equal(sats_id) });
+      if (!fecthedRecord) return response404(res, "No Data Found");
       bodyData.applicationStatus = COMPLETED;
       bodyData.status = ORDER_PENDING;
       bodyData.type = "school";
@@ -481,7 +487,7 @@ export class MobileController {
 
     if (!UserId) return response400(res, "Missing 'UserId' in req formate");
     if (!uniqueId) return response400(res, "Missing 'uniqueId' in req formate");
-    if (!district) return response400(res, "Missing 'district' in req formate");
+    // if (!district) return response400(res, "Missing 'district' in req formate");
 
     // let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
     try {
@@ -612,13 +618,484 @@ export class MobileController {
       mapDataOtherBenfWise.refractionist_mobile = fecthedUser?.Mobile;
       let savedDummyData = await saveDummyData(mapDataOtherBenfWise);
       let checkSavedData = await repository.otherBenfDataDummyRepo.createQueryBuilder('child')
-      .select(['child.benf_name as benf_name', 'child.benf_unique_id as benf_unique_id', 'child.dob as dob', 'child.age as age', 'child.taluk as taluk',
-        'child.district as district', 'child.phone_number as phone_number', 'child.category as category',
-        'child.caste as caste', 'child.address as address', 'child.scheme_eligability as scheme_eligability'])
-      .where("child.UserId= :UserId and child.id= :id", { UserId: UserId, id: savedDummyData.id })
-      .getRawOne();
-        let check = checkSavedData.scheme_eligability == "Yes" ? "" : `You Are Not Eligible For ${checkSavedData.district}. Application Can Not Be Processed.`;
-        return responseForSpec200(res, checkSavedData, RESPONSEAPI_MESSAGE.FETCHED, NO, check);
+        .select(['child.benf_name as benf_name', 'child.benf_unique_id as benf_unique_id', 'child.dob as dob', 'child.age as age', 'child.taluk as taluk',
+          'child.district as district', 'child.phone_number as phone_number', 'child.category as category',
+          'child.caste as caste', 'child.address as address', 'child.scheme_eligability as scheme_eligability'])
+        .where("child.UserId= :UserId and child.id= :id", { UserId: UserId, id: savedDummyData.id })
+        .getRawOne();
+      let check = checkSavedData.scheme_eligability == "Yes" ? "" : `You Are Not Eligible For ${checkSavedData.district}. Application Can Not Be Processed.`;
+      return responseForSpec200(res, checkSavedData, RESPONSEAPI_MESSAGE.FETCHED, NO, check);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async updateAadharData(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id, aadhar_no } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+
+    try {
+      let checkBenfData = await repository.otherBenfDataRepo.findOneBy({ id: Equal(benf_unique_id) });
+      if (!checkBenfData) {
+        bodyData.order_number = await createUniqueIdBasedOnCodes(UserId, 'other');
+        bodyData.type = "otherBenificiary";
+        bodyData.details = "aadhar";
+        bodyData.status = ORDER_PENDING;
+        bodyData.applicationStatus = COMPLETED;
+        let updateDummyData = await repository.otherBenfDataDummyRepo.findOneBy({ id: Equal(benf_unique_id) });
+        if (!updateDummyData) return response404(res, "No Data Found From OtherBenf");
+        let newData = { ...updateDummyData, ...bodyData };
+        await repository.otherBenfDataDummyRepo.save(newData);
+        let findData: any = await repository.otherBenfDataDummyRepo.findOneBy({ id: Equal(benf_unique_id), aadhar_no: Equal(aadhar_no) });
+        let checkEducationId: any = await repository.studentDataRepo.findOneBy({ sats_id: Equal(findData.education_id) });
+        if (checkEducationId) return response400(res, `Your Already Applied In School With Order Number ${checkEducationId.order_number}.`);
+        await repository.otherBenfDataRepo.save(findData);
+        return response200(res, {}, RESPONSEAPI_MESSAGE.UPDATED);
+      } else {
+        let findData = await repository.otherBenfDataRepo.findOneBy({ id: Equal(benf_unique_id) });
+        if (!findData) return response404(res, "No Data Found From OtherBenf");
+        let newData = { ...findData, ...bodyData };
+        await repository.otherBenfDataRepo.save(newData);
+        return response200(res, {}, RESPONSEAPI_MESSAGE.UPDATED);
+      }
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async rcBasedOnNumberWise(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { benf_unique_id, phone_number, UserId } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+    if (!phone_number) return response400(res, "Missing 'phone_number' in req formate");
+
+    try {
+      let finRcData: any = await repository.rcDataRepo.findOneBy({ id: Equal(benf_unique_id) });
+      if (!finRcData) return response404(res, ACCESS_DENIED);
+      let findDummyOther = await repository.otherBenfDataDummyRepo.findOneBy({ aadhar_no: Equal(finRcData.aadhar_no) });
+
+      let findBenfOther = await repository.otherBenfDataRepo.findOneBy({ aadhar_no: Equal(finRcData.aadhar_no) });
+      if (finRcData.education_id) {
+        let findEduData = await repository.otherBenfDataRepo.findOneBy({ education_id: Equal(finRcData.education_id) });
+        if (findEduData) return { code: 422, message: `Already Registered In Schools With Order Number ${findEduData.order_number}.` };
+      };
+      if (findBenfOther?.applicationStatus == COMPLETED && findBenfOther?.ekyc_check == "Y") return response400(res, `Already Registered With Order Number ${findBenfOther.order_number}.`);
+      if (findDummyOther) {
+        if (bodyData.case == "Yes") {
+          let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
+          let uniqueId = new Date().getTime();
+          let bodyForEkyc = {
+            name: findDummyOther.benf_name,
+            uniqueId: uniqueId,
+            txnDateTime
+          }
+          let check = await ekycVerification(bodyForEkyc);
+          if (check == 422) return response400(res, EKYC_ACCESS_DENIED);
+          return response200(res, { uniqueId: txnDateTime, Token: check }, RESPONSEAPI_MESSAGE.FETCHED);
+        };
+
+        findDummyOther.phone_number = findDummyOther?.phone_number;
+        if (phone_number !== 'Yes') {
+          let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
+          let uniqueId = new Date().getTime();
+          let bodyForEkyc = {
+            name: findDummyOther.benf_name,
+            uniqueId: uniqueId,
+            txnDateTime
+          }
+          let check = await ekycVerification(bodyForEkyc);
+          if (check == 422) return response400(res, EKYC_ACCESS_DENIED);
+          await updateDataExistsRecord(findDummyOther);
+          return response200(res, { uniqueId: txnDateTime, Token: check }, RESPONSEAPI_MESSAGE.FETCHED);
+        } else {
+          findDummyOther['otp'] = generateOtp(6);
+          let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(findDummyOther?.phone_number, findDummyOther.otp);
+          await this.ResusableFunctions.sendSmsInKannadaUnicode(findDummyOther?.phone_number, findDummyOther.otp);
+          if (smsOtp !== 200) return response400(res, RESPONSEMSG.OTP_FAILED);
+          await updateDataExistsRecord(findDummyOther);
+          return response200(res, {}, RESPONSEMSG.OTP);
+        }
+      } else {
+        let result: any = await repository.rcDataRepo.findOneBy({ aadhar_no: Equal(finRcData.aadhar_no) });
+        delete result.id;
+        delete result.created_at;
+        delete result.updated_at;
+        delete result.user_id;
+        delete finRcData.id;
+        delete finRcData.created_at;
+        delete finRcData.updated_at;
+        delete finRcData.user_id;
+        result['kutumba_phone_number'] = result.phone_number;
+        result.phone_number = "";
+        let newData = { ...result, ...finRcData };
+        newData['otp'] = generateOtp(6);
+        newData.user_id = UserId;
+        let txnDateTime = new Date().getFullYear() + "" + new Date().getTime();
+        let uniqueId = new Date().getTime();
+        if (phone_number !== 'Yes') {
+          let bodyForEkyc = {
+            name: newData.benf_name,
+            uniqueId: uniqueId,
+            txnDateTime
+          }
+          let check = await ekycVerification(bodyForEkyc);
+          if (check == 422) return response400(res, EKYC_ACCESS_DENIED);
+          await addNewDataFromRC(newData);
+          return response200(res, { uniqueId: txnDateTime, Token: check }, RESPONSEAPI_MESSAGE.FETCHED);
+        } else {
+          let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(newData?.phone_number, newData.otp);
+          await this.ResusableFunctions.sendSmsInKannadaUnicode(newData?.phone_number, newData.otp);
+          if (smsOtp !== 200) return response400(res, RESPONSEMSG.OTP_FAILED);
+          await addNewDataFromRC(newData);
+          return response200(res, {}, RESPONSEMSG.OTP);
+        }
+      };
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async otpCheckRcMember(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id, otp } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+    if (!otp) return response400(res, "Missing 'otp' in req formate");
+
+    try {
+
+      let fecthedRecord = await repository.otherBenfDataDummyRepo.findOneBy({ id: Equal(benf_unique_id), UserId: UserId(UserId) });
+      let checkOtp = fecthedRecord?.otp == otp;
+      if (!checkOtp) return response400(res, RESPONSEMSG.VALIDATE_FAILED);
+      let result = await repository.otherBenfDataRepo.createQueryBuilder('child')
+        .select(['child.benf_name as benf_name', 'child.dob as dob', 'child.age as age', 'child.taluk as taluk',
+          'child.district as district', 'child.phone_number as phone_number', 'child.category as category',
+          'child.caste as caste', 'child.address as address', 'child.scheme_eligability as scheme_eligability'])
+        .where("child.UserId= :user and child.id= :id", { UserId: UserId, id: benf_unique_id }).getRawOne();
+      return response200(res, result, RESPONSEMSG.VALIDATE);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async updateRcAadharData(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+
+    try {
+      let fecthedRecord = await repository.otherBenfDataRepo.findOneBy({ id: Equal(benf_unique_id) });
+      if (!fecthedRecord) {
+        bodyData.order_number = await createUniqueIdBasedOnCodes(UserId, 'other');
+        bodyData.type = "otherBenificiary";
+        bodyData.details = "rc";
+        bodyData.status = ORDER_PENDING;
+        bodyData.applicationStatus = COMPLETED;
+
+        let findData = await repository.otherBenfDataDummyRepo.findOneBy({ id: benf_unique_id });
+        if (!findData) return response400(res, ACCESS_DENIED);
+        let newData = { ...findData, ...bodyData };
+        await repository.otherBenfDataDummyRepo.save(newData);
+        let findDummyData: any = await repository.otherBenfDataDummyRepo.findOneBy({ id: benf_unique_id, aadhar_no: bodyData.aadhar_no });
+        delete findDummyData?.id;
+        delete findDummyData?.CreatedDate;
+        delete findDummyData?.UpdatedDate;
+        let checkEducationId = await repository.studentDataRepo.findOneBy({ sats_id: Equal(findDummyData.education_id) });
+        if (checkEducationId) return { code: 422, message: `Your Already Applied In School With Order Number ${checkEducationId.order_number}.` };
+        await repository.otherBenfDataRepo.save(findDummyData);
+        return response200(res, {}, RESPONSEMSG.UPDATE_SUCCESS);
+      } else {
+        let findData = await repository.otherBenfDataRepo.findOneBy({ id: benf_unique_id });
+        if (!findData) return response400(res, ACCESS_DENIED);
+        let newData = { ...findData, ...bodyData };
+        await repository.otherBenfDataRepo.save(newData);
+        return response200(res, {}, RESPONSEMSG.UPDATE_SUCCESS);
+      }
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async eachStatusWise(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+
+    try {
+      let result = await repository.otherBenfDataRepo.createQueryBuilder('child').
+        select(['child.benf_unique_id as benf_unique_id', 'child.address as address', 'child.order_number as order_number', 'child.benf_name as benf_name',
+          'child.phone_number as phone_number']).where("child.id= :id", { id: benf_unique_id }).getRawOne();
+      return response200(res, result, RESPONSEAPI_MESSAGE.FETCHED);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async readyToDeliverOtp(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id, phone_number, deliveredOtp } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+    if (!phone_number) return response400(res, "Missing 'phone_number' in req formate");
+    bodyData.deliveredOtp = generateOtp(6);
+    bodyData.status = 'ready_to_deliver';
+    try {
+      let result: any = await repository.otherBenfDataRepo.findOneBy({ id: Equal(benf_unique_id) });
+      let smsOtp = await this.ResusableFunctions.sendOtpAsReadyForDeliver(phone_number, bodyData.deliveredOtp, result.order_number);
+      if (smsOtp !== 200) return response400(res, RESPONSEMSG.OTP_FAILED);
+
+      let findData = await repository.otherBenfDataRepo.findOneBy({ id: benf_unique_id });
+      if (!findData) return response400(res, ACCESS_DENIED);
+      let newData = { ...findData, ...bodyData };
+      await repository.otherBenfDataRepo.save(newData);
+      return response200(res, {}, RESPONSEMSG.OTP);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async validateReadyToDeliverOtp(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id, otp } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+    try {
+      let result: any = await repository.otherBenfDataRepo.findOneBy({ id: Equal(benf_unique_id) });
+      let checkOtp = result?.deliveredOtp == otp;
+      if (!checkOtp) return response400(res, RESPONSEMSG.VALIDATE_FAILED);
+      return response200(res, {}, RESPONSEMSG.VALIDATE);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async delivered(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id, otp } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+    try {
+      bodyData.status = 'delivered';
+      let result: any = await repository.otherBenfDataRepo.findOneBy({ id: Equal(benf_unique_id) });
+      let newData = { ...result, ...bodyData };
+      await repository.otherBenfDataRepo.save(newData);
+      return response200(res, {}, RESPONSEMSG.UPDATE_SUCCESS);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async otpSentToNewNumber(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id, phone_number } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+    try {
+      let findMobile = await repository.otherBenfDataRepo.find({ where: { phone_number: Equal(phone_number) } });
+      if (findMobile.length > 4) return response400(res, PHONE_REGESTERED);
+      bodyData.otp = generateOtp(6);
+      let smsOtp = await this.ResusableFunctions.sendOtpAsSingleSms(phone_number, bodyData.otp);
+      if (smsOtp !== 200) return response400(res, RESPONSEMSG.OTP_FAILED);
+
+      let result = await repository.otherBenfDataDummyRepo.findOneBy({ id: benf_unique_id });
+      if (!result) return response400(res, ACCESS_DENIED);
+      let newData = { ...result, ...bodyData };
+      await repository.otherBenfDataDummyRepo.save(newData);
+      return response200(res, {}, RESPONSEMSG.OTP);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async validateWithNewNumber(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id, otp } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+    try {
+      let findDummyData = await repository.otherBenfDataDummyRepo.findOneBy({ id: Equal(benf_unique_id) });
+      let checkOtp = findDummyData?.otp == otp;
+      if (!checkOtp) return response400(res, RESPONSEMSG.VALIDATE_FAILED);
+      return response200(res, {}, RESPONSEMSG.VALIDATE);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async chnageStatusReadyToDeliver(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+    try {
+      let findBenfData = await repository.otherBenfDataRepo.findOneBy({ id: Equal(benf_unique_id) });
+      if (!findBenfData) return response400(res, ACCESS_DENIED);
+      bodyData.status = "delivered";
+      let newData = { ...findBenfData, ...bodyData };
+      await repository.otherBenfDataRepo.save(newData);
+      return response200(res, {}, RESPONSEMSG.UPDATE_SUCCESS);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async chnageStatusPendingToReady(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, benf_unique_id } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!benf_unique_id) return response400(res, "Missing 'benf_unique_id' in req formate");
+    try {
+      let findBenfData = await repository.otherBenfDataRepo.findOneBy({ id: Equal(benf_unique_id) });
+      if (!findBenfData) return response400(res, ACCESS_DENIED);
+      bodyData.status = "ready_to_deliver";
+      let newData = { ...findBenfData, ...bodyData };
+      await repository.otherBenfDataRepo.save(newData);
+      return response200(res, {}, RESPONSEMSG.UPDATE_SUCCESS);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async getAaadharDataFromRcData(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, aadhar_no } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!aadhar_no) return response400(res, "Missing 'aadhar_no' in req formate");
+    try {
+      let findBenfData = await repository.otherBenfDataRepo.find({
+        where: { aadhar_no: Equal(aadhar_no), UserId: Equal(UserId) },
+        select: ["benf_name", "dob", "age", "taluk", "district", "phone_number", "category", "caste", "address", "scheme_eligability"]
+      });
+      if (findBenfData.length == 0) return response400(res, ACCESS_DENIED);
+      return response200(res, findBenfData, RESPONSEAPI_MESSAGE.FETCHED);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async getAadharHashData(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, aadhar_no } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (!aadhar_no) return response400(res, "Missing 'aadhar_no' in req formate");
+    bodyData.aadhar_no = await convertAadharToSha256Hex(aadhar_no);
+    try {
+      let findBenfData = await repository.otherBenfDataRepo.find({
+        where: { aadhar_no: Equal(bodyData.aadhar_no) },
+        select: ["benf_name", "dob", "age", "taluk", "district", "phone_number", "category", "caste", "address", "scheme_eligability"]
+      });
+      if (findBenfData.length == 0) return response400(res, ACCESS_DENIED);
+      return response200(res, findBenfData, RESPONSEAPI_MESSAGE.FETCHED);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async getBenfHistory(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, searchTerm, pagination, skip = 0, take = 10 } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (pagination !== "Yes") return response400(res, "Missing 'pagination' in req formate");
+    try {
+      let findBenfData = await repository.otherBenfDataRepo.createQueryBuilder('other').
+        select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name', 'other.order_number as order_number',
+          'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
+        .where("other.UserId = :id and other.applicationStatus = :applicationStatus and other.status = :status",
+          { id: UserId, applicationStatus: COMPLETED, status: DELIVERED })
+        .andWhere(new Brackets(qb => {
+          qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+        }))
+        .orderBy('other.created_at', 'DESC')
+        .skip(+skip)
+        .take(+take)
+        .getRawMany();
+      return response200(res, findBenfData, RESPONSEAPI_MESSAGE.FETCHED);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async getBenfStatusWise(req: Request | any, res: any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { UserId, searchTerm, pagination, skip = 0, take = 10 } = bodyData;
+
+    if (!UserId) return response400(res, "Missing 'UserId' in req formate");
+    if (pagination !== "Yes") return response400(res, "Missing 'pagination' in req formate");
+    try {
+      let pending_count = await repository.otherBenfDataRepo.createQueryBuilder("other")
+        .where("other.UserId= :UserId and other.status= :status and other.applicationStatus= :aps", { UserId, status: ORDER_PENDING, aps: COMPLETED })
+        .andWhere(new Brackets(qb => {
+          qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+        }))
+        .getCount();
+      let delivered_count = await repository.otherBenfDataRepo.createQueryBuilder("other")
+        .where("other.UserId= :UserId and other.status= :status and other.applicationStatus= :aps", { UserId, status: DELIVERED, aps: COMPLETED })
+        .andWhere(new Brackets(qb => {
+          qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+        }))
+        .getCount();
+      let ready_count = await repository.otherBenfDataRepo.createQueryBuilder("other")
+        .where("other.UserId= :UserId and other.status= :status and other.applicationStatus= :aps", { UserId, status: READY_TO_DELIVER, aps: COMPLETED })
+        .andWhere(new Brackets(qb => {
+          qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+        }))
+        .getCount();
+      let totalData = await repository.otherBenfDataRepo.createQueryBuilder('other').
+        select(['other.benf_unique_id as benf_unique_id', 'other.benf_name as benf_name', 'other.order_number as order_number',
+          'other.address as address', 'other.status as status', 'other.phone_number as phone_number'])
+        .where("other.UserId = :id and other.applicationStatus = :applicationStatus", { id: UserId, applicationStatus: COMPLETED })
+        .andWhere(new Brackets(qb => {
+          qb.where("other.order_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.benf_name like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.phone_number like :term", { term: `%${searchTerm}%` })
+            .orWhere("other.status like :term", { term: `%${searchTerm}%` })
+        }))
+        .orderBy('other.CreatedDate', 'DESC')
+        .skip(+skip)
+        .take(+take)
+        .getRawMany();
+      let result = {
+        take: take,
+        skip: skip,
+        total: Number(pending_count) + Number(ready_count) + Number(delivered_count),
+        pending_count: pending_count,
+        ready_count: ready_count,
+        delivered_count: delivered_count,
+        totalData
+      };
+      return response200(res, result, RESPONSEAPI_MESSAGE.FETCHED);
     } catch (error) {
       return apiErrorHandler(error, req, res);
     };
@@ -626,8 +1103,6 @@ export class MobileController {
   /* ended other beneficiary table related apis */
 
 };
-
-
 
 const mappingNewBenfData = (mapData: EkycData, getData: any) => {
   let getOneArray = getData[0];
@@ -676,3 +1151,32 @@ const saveDummyData = async (...data: any) => {
   data.scheme_eligability = checkEligibaleOrNot;
   return await repository.otherBenfDataDummyRepo.save(data);
 }
+
+
+const updateDataExistsRecord = async (data: OtherBenfDataDummy) => {
+  let findDistrict = await repository.userDataRepo.createQueryBuilder('ud')
+    .innerJoinAndSelect(repoNames.MasterDataTable, 'md', 'md.DistrictCode=ud.DistrictCode and md.TalukCode=ud.TalukCode and md.PhcoCode=ud.PhcoCode and md.SubCenterCode=ud.SubCenterCode')
+    .select(["md.DistrictName as DistrictName, md.TalukName as TalukName, md.PhcoName as PhcoName"])
+    .where("ud.UserId = :UserId", { UserId: Equal(data.UserId) })
+    .getRawOne();
+  let removeExtraCharacters = findDistrict?.DistrictName.replace(/\W/g, "").replace(/\d/g, "");
+  let checkEligibaleOrNot = await checkEligableCandiadate(removeExtraCharacters.toLowerCase(), data?.district.toLowerCase());
+  data.scheme_eligability = checkEligibaleOrNot;
+  let other_repo = await repository.otherBenfDataDummyRepo.findOneBy({ aadhar_no: Equal(data.aadhar_no) });
+  let finalData = { ...other_repo, ...data };
+  return await repository.otherBenfDataDummyRepo.save(finalData);
+};
+
+
+const addNewDataFromRC = async (data: OtherBenfData) => {
+  let findDistrict = await repository.userDataRepo.createQueryBuilder('ud')
+    .innerJoinAndSelect(repoNames.MasterDataTable, 'md', 'md.DistrictCode=ud.DistrictCode and md.TalukCode=ud.TalukCode and md.PhcoCode=ud.PhcoCode and md.SubCenterCode=ud.SubCenterCode')
+    .select(["md.DistrictName as DistrictName, md.TalukName as TalukName, md.PhcoName as PhcoName"])
+    .where("ud.UserId = :UserId", { UserId: Equal(data.UserId) })
+    .getRawOne();
+  let removeExtraCharacters = findDistrict?.DistrictName.replace(/\W/g, "").replace(/\d/g, "");
+  let checkEligibaleOrNot = await checkEligableCandiadate(removeExtraCharacters.toLowerCase(), data?.district.toLowerCase());
+  data.scheme_eligability = checkEligibaleOrNot;
+  return await repository.otherBenfDataDummyRepo.save(data);
+};
+
