@@ -8,6 +8,7 @@ import { NewDistricts } from "../entities/newDistricts";
 import { OtherBenfData } from "../entities/otherBenfData";
 import { OtherBenfDataDummy } from "../entities/otherBenfDataDum";
 import { OtpLogs } from "../entities/otpLogs";
+import { RcData } from "../entities/rcData";
 import { RolesAccess } from "../entities/roleAccess";
 import { Roles } from "../entities/roles";
 import { SchoolData } from "../entities/schoolData";
@@ -36,5 +37,6 @@ export const allEntities = [
     DemoAuthResponse,
     OtherBenfDataDummy,
     EkycData,
-    SecondaryScreening
+    SecondaryScreening,
+    RcData
 ]

@@ -5,10 +5,12 @@ import crypto from "crypto";
 
 import { AppDataSource } from "../db/config";
 import { response200, response400, response404 } from "../utils/resBack";
-import { encryptData } from "../utils/resuableCode";
+import { encryptData, generateOtp } from "../utils/resuableCode";
 import { apiErrorHandler } from "../utils/reqResHandler";
 import { repoNames, repository } from "../db/repos";
 import XLSX from "xlsx";
+import { sendOtpAsSingleSms } from "../utils/smsServceResusable";
+import { RESPONSEMSG } from "../utils/statusCodes";
 
 interface ExcelData {
   [key: string]: string | number;
@@ -53,14 +55,16 @@ export class WebController {
     const bodyData = req.body;
     const { Mobile, Id } = bodyData;
 
-    // bodyData.Otp = generateOTP(4);
-    bodyData.Otp = "1111";
+    bodyData.Otp = generateOtp(6);
+    // bodyData.Otp = "1111";
 
     if (!Id) return response400(res, "Missing 'Id' in req formate");
     if (!Mobile) return response400(res, "Missing 'Mobile' in req formate");
     try {
       let fetchedUser = await repository.assignedMastersRepo.findOneBy({ RoleId: Equal(bodyData.Id), Mobile: Equal(Mobile) });
       if (!fetchedUser) return response404(res, "User not found");
+      let smsOtp = await sendOtpAsSingleSms(Mobile, bodyData.Otp);
+      if (smsOtp !== 200) return response400(res, RESPONSEMSG.OTP_FAILED);
       let newData = { ...fetchedUser, ...{ Otp: bodyData?.Otp } }
       await repository.assignedMastersRepo.save(newData);
 
@@ -264,13 +268,21 @@ export class WebController {
 
   async getAssignedMasters(req: Request | any, res: Response | any): Promise<any> {
     const bodyData = req.body;
-    const { ReqType, Mobile, DataType } = bodyData;
+    const { ReqType, Mobile, DataType, PageNumber = 1, RowsPerPage = 10  } = bodyData;
 
     if (!Mobile) return response400(res, "Missing 'Mobile' in req formate");
     if (!ReqType) response400(res, "Missing 'ReqType' in req formate");
     try {
-      let query = `execute assignedOfficersOrSurveyers @0,@1,@2`;
-      let result = await AppDataSource.query(query, [ReqType, Mobile, DataType]);
+      let spQueryForCounts = `execute assignedOfficersOrSurveyersForCounts @0,@1,@2`;
+      let query = `execute assignedOfficersOrSurveyers @0,@1,@2,@3,@4`;
+      let responseForCounts = await AppDataSource.query(spQueryForCounts, [ReqType, Mobile, DataType]);
+      let response = await AppDataSource.query(query, [ReqType, Mobile, DataType, PageNumber, RowsPerPage]);
+      let result = {
+        TotalCount: responseForCounts[0]?.TotalCount,
+        Page: PageNumber,
+        RowsPerPage: RowsPerPage,
+        TotalData: response
+      };
       return response200(res, result);
     } catch (error) {
       return apiErrorHandler(error, req, res);
@@ -409,7 +421,7 @@ export class WebController {
     const SubCenterCodeInput = SubCenterCode == '' ? null : SubCenterCode;
     const StatusInput = Status == '' ? null : Status;
     const FromDateInput = FromDate == '' ? null : FromDate;
-    const ToDateInput = ToDate == '' ? null : ToDate; 
+    const ToDateInput = ToDate == '' ? null : ToDate;
     try {
       let spQueryForCounts = `execute WebFetchSearchCountsBasedOnInputs @0,@1,@2,@3,@4,@5,@6,@7,@8`;
       let spQuery = `execute WebFetchSearchDataBasedOnInputs @0,@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11`;
@@ -542,6 +554,42 @@ export class WebController {
         TotalData: response
       };
       return response200(res, result);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async fetchDetailedReportsOfId(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { ReportType, id } = bodyData;
+    if (!ReportType) return response400(res, "Missing 'ReportType' in req formate");
+    if (!id) return response400(res, "Missing 'id' in req formate");
+
+    try {
+      let spQuery = `execute WebFetchDetailedReport @0,@1`;
+      let result = await AppDataSource.query(spQuery, [ReportType, id]);
+      return response200(res, result);
+    } catch (error) {
+      return apiErrorHandler(error, req, res);
+    };
+  };
+
+  async fetchImagesOfId(req: Request | any, res: Response | any): Promise<any> {
+    const bodyData = { ...req.body, ...{ UserId: req.user?.UserId } };
+    const { ReportType, id } = bodyData;
+    if (!ReportType) return response400(res, "Missing 'ReportType' in req formate");
+    if (!id) return response400(res, "Missing 'id' in req formate");
+
+    try {
+      if(ReportType == "other"){
+        let result = await repository.otherBenfDataRepo.findOne({where: {id: Equal(id)}, select: ['image', 'initial_image']});
+        return response200(res, result);
+      }else if(ReportType == "school") {
+        let result = await repository.studentDataRepo.findOne({where: {id: Equal(id)}, select: ['image']});
+        return response200(res, result);
+      } else {
+        return response400(res, "ReportType is invalid");
+      }
     } catch (error) {
       return apiErrorHandler(error, req, res);
     };

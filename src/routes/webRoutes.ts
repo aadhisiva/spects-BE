@@ -42,6 +42,8 @@ router.post('/fetchStateOrDistrictReports', authenticateTokenWeb, webController.
 router.post('/downloadStateOrDistrictReports', authenticateTokenWeb, webController.downloadStateOrDistrictReports);
 
 router.post('/fetchRefraLoginReports', authenticateTokenWeb, webController.fetchRefraLoginReports);
+router.post('/fetchDetailedReportsOfId', authenticateTokenWeb, webController.fetchDetailedReportsOfId);
+router.post('/fetchImagesOfId', authenticateTokenWeb, webController.fetchImagesOfId);
 router.post('/downloadStateOrDistrictReports', authenticateTokenWeb, webController.downloadRefraLoginReports);
 router.post('/fetchCountsByLogin', authenticateTokenWeb, webController.fetchCountsByLogin);
 router.post('/fetchPrimaryScreeningReports', authenticateTokenWeb, webController.fetchPrimaryScreeningReports);

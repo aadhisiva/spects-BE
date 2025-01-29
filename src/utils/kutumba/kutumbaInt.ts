@@ -44,13 +44,39 @@ export const fetchDataFromKutumba = async (data: any) => {
             if (pasingDecryptData?.StatusCode === 0 && pasingDecryptData?.StatusText === "Sucess") {
                 return pasingDecryptData?.ResultDataList;
             } else {
-                return 422;
+                return response.status;
             }
         } else {
             return 422;
         }
     } catch (e: any) {
-        Logger.error("[ *********** getFamilyAdDataFromKutumba ************* ]", e);
+        Logger.error("[ *********** fetchDataFromKutumba ************* ]", e);
+        return e.message;
+    };
+};
+
+
+export const fetchDataFromKutumbaForCheck = async (data: any) => {
+    try {
+        let inputValue = "";
+        inputValue = (data?.aadhar_no) ?
+            `${process.env.KUTUMA_CLIENT_CODE}___${data.aadhar_no}_` :
+            `${process.env.KUTUMA_CLIENT_CODE}__${data.rc_no}__`;
+        let creteHMAC = HashHMACHex(process.env.KUTUMBA_CLIENT_SEC_KEY!, inputValue);
+        let response = await axios.post(process.env.KUTUMBA_API!, await getReqBody(data, creteHMAC), {
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+        if (response.status == 200 && response.data?.StatusCode == 0) {
+            let decryptString = DecryptStringFromEncrypt(process.env.KUTUMBA_AES_KEY, process.env.KUTUMBA_IV_KEY, response?.data?.EncResultData)
+            let pasingDecryptData = JSON.parse(decryptString);
+            return pasingDecryptData;
+        } else {
+            return response.status;
+        }
+    } catch (e: any) {
+        Logger.error("[ *********** fetchDataFromKutumbaForCheck ************* ]", e);
         return e.message;
     };
 };
@@ -81,41 +107,41 @@ export const getSchoolDataFromExternal = async (data: any, type: string) => {
     }
 };
 
-export const getAgeFromBirthDateMultipleScenario = (dob: any) => {
-    let currentDate: any = new Date();
-    let [dayM, monM, yearM] = dob.split("/");
-    if (dayM) {
-        if (dayM.length > 2) {
-            let [year, mon, day] = dob.split("/");
-            let originDate: any = new Date(`"${mon + "/" + day + "/" + year}"`);
-            var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
-            let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
-            return age;
-        }
-        let originDate: any = new Date(`"${monM + "/" + dayM + "/" + yearM}"`);
-        var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
-        let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
-        return age;
+export const getSchoolDataFromExternalForCheck = async (data: any, type: string) => {
+    let urlType = (type == "school") ? process.env.SCHOOL_API : process.env.CHILD_API;
+    // await trackExternalLogs(Tables.SCHOOL, type, "before", data, "", data?.user_id);
+    let getData = (await post_axios(urlType, data)).data;
+    if (type == "school") {
+        // await trackExternalLogs(Tables.SCHOOL, type, "after", "", getData, data?.user_id);
+        return getData.instlist;
     } else {
-        let [dayS, monS, yearS] = dob.split("-");
-        if (dayS.length > 2) {
-            let [year, mon, day] = dob.split("-");
-            let originDate: any = new Date(`"${mon + "/" + day + "/" + year}"`);
-            var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
-            let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
-            return age;
-        } else {
-            let originDate: any = new Date(`"${monS + "/" + dayS + "/" + yearS}"`);
-            var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
-            let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
-            return age;
-        }
+        // await trackExternalLogs(Tables.SCHOOL, type, "after", "", getData, data?.user_id);
+        return getData.healthMstChilds;
     }
+};
+
+export const getCalulateAgeFromDob = (dob: any) => {
+    // Convert the input date to a Date object (this handles different formats)
+    const birthDate = new Date(dob);
+
+    // Get the current date
+    const currentDate = new Date();
+
+    // Calculate the age
+    let age = currentDate.getFullYear() - birthDate.getFullYear();
+
+    // Adjust if the birthdate hasn't occurred yet this year
+    const monthDifference = currentDate.getMonth() - birthDate.getMonth();
+    if (monthDifference < 0 || (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
+    return age;
 };
 
 export const mappingKutmbaDetails = async (kutumbaData: any, type: string, data: any) => {
     let reqBody = new OtherBenfData();
-    reqBody.age = kutumbaData?.MBR_DOB ? getAgeFromBirthDateMultipleScenario(kutumbaData.MBR_DOB) : 0;
+    reqBody.age = kutumbaData?.MBR_DOB ? getCalulateAgeFromDob(kutumbaData.MBR_DOB) : 0;
     reqBody.caste = kutumbaData?.MBR_CASTE || "";
     reqBody.rc_no = type == "rc" ? data?.rc_no : "";
     reqBody.category = kutumbaData?.MBR_CASTE_CATEGORY || "";

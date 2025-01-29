@@ -32,7 +32,7 @@ export const AppDataSource = new DataSource({
     min: 0,  // Minimum number of connections in the pool
     idleTimeoutMillis: 30000 // Time (in ms) to keep idle connections in the pool
   },
-  connectionTimeout: 15000, // Connection timeout in milliseconds
+  connectionTimeout: 20000, // Connection timeout in milliseconds
   requestTimeout: 30000
 });
 

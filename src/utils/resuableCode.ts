@@ -7,6 +7,18 @@ export function generateOtp(length: number) {
     const otp = crypto.randomInt(1000, 9999).toString(); // 6-digit OTP
     return otp;
 };
+export function generateOTP() {
+
+    // Declare a digits variable 
+    // which stores all digits
+    var digits = '0123456789';
+    let OTP = '';
+    for (let i = 0; i < 6; i++) {
+      OTP += digits[Math.floor(Math.random() * 10)];
+    }
+    return OTP;
+  };
+  
 
 export function encryptData(data: any, secretKey: string) {
     const jsonString = JSON.stringify(data);
@@ -72,24 +84,11 @@ export const DecryptStringFromEncrypt = (key: any, IV: any, cipherText: any) => 
 export const createUniqueIdBasedOnCodes = async (id: string, type = 'school') => {
     // formate codes-Wise = district/taluka/phc/user_id/order_number
 
-    let orderNumber = new Date().getTime();
-    let userData = await repository.userDataRepo.createQueryBuilder('ud')
-        .innerJoinAndSelect(repoNames.MasterDataTable, 'md', 'md.DistrictCode=ud.DistrictCode and md.TalukCode=ud.TalukCode and md.PhcoCode=ud.PhcoCode and md.SubCenterCode=ud.SubCenterCode')
-        .select(["md.DistrictName as DistrictName, md.TalukName as TalukName, md.PhcoName as PhcoName"])
-        .where("ud.UserId = :UserId", { UserId: Equal(id) })
-        .getRawOne();
-    let addString = "";
-    for (const key in userData) {
-        if (key == 'DistrictName') {
-            addString += userData[key].replace(/\D/g, "") + "/";
-        } else if (key === 'TalukName') {
-            addString += userData[key].replace(/\D/g, "") + "/";
-        } else if (key === "PhcoName") {
-            addString += userData[key].replace(/\D/g, "") + "/";
-        }
-    }
-    let checkType = (type == "school") ? `S-${orderNumber}` : orderNumber;
-    let finalString = addString + id + "/" + checkType;
+    let getTime = new Date().getTime();
+    let userData = await repository.userDataRepo.findOneBy({ UserId: Equal(id) });
+    let addedOrderNumber = userData?.DistrictCode + "/" + userData?.TalukCode + "/" + userData?.PhcoCode + "/" + userData?.SubCenterCode;
+    let checkType = (type == "school") ? `S-${getTime}` : getTime;
+    let finalString = addedOrderNumber + "/" + checkType;
     return finalString;
 };
 
@@ -112,22 +111,10 @@ export const checkEligableCandiadate = async (first: string, second: string) => 
         let macthString = matchStrings(first, second);
         return (macthString >= 50) ? "Yes" : "No";
     } else {
-        let newDistricts = NewDistrictMatch.newDistrictName.toLowerCase();
-        let oldDistricts = NewDistrictMatch.oldDistrictName.toLowerCase();
+        let newDistricts = NewDistrictMatch.newDistrictName?.toLowerCase();
+        let oldDistricts = NewDistrictMatch.oldDistrictName?.toLowerCase();
         let macthStringWithNewDistrict = matchStrings(newDistricts, second);
         let macthStringWithOldDistrict = matchStrings(oldDistricts, second);
         return ((macthStringWithNewDistrict >= 50 || macthStringWithOldDistrict >= 50)) ? "Yes" : "No";
     }
 };
-
-export const getAgeFromBirthDateToEkyc = (dob: any) => {
-    let currentDate: any = new Date();
-    let [day, mon, year] = dob.split("-");
-    let originDate: any = new Date(`"${mon + "/" + day + "/" + year}"`);
-    var milliDay = 1000 * 60 * 60 * 24 // a day in milliseconds;
-    let age = Math.floor(((currentDate - originDate) / milliDay) / 365);
-    return age;
-  };
-  
-  
-  

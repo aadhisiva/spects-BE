@@ -50,18 +50,16 @@ export function stringToFinalmessage(message: any) {
         .join('');
 };
 
-@Service()
-export class SMSServices {
 
     // send sendSingleSMS to user
-    async sendSingleSMS(userName: string, password: string, senderId: string, message: string, mobileno: string, secureKey: string, templateId: string) {
+   export const sendSingleSMS = async (userName: string, password: string, senderId: string, message: string, mobileno: string, secureKey: string, templateId: string) => {
         try {
             let data = {
                 username: userName.trim(),
                 password: convertPasswordToSha1(password),
                 senderid: senderId.trim(),
                 content: message.trim(),
-                smsservicetype: "singlemsg",
+                smsservicetype: "otpmsg",
                 mobileno: mobileno,
                 key: hashGenerator(userName, senderId, message, secureKey),
                 templateid: templateId.trim()
@@ -76,7 +74,7 @@ export class SMSServices {
     }
 
     // send sendSingleUnicode to user
-    async sendSingleUnicode(userName: string, password: string, senderId: string, messageUnicode: string, mobileno: string, secureKey: string, templateId: string) {
+    export const sendSingleUnicode = async (userName: string, password: string, senderId: string, messageUnicode: string, mobileno: string, secureKey: string, templateId: string) => {
         try {
             let finalmessage = stringToFinalmessage(messageUnicode.trim());
             // console.log("finalmessage",finalmessage)
@@ -86,7 +84,7 @@ export class SMSServices {
                 password: convertPasswordToSha1(password),
                 senderid: senderId.trim(),
                 content: finalmessage.trim(),
-                smsservicetype: "unicodemsg",
+                smsservicetype: "unicodeotpmsg",
                 mobileno: mobileno.trim(),
                 key: key.trim(),
                 templateid: templateId.trim()
@@ -99,6 +97,3 @@ export class SMSServices {
             return e;
         }
     };
-
-
-};

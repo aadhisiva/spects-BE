@@ -8,7 +8,6 @@ import {
 
 @Entity({ name: 'RcData'})
 export class RcData {
-    [x: string]: any;
 
     @PrimaryGeneratedColumn()
     id!: number;
@@ -25,7 +24,7 @@ export class RcData {
     @Column({ default: null, length: 100,  type: 'nvarchar' })
     taluk!: string;
 
-    @Column({ default: null, length: 100,  type: 'nvarchar' })
+    @Column({ default: null, type: 'int' })
     age!: number;
 
     @Column({ default: null, length: 100,  type: 'nvarchar' })

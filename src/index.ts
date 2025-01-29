@@ -18,6 +18,7 @@ import session from 'express-session';
 //controllers
 import mobileRoutes from "./routes/mobileRoutes";
 import webRoutes from "./routes/webRoutes";
+import ekycRoutes from "./routes/ekycRoutes";
 import { errorHandler, logRequestResponse } from "./utils/reqResHandler";
 import { allowedHosts } from "./utils/constants";
 
@@ -78,11 +79,11 @@ app.disable('Server');
 
 // Logging middleware
 app.use(async (req: Request | any, res: any, next) => {
-  const host = req.headers['host'];
+  // const host = req.headers['host'];
   // If the Host header doesn't match the allowed domains, reject the request
-  if (!allowedHosts.includes(host)) {
-      return res.status(400).send('Invalid Host header');
-  };
+  // if (!allowedHosts.includes(host)) {
+  //     return res.status(400).send('Invalid Host header');
+  // };
   const cspPolicy =
       "default-src 'self';" + // Allow resources only from the same origin
       "script-src 'self' 'unsafe-inline' 'unsafe-eval';" + // Allow inline scripts and eval (if necessary)
@@ -122,14 +123,15 @@ if (!fs.existsSync('uploads')) {
 
 
 // we are adding port connection here
-app.get("/api/run", (req, res) => {
+app.get("/edcs/run", (req, res) => {
   res.send("running")
 });
 // controllers
 // app.use('/wapi/admin', adminRouter);
-app.use('/api/admin', webRoutes);
+app.use('/edcs/admin', webRoutes);
 // app.use('/wapi/mobile', mobileRouter);
-app.use('/api/mobile', mobileRoutes);
+app.use('/edcs/mobile', mobileRoutes);
+app.use('/edcs', ekycRoutes);
 // 404 handler
 app.all('*', (req: any, res: any) => res.status(404).send('Not Found'));
 app.use(errorHandler);

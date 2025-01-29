@@ -38,6 +38,16 @@ export const responseForSpec200 = (res: Response, data?: any, message?: string, 
   });
 };
 
+export const responseForError200 = (res: Response, data?: any, message?: string, check?: string) => {
+  return res.status(200).send({
+    code: 200,
+    status: "Success",
+    message: message || "Success",
+    errorInfo: check,
+    data: data || {}
+  });
+};
+
 
 export const response401 = (res: Response, msg?: any) => {
   return res.status(401).send({

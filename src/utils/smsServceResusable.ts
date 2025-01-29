@@ -1,56 +1,46 @@
-import { Service } from "typedi";
-import { SMSServices } from "./sms_otp";
+import { sendSingleSMS, sendSingleUnicode } from "./sms_otp";
 
+export const sendOtpAsSingleSms = async (mobile_no: string, otp: string) => {
+    let text = `Your OTP is ${otp}.Directorate of EDCS.`;
+    let sendSingleSms = await sendSingleSMS(
+        process.env.SMS_USERNAME!,
+        process.env.SMS_PASSWORD!,
+        process.env.SMS_SENDER_ID!,
+        text,
+        mobile_no,
+        process.env.SMS_API_SERVICE_KEY!,
+        process.env.TEMPLATE_ID!
+    );
+    return sendSingleSms;
+};
 
-@Service()
-export class ResusableFunctions {
-
-    constructor(public smsServices: SMSServices) { };
-
-    async sendOtpAsSingleSms(mobile_no: string, otp: string) {
-        console.log("dakfhjh")
-        let text = `Your OTP is ${otp}.Directorate of EDCS.`;
-        let sendSingleSms = await this.smsServices.sendSingleSMS(
-            process.env.SMS_USERNAME!,
-            process.env.SMS_PASSWORD!,
-            process.env.SMS_SENDER_ID!,
-            text,
-            mobile_no,
-            process.env.SMS_API_SERVICE_KEY!,
-            process.env.TEMPLATE_ID!
-        );
-        return sendSingleSms;
-    };
-
-    async sendSmsInKannadaUnicode(mobile_no: string, otp: string) {
-        let text = `ಅಪ್ಲಿಕೇಶನ್ ಲಾಗಿನ್ ಒಟಿಪಿ ${otp}.
+export const sendSmsInKannadaUnicode = (mobile_no: string, otp: string) => {
+    let text = `ಅಪ್ಲಿಕೇಶನ್ ಲಾಗಿನ್ ಒಟಿಪಿ ${otp}.
         -NHM, Gok`;
-        let sendSingleSms = await this.smsServices.sendSingleUnicode(
-            process.env.SMS_USERNAME!,
-            process.env.SMS_PASSWORD!,
-            process.env.SMS_SENDER_ID!,  
-            text,
-            mobile_no,
-            process.env.SMS_API_SERVICE_KEY!,
-            process.env.TEMPLATE_ID_KANNADA!
-        );
-        return sendSingleSms;
-    }
-
-
-    async sendOtpAsReadyForDeliver(mobile_no: string, otp: string, order_number: string) {
-        let text = `${otp} is the OTP for Spectacle Delivery for the order number ${order_number}
-        -National Health mission ,GOK.`;
-        console.log("text",text)
-        let sendSingleSms = await this.smsServices.sendSingleSMS(
-            process.env.SMS_USERNAME!,
-            process.env.SMS_PASSWORD!,
-            process.env.SMS_SENDER_ID!,
-            text,
-            mobile_no,
-            process.env.SMS_API_SERVICE_KEY!,
-            process.env.TEMPLATE_ID_FOR_DELIVER!
-        );
-        return sendSingleSms;
-    };
+    let sendSingleSms = sendSingleUnicode(
+        process.env.SMS_USERNAME!,
+        process.env.SMS_PASSWORD!,
+        process.env.SMS_SENDER_ID!,
+        text,
+        mobile_no,
+        process.env.SMS_API_SERVICE_KEY!,
+        process.env.TEMPLATE_ID_KANNADA!
+    );
+    return sendSingleSms;
 }
+
+
+export const sendOtpAsReadyForDeliver = async (mobile_no: string, otp: string, order_number: string) => {
+    let text = `${otp} is the OTP for Spectacle Delivery for the order number ${order_number}
+        -National Health mission ,GOK.`;
+    let sendSingleSms = await sendSingleSMS(
+        process.env.SMS_USERNAME!,
+        process.env.SMS_PASSWORD!,
+        process.env.SMS_SENDER_ID!,
+        text,
+        mobile_no,
+        process.env.SMS_API_SERVICE_KEY!,
+        process.env.TEMPLATE_ID_FOR_DELIVER!
+    );
+    return sendSingleSms;
+};
